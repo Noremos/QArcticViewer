@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>QML/HeiScene.qml</file>
+        <file>QML/main.qml</file>
+        <file>QML/NewButton.qml</file>
+        <file>QML/SideMenu.qml</file>
+        <file>QML/Hoverd.qml</file>
+        <file>QML/LoadButton.qml</file>
+    </qresource>
+    <qresource prefix="/heightmaps">
+        <file>layer_1.png</file>
+        <file>layer_2.png</file>
+        <file>layer_3.png</file>
+    </qresource>
+</RCC>
