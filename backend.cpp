@@ -45,10 +45,7 @@ void  Backend::loadImage(QString path)
 	if (!reader->ready)
 		return;
 //	int hei = 500;
-	int hei = reader->height();
-	Obj3d object(reader->widght(),hei);
-	for (int i = 0; i < hei; ++i)
-		object.setRow(i, reinterpret_cast<float *>(reader->getRowData(i)));
+	Obj3d object(reader);
 
 
 	object.write("D:\\1.obj");

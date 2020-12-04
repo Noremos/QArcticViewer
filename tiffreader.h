@@ -251,6 +251,54 @@ struct TiffTags
 
 #include "Decoder.h"
 
+template<class T>
+class Cache
+{
+	std::queue<int> cacheIndexs;
+	std::unordered_map<int, T> cashedData;
+	size_t maxElementsSize = 16;
+	size_t maxCacheSize = 10000000;
+
+public:
+	Cache(size_t maxElemCount = 16, size_t maxCachSize = 10000000): maxElementsSize(maxElemCount), maxCacheSize(maxCachSize) { }
+
+	void cacheData(int i, T data)
+	{
+		size_t s = cashedData.size();
+		if (s > maxElementsSize || s * sizeof(T) > maxCacheSize)
+		{
+			int ol = cacheIndexs.front();
+			float *temp = reinterpret_cast<float *>(cashedData[ol]);
+			delete[] temp;
+			cacheIndexs.pop();
+			cashedData.erase(ol);
+		}
+		cashedData.insert(std::pair<int, void *>(i, data));
+		cacheIndexs.push(i);
+	}
+
+	bool isInCache(int i) { return cashedData.find(i) != cashedData.end(); }
+
+	T getData(int i)
+	{
+		auto t = cashedData.find(i);
+		if (t != cashedData.end())
+			return t->second;
+		else
+			throw exception();
+
+	}
+	T getData(int i, const T& defaultValue)
+	{
+		auto t = cashedData.find(i);
+		if (t != cashedData.end())
+			return t->second;
+		else
+			return defaultValue;
+
+	}
+};
+
 
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rdb8, argb8 };
 class ImageReader
@@ -262,31 +310,19 @@ public:
 	virtual ImageType getType()=0;
 	virtual int widght()=0;
 	virtual int height()=0;
-	std::queue<int> cashedRowIndexs;
-	std::unordered_map<int, void *> cashedRows;
+	Cache<void*> cachedRows;
 	bool ready = false;
 	bool isTile = true;
 
 	void *getRow(int i)
 	{
-		auto t = cashedRows.find(i);
-		if (t != cashedRows.end())
-		{
-			return t->second;
-		}
+		void *data = cachedRows.getData(i, nullptr);
+		if (data != nullptr)
+			return data;
 		else
 		{
-			if (cashedRows.size() > 0)
-			{
-				int ol = cashedRowIndexs.front();
-				float *temp = reinterpret_cast<float *>(cashedRows[ol]);
-				delete[] temp;
-				cashedRowIndexs.pop();
-				cashedRows.erase(ol);
-			}
-			void *data = getRowData(i);
-			cashedRows.insert(std::pair<int,void*>(i,data));
-			cashedRowIndexs.push(i);
+			data = getRowData(i);
+			cachedRows.cacheData(i, data);
 			return data;
 		}
 	}
@@ -303,6 +339,7 @@ class TiffReader: public ImageReader
 	uchar imgByteOrder;
 	uchar sysByteOredr;
 	uint tilesCount = 0;
+
 public:
 	TiffReader();
 
