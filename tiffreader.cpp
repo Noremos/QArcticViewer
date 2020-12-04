@@ -271,33 +271,40 @@ void *TiffReader::getRowData(int y)
 			uchar *data = cachedTiles.getData(tileNum + i, n);
 			if (data != nullptr)
 			{
-				data += rowInTile * tiff.TileWidth;
-				std::copy(data, data + tiff.TileWidth, std::back_inserter(ret));
-//				ret.insert(ret.end(), data[rowInTile],  reinterpret_cast<void *>(temp));
-
+				data += rowInTile * bytsInTileWid;
+				std::copy(data, data + bytsInTileWid, std::back_inserter(ret));
+				//				ret.insert(ret.end(), data[rowInTile],  reinterpret_cast<void *>(temp));
 			}
-			//offset tile
-			uchar buffer[4];
-			read(buffer,tiff.TileOffsets + (tileNum +  i) * sizeof(uint), sizeof(uint));
-			uint off = toInt(buffer);
-			//************
+			else
+			{
+				//offset tile
+				uchar buffer[4];
+				read(buffer, tiff.TileOffsets + (tileNum + i) * sizeof(uint), sizeof(uint));
+				uint off = toInt(buffer);
+				//************
 
-			//Count
-			read(buffer, tiff.TileByteCounts + (tileNum +  i) * sizeof(uint), sizeof(uint));
-			uint count = toInt(buffer);
-			uchar *buff = new uchar[count];
-			//*****
+				//Count
+				read(buffer, tiff.TileByteCounts + (tileNum + i) * sizeof(uint), sizeof(uint));
+				uint count = toInt(buffer);
+				uchar *buff = new uchar[count];
+				//*****
 
-			//data
-			read(buff, off, count);
-			decorder decod;
+				//data
+				read(buff, off, count);
+				decorder decod;
 
-			vector<uchar> temp;
-			decod.decompress(buff, count, temp);// (rowInTile + 1) * bytsInTileWid
+				vector<uchar> temp;
+				decod.decompress(buff, count, temp); // (rowInTile + 1) * bytsInTileWid
 
-			ret.insert(ret.end(), temp.begin() + rowInTile * bytsInTileWid, temp.begin() + (rowInTile + 1) *bytsInTileWid);
 
-			delete[] buff;
+				ret.insert(ret.end(), temp.begin() + rowInTile * bytsInTileWid, temp.begin() + (rowInTile + 1) *bytsInTileWid);
+				size_t ft = bytsInTileWid * tiff.TileLength;
+				uchar *data = new uchar[ft];
+				memcpy(data, temp.data(), ft);
+				cachedTiles.storeData(tileNum + i, data);
+
+				delete[] buff;
+			}
 			//****
 		}
 	}else

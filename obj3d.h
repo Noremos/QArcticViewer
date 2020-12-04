@@ -108,19 +108,15 @@ public:
 
 		float min = 99999;
 		float max = -99999;
-		bool first = false;
+
 		for (int h = 0; h < 500; ++h)
 		{
-			if (h == 0)
-			{
-			}
-			else
+			if (h != 0)
 			{
 				delete[] data[0];
 				data[0] = data[1];
-				data[1] = reinterpret_cast<float *>(reader->getRowData(h));
-
 			}
+
 			data[1] = reinterpret_cast<float *>(reader->getRowData(h));
 
 			for (int w = 0; w < width; ++w)

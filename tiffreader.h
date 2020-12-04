@@ -295,13 +295,13 @@ public:
 		while( cachedData.size() * elementSize > size)
 			remove();
 	}
-	void cacheData(int i, T data)
+	void storeData(int i, T data)
 	{
 		size_t s = cachedData.size();
 		if (s > maxElementsSize || s * elementSize > maxCacheSize)
 			remove();
 
-		cachedData.insert(std::pair<int, void *>(i, data));
+		cachedData.insert(std::pair<int, T>(i, data));
 		cacheIndexs.push(i);
 	}
 
@@ -391,7 +391,7 @@ public:
 		else
 		{
 			data = getRowData(i);
-			cachedRows.cacheData(i, data);
+			cachedRows.storeData(i, data);
 			return data;
 		}
 	}
