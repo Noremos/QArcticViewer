@@ -255,34 +255,57 @@ template<class T>
 class Cache
 {
 	std::queue<int> cacheIndexs;
-	std::unordered_map<int, T> cashedData;
+	std::unordered_map<int, T> cachedData;
 	size_t maxElementsSize = 16;
 	size_t maxCacheSize = 10000000;
-
+	size_t elementSize;
 public:
-	Cache(size_t maxElemCount = 16, size_t maxCachSize = 10000000): maxElementsSize(maxElemCount), maxCacheSize(maxCachSize) { }
+	Cache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)):
+		  maxElementsSize(maxElemCount), maxCacheSize(maxCachSize), elementSize(sizeOfElement)
+	{ }
 
-	void cacheData(int i, T data)
+	void setMaxElems(size_t number)
 	{
-		size_t s = cashedData.size();
-		if (s > maxElementsSize || s * sizeof(T) > maxCacheSize)
+		maxElementsSize = number;
+		while( cachedData.size() > number)
 		{
 			int ol = cacheIndexs.front();
-			float *temp = reinterpret_cast<float *>(cashedData[ol]);
+			cacheIndexs.pop();
+			cachedData.erase(ol);
+		}
+	}
+
+	void setMaxSize(size_t size)
+	{
+		maxCacheSize = size;
+		while( cachedData.size()* elementSize > size)
+		{
+			int ol = cacheIndexs.front();
+			cacheIndexs.pop();
+			cachedData.erase(ol);
+		}
+	}
+	void cacheData(int i, T data)
+	{
+		size_t s = cachedData.size();
+		if (s > maxElementsSize || s * elementSize > maxCacheSize)
+		{
+			int ol = cacheIndexs.front();
+			float *temp = reinterpret_cast<float *>(cachedData[ol]);
 			delete[] temp;
 			cacheIndexs.pop();
-			cashedData.erase(ol);
+			cachedData.erase(ol);
 		}
-		cashedData.insert(std::pair<int, void *>(i, data));
+		cachedData.insert(std::pair<int, void *>(i, data));
 		cacheIndexs.push(i);
 	}
 
-	bool isInCache(int i) { return cashedData.find(i) != cashedData.end(); }
+	bool isInCache(int i) { return cachedData.find(i) != cachedData.end(); }
 
 	T getData(int i)
 	{
-		auto t = cashedData.find(i);
-		if (t != cashedData.end())
+		auto t = cachedData.find(i);
+		if (t != cachedData.end())
 			return t->second;
 		else
 			throw exception();
@@ -290,12 +313,17 @@ public:
 	}
 	T getData(int i, const T& defaultValue)
 	{
-		auto t = cashedData.find(i);
-		if (t != cashedData.end())
+		auto t = cachedData.find(i);
+		if (t != cachedData.end())
 			return t->second;
 		else
 			return defaultValue;
 
+	}
+	void clear() {
+		cachedData.clear();
+		std::queue<int> empty;
+		std::swap( cacheIndexs, empty );
 	}
 };
 
@@ -339,6 +367,8 @@ class TiffReader: public ImageReader
 	uchar imgByteOrder;
 	uchar sysByteOredr;
 	uint tilesCount = 0;
+	Cache<void**> cachedTiles;
+
 
 public:
 	TiffReader();
@@ -388,6 +418,7 @@ public:
 		return out;
 	}
 	void reorder(uchar *bytes, int size);
+	void **checkTileInCache(int x, int y);
 };
 
 

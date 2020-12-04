@@ -239,6 +239,14 @@ ImageType TiffReader::getType()
 	return ImageType::float32;
 }
 
+void **TiffReader::checkTileInCache(int tileX, int tileY)
+{
+	int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
+
+	int index = tileY * TilesAcross + tileX;
+	return cachedTiles.getData(index, nullptr);
+}
+
 void *TiffReader::getRowData(int y)
 {
 	vector<uchar> ret;
