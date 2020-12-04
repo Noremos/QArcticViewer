@@ -32,11 +32,12 @@ struct Point3f
 
 class Obj3d
 {
+	int width, height;
+	int step;
+	int NAN_VALUE = -9999;
+
 	ImageReader *reader;
 	QString name;
-	int step;
-	int width, height;
-	int NAN_VALUE = -9999;
 
 public:
 	//	QVector<Face3d *> faces;

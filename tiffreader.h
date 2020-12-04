@@ -249,11 +249,14 @@ struct TiffTags
 #include <queue>
 #include <unordered_map>
 
+#include <bits/unique_ptr.h>
+
 #include "Decoder.h"
 
 template<class T>
 class Cache
 {
+protected:
 	std::queue<int> cacheIndexs;
 	std::unordered_map<int, T> cachedData;
 	size_t maxElementsSize = 16;
@@ -263,6 +266,11 @@ public:
 	Cache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)):
 		  maxElementsSize(maxElemCount), maxCacheSize(maxCachSize), elementSize(sizeOfElement)
 	{ }
+
+	virtual void free(int index)
+	{
+
+	}
 
 	void setMaxElems(size_t number)
 	{
@@ -274,28 +282,25 @@ public:
 			cachedData.erase(ol);
 		}
 	}
-
+	void remove()
+	{
+		int ol = cacheIndexs.front();
+		free(ol);
+		cacheIndexs.pop();
+		cachedData.erase(ol);
+	}
 	void setMaxSize(size_t size)
 	{
 		maxCacheSize = size;
-		while( cachedData.size()* elementSize > size)
-		{
-			int ol = cacheIndexs.front();
-			cacheIndexs.pop();
-			cachedData.erase(ol);
-		}
+		while( cachedData.size() * elementSize > size)
+			remove();
 	}
 	void cacheData(int i, T data)
 	{
 		size_t s = cachedData.size();
 		if (s > maxElementsSize || s * elementSize > maxCacheSize)
-		{
-			int ol = cacheIndexs.front();
-			float *temp = reinterpret_cast<float *>(cachedData[ol]);
-			delete[] temp;
-			cacheIndexs.pop();
-			cachedData.erase(ol);
-		}
+			remove();
+
 		cachedData.insert(std::pair<int, void *>(i, data));
 		cacheIndexs.push(i);
 	}
@@ -311,7 +316,7 @@ public:
 			throw exception();
 
 	}
-	T getData(int i, const T& defaultValue)
+	T getData(int i, T& defaultValue)
 	{
 		auto t = cachedData.find(i);
 		if (t != cachedData.end())
@@ -321,9 +326,44 @@ public:
 
 	}
 	void clear() {
+		for (std::pair<int, T> &it : cachedData)
+		{
+			free(it.first);
+		}
 		cachedData.clear();
 		std::queue<int> empty;
 		std::swap( cacheIndexs, empty );
+	}
+};
+
+template<class T>
+class PointerCache : public Cache<T>
+{
+public:
+	PointerCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)) :
+		  Cache<T>(maxElemCount, maxCachSize, sizeOfElement) {}
+
+	void free(int index) override
+	{
+		auto it = this->cachedData.find(index);
+		delete it->second;
+		it->second = nullptr;
+	}
+};
+
+template<class T>
+class PointerArrayCache : public Cache<T>
+{
+public:
+	PointerArrayCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)):
+		  Cache<T>(maxElemCount, maxCachSize,sizeOfElement)
+	{  }
+
+	void free(int index) override
+	{
+		auto it = this->cachedData.find(index);
+		delete[] it->second;
+		it->second = nullptr;
 	}
 };
 
@@ -338,13 +378,14 @@ public:
 	virtual ImageType getType()=0;
 	virtual int widght()=0;
 	virtual int height()=0;
-	Cache<void*> cachedRows;
+	PointerArrayCache<void*> cachedRows;
 	bool ready = false;
 	bool isTile = true;
 
 	void *getRow(int i)
 	{
-		void *data = cachedRows.getData(i, nullptr);
+		void *d = nullptr;
+		void *data = cachedRows.getData(i, d);
 		if (data != nullptr)
 			return data;
 		else
@@ -367,7 +408,7 @@ class TiffReader: public ImageReader
 	uchar imgByteOrder;
 	uchar sysByteOredr;
 	uint tilesCount = 0;
-	Cache<void**> cachedTiles;
+	Cache<uchar*> cachedTiles;
 
 
 public:

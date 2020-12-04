@@ -42,7 +42,7 @@ void HeiMapModel::loadImage(QString path)
 	}
 	endInsertRows();
 }
-const int L= 1000;
+//const int L= 1000;
 int HeiMapModel::rowCount(const QModelIndex &parent) const
 {
 	// For list models only the root node (an invalid parent) should return the list's size. For all

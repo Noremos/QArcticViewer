@@ -29,20 +29,20 @@ TiffReader::TiffReader()
 {
 	uint16_t x = 0x0001;
 	sysByteOredr = *((uint8_t*)&x) ? 77 : 73;//b : l
-	uchar cs[]{ 0,1,0,2,5,0,3,9,8,6,4 };
+//	uchar cs[]{ 0,1,0,2,5,0,3,9,8,6,4 };
 	//	dectodeTEST(cs, 11);
 }
 
 
 // Method to convert integer to its binary value
-string converToBinary(uchar value, int len = 8)
+string converToBinary(uchar value)//, int len = 8
 {
 	string finalValue = "";
 	uchar mask = 128;
 	for (size_t i = 0; i < 8; i++)
 	{
 		finalValue += value & mask ? "1" : "0";
-		mask >> 1;
+		mask = mask >> 1;
 	}
 
 	return finalValue;
@@ -239,13 +239,13 @@ ImageType TiffReader::getType()
 	return ImageType::float32;
 }
 
-void **TiffReader::checkTileInCache(int tileX, int tileY)
-{
-	int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
+//void **TiffReader::checkTileInCache(int tileX, int tileY)
+//{
+//	int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
 
-	int index = tileY * TilesAcross + tileX;
-	return cachedTiles.getData(index, nullptr);
-}
+//	int index = tileY * TilesAcross + tileX;
+//	return cachedTiles.getData(tileNum, nullptr);
+//}
 
 void *TiffReader::getRowData(int y)
 {
@@ -254,8 +254,12 @@ void *TiffReader::getRowData(int y)
 	int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
 	int TilesDown = (tiff.ImageLength + tiff.TileLength - 1) / tiff.TileLength;
 	int TilesPerImage = TilesAcross * TilesDown;
+
+
 	if (TilesPerImage > 0)
 	{
+		cachedTiles.setMaxElems(TilesAcross);
+
 		int tileNum = (y / tiff.TileLength) * TilesAcross;
 		int rowInTile = y % tiff.TileLength;
 
@@ -263,6 +267,15 @@ void *TiffReader::getRowData(int y)
 
 		for (int i = 0; i < TilesAcross; ++i)
 		{
+			uchar *n = nullptr;
+			uchar *data = cachedTiles.getData(tileNum + i, n);
+			if (data != nullptr)
+			{
+				data += rowInTile * tiff.TileWidth;
+				std::copy(data, data + tiff.TileWidth, std::back_inserter(ret));
+//				ret.insert(ret.end(), data[rowInTile],  reinterpret_cast<void *>(temp));
+
+			}
 			//offset tile
 			uchar buffer[4];
 			read(buffer,tiff.TileOffsets + (tileNum +  i) * sizeof(uint), sizeof(uint));
@@ -280,7 +293,7 @@ void *TiffReader::getRowData(int y)
 			decorder decod;
 
 			vector<uchar> temp;
-			decod.decompress(buff, count, temp, (rowInTile + 1) * bytsInTileWid);
+			decod.decompress(buff, count, temp);// (rowInTile + 1) * bytsInTileWid
 
 			ret.insert(ret.end(), temp.begin() + rowInTile * bytsInTileWid, temp.begin() + (rowInTile + 1) *bytsInTileWid);
 

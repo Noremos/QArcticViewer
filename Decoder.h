@@ -20,7 +20,7 @@ typedef unsigned int offu64;
 inline long long st(long long st)
 {
 	int step = 1;
-	for (size_t i = 1; i <= st; i++)
+	for (long long i = 1; i <= st; i++)
 		step *= 2;
 	return step;
 }
