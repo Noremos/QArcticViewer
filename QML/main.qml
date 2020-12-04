@@ -35,7 +35,8 @@ ApplicationWindow {
             LoadButton {
                 id: fileDialog
                 onAccepted: {
-                    mainZone.run(filePath.toString().substring(8))
+
+                    //                    mainZone.run(filePath.toString().substring(8))
                 }
             }
         }

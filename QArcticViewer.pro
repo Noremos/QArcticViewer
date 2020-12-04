@@ -1,4 +1,4 @@
-QT += quick datavisualization
+QT += quick datavisualization quick3d
 
 CONFIG += c++20
 
@@ -8,8 +8,10 @@ CONFIG += c++20
 
 SOURCES += \
     backend.cpp \
+    face3d.cpp \
     heimapmodel.cpp \
     main.cpp \
+    obj3d.cpp \
     tiffreader.cpp
 
 RESOURCES += qml.qrc
@@ -19,10 +21,14 @@ QML_IMPORT_PATH =
 
 # Additional import path used to resolve QML modules just for Qt Quick Designer
 QML_DESIGNER_IMPORT_PATH =
-
 # Default rules for deployment.
+
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
+
+
+#target.path = $${QT_INSTALL_EXAMPLES}/quick3d/view3d
+
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
@@ -41,6 +47,10 @@ else:win32:CONFIG(debug, debug|release): LIBS += -LD:/MyA/Libraries/Libs/ -lopen
 else:unix: LIBS += -LD:/MyA/Libraries/Libs/ -lopencv_world411
 
 HEADERS += \
+    Decoder.h \
     backend.h \
+    face3d.h \
     heimapmodel.h \
+    obj3d.h \
     tiffreader.h
+

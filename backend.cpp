@@ -1,7 +1,6 @@
 #include "backend.h"
 
 #include <QImage>
-#include "tiffreader.h"
 
 using namespace cv;
 Backend::Backend(QObject *parent) : QObject(parent)
@@ -27,3 +26,30 @@ cv::Mat Backend::imgread(QString path)
 }
 
 
+void  Backend::loadImage(QString path)
+{
+	if (reader)
+	{
+		delete reader;
+		reader = nullptr;
+	}
+
+	int type = 0;
+	switch (type)
+	{
+	default:
+		reader = new TiffReader();
+		break;
+	}
+	reader->open(path.toStdWString().c_str());
+	if (!reader->ready)
+		return;
+//	int hei = 500;
+	int hei = reader->height();
+	Obj3d object(reader->widght(),hei);
+	for (int i = 0; i < hei; ++i)
+		object.setRow(i, reinterpret_cast<float *>(reader->getRowData(i)));
+
+
+	object.write("D:\\1.obj");
+}

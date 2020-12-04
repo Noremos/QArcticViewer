@@ -10,7 +10,6 @@ using namespace std;
 #endif // !_QT
 
 #include <stdio.h>
-#include "Decoder.h"
 
 #include <algorithm>
 
@@ -18,8 +17,7 @@ string dectodeTEST(uchar* buffer, int len);
 #include <map>
 #include <unordered_map>
 typedef vector<int> bytesCode;
-//typedef unordered_map<string, int> dict;
-//typedef pair<string, int> ppair;
+
 typedef unordered_map<int, string> dictT;
 typedef pair< int, string> ppairT;
 typedef unordered_map<int, string> dict;
@@ -50,49 +48,6 @@ string converToBinary(uchar value, int len = 8)
 	return finalValue;
 }
 
-string dectodeTEST(uchar* buffer, int len)
-{
-	dict codes;
-	for (uchar i = 0; i < 5; i++)
-	{
-		char c = 'a' + i;
-		string st = " ";
-		st[0] = c;
-		codes.insert(ppair(i, st));
-	}
-
-	string full = "";
-	string res = "";
-	bytesCode codestrim;
-	int lastI = 5;
-	string chast = "";
-	for (size_t i = 0; i < len; i++)
-	{
-		string out = codes[buffer[i]];
-		res += out;
-		full = chast + out[0];
-		bool found = false;
-		for (auto& val : codes)
-		{
-			if (val.second == full)
-			{
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-		{
-			codes.insert(ppair(lastI++, full));
-			//full = chast;
-		}
-		chast = out;
-	}
-	bool b = res == string("abacabadabacabae");
-	cout << b;
-	return res;
-}
-
-
 union toduble
 {
 	uchar data[8];
@@ -122,7 +77,7 @@ float TiffReader::toFloat(uchar* bytes)
 {
 	tofloat conv;
 	memcpy(conv.data, bytes, 4);
-	convert(conv.data, 4);
+	//reorder(conv.data, 4);
 	return conv.value;
 }
 
@@ -130,7 +85,7 @@ double TiffReader::toDouble(uchar* bytes)
 {
 	toduble conv;
 	memcpy(conv.data, bytes, 8);
-	convert(conv.data, 8);
+	reorder(conv.data, 8);
 	return conv.value;
 }
 
@@ -148,7 +103,7 @@ uint TiffReader::toInt(uchar* bytes)
 	return int((unsigned char)(bytes[t.v()]) << 24 | (bytes[t.v()]) << 16 | (bytes[t.v()]) << 8 | (bytes[t.v()]));
 }
 
-void TiffReader::convert(uchar* bytes, int size)
+void TiffReader::reorder(uchar* bytes, int size)
 {
 	if (sysByteOredr != imgByteOrder)
 	{
@@ -164,7 +119,7 @@ void TiffReader::printHeader(uchar* buffer)
 	OUT << "Version number :" << (toShort(buffer + 2));
 	OUT << "Offset to first IFD:" << (toInt(buffer + 4)) << endl;
 }
-int TiffReader::getTagIntValue(int offOrValue, int count, char format)
+int TiffReader::getTagIntValue(offu64 offOrValue, offu64 count, char format)
 {
 	if (count > 4)
 	{
@@ -177,20 +132,25 @@ int TiffReader::getTagIntValue(int offOrValue, int count, char format)
 }
 void TiffReader::printTag(uchar* buffer)
 {
-	OUT << "----Tag data----";
+//	OUT << "----Tag data----";
 	ushort tag = toShort(buffer);
 	ushort type = toShort(buffer + 2);
-	int count = toInt(buffer + 4);
-	int value = toInt(buffer + 8);
+	offu64 count = toInt(buffer + 4);
+	offu64 value = toInt(buffer + 8);
 
 	bool print = true;
 	switch ((Tags)tag)
 	{
+	case Tags::TileWidth:
+		this->tiff.TileWidth = getTagIntValue(value, count, type);
+		break;
+	case Tags::TileLength:
+		this->tiff.TileLength = getTagIntValue(value, count, type);
+		break;
 	case Tags::ImageWidth:
 		this->tiff.ImageWidth = getTagIntValue(value, count, type);
 		OUT << "ImageWidth";
 		break;
-
 	case Tags::ImageLength:
 		this->tiff.ImageLength = getTagIntValue(value, count, type);
 		OUT << "ImageLength";
@@ -199,13 +159,28 @@ void TiffReader::printTag(uchar* buffer)
 		this->tiff.PlanarConfiguration = getTagIntValue(value, count, type);
 		OUT << "PlanarConfiguration";
 		break;
+	case Tags::TileOffsets:
+		isTile = true;
+		tilesCount = count;
+		this->tiff.TileOffsets = value;
+		break;
+
 	case Tags::StripOffsets:
 		this->tiff.StripOffsets = value;
+//		compressedLen = count;
+//		this->tiff.ImageLength = count;
 		OUT << "StripOffsets";
+		break;
+
+	case Tags::TileByteCounts:
+		this->tiff.TileByteCounts = value;
+		tilesCount = count;
 		break;
 
 	case Tags::StripByteCounts:
 		this->tiff.StripByteCounts = value;
+//		this->tiff.ImageLength = count;
+
 		OUT << "StripByteCounts";
 		break;
 
@@ -235,9 +210,13 @@ void TiffReader::printTag(uchar* buffer)
 
 	//In other words, if the tag data is smaller than or equal to 4 bytes, it fits. Otherwise, it is stored elsewhere and pointed to.
 }
-void TiffReader::read(uchar* buffer, int offset, int len)
+void TiffReader::read(uchar* buffer, offu64 offset, offu64 len)
 {
-	fseek(pFile, offset, SEEK_SET);
+#ifdef _MSC_VER
+	_fseeki64(pFile, offset, SEEK_SET);
+#else
+	fseeko64(pFile, offset, SEEK_SET);
+#endif
 	if (!fread(buffer, 1, len, pFile))
 		OUT << "ERROR?";
 	if (feof(pFile))
@@ -260,25 +239,63 @@ ImageType TiffReader::getType()
 	return ImageType::float32;
 }
 
-
-
 void *TiffReader::getRowData(int y)
 {
-	uchar buffer[4];
-	read(buffer, tiff.StripOffsets + y * 4, 4);
-	int off = toInt(buffer);
+	vector<uchar> ret;
 
-	read(buffer, tiff.StripByteCounts + y * 4, 4);
-	int count = toInt(buffer);
+	int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
+	int TilesDown = (tiff.ImageLength + tiff.TileLength - 1) / tiff.TileLength;
+	int TilesPerImage = TilesAcross * TilesDown;
+	if (TilesPerImage > 0)
+	{
+		int tileNum = (y / tiff.TileLength) * TilesAcross;
+		int rowInTile = y % tiff.TileLength;
 
-	uchar *buff = new uchar[count];
-	read(buff, off, count);
+		const int bytsInTileWid = tiff.TileWidth * sizeof(float);
 
-	string st = ""; // dectode(buff, count);
-	vector<uchar> ret(count);
-	decorder decod;
-	decod.decompress(buff, count, ret);
+		for (int i = 0; i < TilesAcross; ++i)
+		{
+			//offset tile
+			uchar buffer[4];
+			read(buffer,tiff.TileOffsets + (tileNum +  i) * sizeof(uint), sizeof(uint));
+			uint off = toInt(buffer);
+			//************
 
+			//Count
+			read(buffer, tiff.TileByteCounts + (tileNum +  i) * sizeof(uint), sizeof(uint));
+			uint count = toInt(buffer);
+			uchar *buff = new uchar[count];
+			//*****
+
+			//data
+			read(buff, off, count);
+			decorder decod;
+
+			vector<uchar> temp;
+			decod.decompress(buff, count, temp, (rowInTile + 1) * bytsInTileWid);
+
+			ret.insert(ret.end(), temp.begin() + rowInTile * bytsInTileWid, temp.begin() + (rowInTile + 1) *bytsInTileWid);
+
+			delete[] buff;
+			//****
+		}
+	}else
+	{
+		uchar buffer[4];
+		read(buffer, tiff.StripOffsets + y * 4, 4);
+		uint off = toInt(buffer);
+
+		read(buffer, tiff.StripByteCounts + y * 4, 4);
+		uint count = toInt(buffer);
+		uchar *buff = new uchar[count];
+
+		read(buff, off, count);
+
+		string st = ""; // dectode(buff, count);
+		decorder decod;
+		decod.decompress(buff, count, ret);
+		delete[] buff;
+	}
 	int len = widght();
 	void *data;
 	switch (getType())
@@ -290,17 +307,16 @@ void *TiffReader::getRowData(int y)
 	return data;
 }
 
-void TiffReader::printIFD(int offset)
+void TiffReader::printIFD(offu64 offset)
 {
 	OUT << "----IDF----";
 	uchar* buffer;
 	uchar temp[2];
-	fseek(pFile, offset, SEEK_SET);
-	fgets((char*)temp, 2, pFile);
+
 	read((uchar*)temp, offset, 2);
-
-
 	ushort tagNums = toShort(temp);
+
+
 	OUT << "Number of tags in IFD:" << tagNums << endl;
 
 	buffer = new uchar[12 * tagNums + 6];
@@ -310,219 +326,16 @@ void TiffReader::printIFD(int offset)
 	{
 		printTag(buffer + 2 + 12 * i);
 	}
-	int oofset = toInt(buffer + tagNums * 12 + 2);
+	uint oofset = toInt(buffer + tagNums * 12 + 2);
 
 	delete[] buffer;
 
 	if (oofset != 0)
 		printIFD(oofset);
 }
-/* string TiffReader::dectode(uchar* bf, int len)
-{
-	size_t realLen = len * 8 / 9;
-	ushort* buffer = new ushort[len / 2];
-	int t = 0;
-	for (size_t i = 0; i < realLen; i += 9)
-	{
-		//9 bit
-		int k = i / 8;
-		int l = i % 8;
-		ushort r = ushort(bf[k] << 8 | bf[k + 1]);
-		int ds = 16 - 9 - l;
-		r = r << l;
-		r = r >> ds + l;
-		buffer[t++] = r;
-	}
-	buffer = buffer + 1;
-	len = realLen;
-	//uchar* buffer = bf;
-	dict codes;
-	for (short i = 0; i < 256; i++)
-	{
-		string st = " ";
-		st[0] = i;
-		codes.insert(ppair(i, st));
-	}
-
-	string full = "";
-	string res = "";
-	bytesCode codestrim;
-	int lastI = 256;
-	string chast = "";
-
-
-	for (size_t i = 0; i < len; i++)//TIFF ROWSPERSTRIP * IMAGEWIDTH * BITSPERSAMPLE / 8,
-	{
-		string out = codes[buffer[i]];
-		res += out;
-		full = chast + out[0];
-		bool found = false;
-		for (auto& val : codes)
-		{
-			if (val.second == full)
-			{
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-		{
-			codes.insert(ppair(lastI++, full));
-			//full = chast;
-		}
-		chast = out;
-	}
-	buffer -= 1;
-	delete[] buffer;
-	return res;
-}
-ushort get_bits_in_stream(uchar* byteBuffer, int byteBufferSize, int bitStarts, int bitsLen)
-{
-	//assert(bitStarts != 2363 - 9);
-	if (bitStarts == 2363 - 9)
-		OUT;
-	int BYTE_SIZE = 8;
-	int byteOffset = bitStarts % 8;
-	int byteStart = bitStarts / 8;
-	size_t bitsCount = byteBufferSize * 8;
-
-	ushort r = ushort(byteBuffer[byteStart] << 8 | byteBuffer[byteStart + 1]);
-	//  {offset}**{bitsLen}**{rightBitsCount} = 16
-
-	int rightBitsCount = 16 - bitsLen - byteOffset;
-
-	r = r << byteOffset;
-	//  {bitsLen}**{rightBitsCount}**{zeros==byteOffset}
-
-	r = r >> rightBitsCount + byteOffset;
-	//  {zeros==rightBitsCount}**{zeros==byteOffset}**{bitsLen==actialy data}
-	return r;
-}
- 
-void lzw_dict_init(string& d, wstring dindex)
-{
-	d.clear();
-	for (short i = 0; i < 256; i++)
-	{
-		string st = " ";
-		st[0] = i;
-		dindex += {4096};
-		//d.insert(ppair(i, st));
-		d += st;
-	}
-	d += {0, 0};
-	dindex += {4096, 4096};
-
-
-}
-*/
-/*void tiff_lzw_calc_maxcode(int bpc, int* mc)
-{
-	*mc = 12;
-}
-
-void tiff_lzw_calc_bpc(int new_inc, int* bpc, int* max)
-{
-	int mask = int(1) << 30;// << *max
-	int nb = *bpc;
-	while ((mask & (new_inc << nb++)) == 0);
-	*bpc = 32 - nb;
-}
-
-void lzw_add_to_cdict(string& cdict, int& cdict_as, int new_index, int idono, string buff, int& bpc)
-{
-	cdict += buff;
-}
-void tiff_lzw_decode(uchar* coded, int buffLen, string& dec)
-{
-	string word = { 0 }, outstring = { 0 };
-	size_t coded_pos;   // position in bits
-	int i, new_index, code, maxcode, bpc;
-
-	string cdict = { 0 };
-	wstring dictionaryIndex = { 0 };
-
-	bpc = 9;            // starts with 9 bits per code, increases later
-	tiff_lzw_calc_maxcode(bpc, &maxcode);
-	new_index = 258;        // index at which new cdict entries begin
-	coded_pos = 0;          // bit position
-
-	lzw_dict_init(cdict, dictionaryIndex);
-	const int CLEAR_CODE = 256;
-	while ((code = get_bits_in_stream(coded, buffLen, coded_pos, bpc)) != 257)   // while ((Code = GetNextCode()) != EoiCode)
-	{
-		coded_pos += bpc;
-
-		if (code >= new_index)
-			printf("Out of range code %d (new_index %d)\n", code, new_index);
-
-		if (code == 256)                        // if (Code == ClearCode)
-		{
-			lzw_dict_init(cdict, dictionaryIndex);             // InitializeTable();
-			bpc = 9;
-			tiff_lzw_calc_maxcode(bpc, &maxcode);
-			new_index = 258;
-
-			while (code == CLEAR_CODE)
-			{
-				code = get_bits_in_stream(coded, buffLen, coded_pos, bpc);   // Code = GetNextCode();
-				coded_pos += bpc;
-				if (code == 257)                    // if (Code == EoiCode)
-					break;
-			}
-			if (code == 257)                    // if (Code == EoiCode)
-				break;
-
-			// revece?
-			dec += cdict[code];               // WriteString(StringFromCode(Code));
-
-			word = cdict[code];             // OldCode = Code;
-		}
-		else if (code > 4096)
-			throw exception("corrupted code at scanline ");
-
-
-		if (cdict.length() > code)                 // if (IsInTable(Code))
-		{
-			dec += cdict[code];           // WriteString(StringFromCode(Code));
-
-			lzw_add_to_cdict(cdict, i, new_index, 0, word, bpc);
-			lzw_add_to_cdict(cdict, i, new_index, 1, "" + cdict[code], bpc);    // AddStringToTable
-			new_index++;
-			tiff_lzw_calc_bpc(new_index, &bpc, &maxcode);
-
-			word = cdict[code];         // OldCode = Code;
-		}
-		else
-		{
-			outstring = word + word[0];      // OutString = StringFromCode(OldCode) + FirstChar(StringFromCode(OldCode));
-
-			dec += outstring;            // WriteString(OutString);
-
-			lzw_add_to_cdict(cdict, i, new_index, 0, outstring, bpc); // AddStringToTable
-			new_index++;
-			tiff_lzw_calc_bpc(new_index, &bpc, &maxcode);
-
-			word = code;         // OldCode = Code;
-		}
-
-	}
-
-	word.clear();
-	outstring.clear();
-	cdict.clear();
-}
-*/
-
-
 
 void TiffReader::printValue(int x, int y)
 {
-
-	// get Tile (contans offsects for each row
-	//Count		N = StripsPerImage for PlanarConfiguration equal to 1; N = SamplesPerPixel * StripsPerImage for PlanarConfiguration equal to 2
-//	Default		None
-
 	uchar buffer[4];
 	read(buffer, tiff.StripOffsets + y * 4, 4);
 	int off = toInt(buffer);
@@ -532,6 +345,7 @@ void TiffReader::printValue(int x, int y)
 
 	uchar* buff = new uchar[count];
 	read(buff, off, count);
+
 
 	string st = "";// dectode(buff, count);
 	vector<uchar> ret;
@@ -548,138 +362,14 @@ void TiffReader::printValue(int x, int y)
 	OUT << val;
 	OUT << (val) / 10000000.;
 }
-//
-//static int
-//DGifDecompressLine(uchar* Line, int LineLen)
-//{
-//	int i = 0;
-//	int j, CrntCode, EOFCode, ClearCode, CrntPrefix, LastCode, StackPtr;
-//	GifByteType* Stack, * Suffix;
-//	GifPrefixType* Prefix;
-//	GifFilePrivateType* Private = (GifFilePrivateType*)GifFile->Private;
-//
-//	StackPtr = Private->StackPtr;
-//	Prefix = Private->Prefix;
-//	Suffix = Private->Suffix;
-//	Stack = Private->Stack;
-//	EOFCode = Private->EOFCode;
-//	ClearCode = Private->ClearCode;
-//	LastCode = Private->LastCode;
-//
-//	if (StackPtr > LZ_MAX_CODE) {
-//		return GIF_ERROR;
-//	}
-//
-//	if (StackPtr != 0) {
-//		/* Let pop the stack off before continueing to read the GIF file: */
-//		while (StackPtr != 0 && i < LineLen)
-//			Line[i++] = Stack[--StackPtr];
-//	}
-//
-//	while (i < LineLen) {    /* Decode LineLen items. */
-//		if (DGifDecompressInput(GifFile, &CrntCode) == GIF_ERROR)
-//			return GIF_ERROR;
-//
-//		if (CrntCode == EOFCode) {
-//			/* Note however that usually we will not be here as we will stop
-//			 * decoding as soon as we got all the pixel, or EOF code will
-//			 * not be read at all, and DGifGetLine/Pixel clean everything.  */
-//			GifFile->Error = D_GIF_ERR_EOF_TOO_SOON;
-//			return GIF_ERROR;
-//		}
-//		else if (CrntCode == ClearCode) {
-//			/* We need to start over again: */
-//			for (j = 0; j <= LZ_MAX_CODE; j++)
-//				Prefix[j] = NO_SUCH_CODE;
-//			Private->RunningCode = Private->EOFCode + 1;
-//			Private->RunningBits = Private->BitsPerPixel + 1;
-//			Private->MaxCode1 = 1 << Private->RunningBits;
-//			LastCode = Private->LastCode = NO_SUCH_CODE;
-//		}
-//		else {
-//			/* Its regular code - if in pixel range simply add it to output
-//			 * stream, otherwise trace to codes linked list until the prefix
-//			 * is in pixel range: */
-//			if (CrntCode < ClearCode) {
-//				/* This is simple - its pixel scalar, so add it to output: */
-//				Line[i++] = CrntCode;
-//			}
-//			else {
-//				/* Its a code to needed to be traced: trace the linked list
-//				 * until the prefix is a pixel, while pushing the suffix
-//				 * pixels on our stack. If we done, pop the stack in reverse
-//				 * (thats what stack is good for!) order to output.  */
-//				if (Prefix[CrntCode] == NO_SUCH_CODE) {
-//					/* Only allowed if CrntCode is exactly the running code:
-//					 * In that case CrntCode = XXXCode, CrntCode or the
-//					 * prefix code is last code and the suffix char is
-//					 * exactly the prefix of last code! */
-//					if (CrntCode == Private->RunningCode - 2) {
-//						CrntPrefix = LastCode;
-//						Suffix[Private->RunningCode - 2] =
-//							Stack[StackPtr++] = DGifGetPrefixChar(Prefix,
-//								LastCode,
-//								ClearCode);
-//					}
-//					else {
-//						GifFile->Error = D_GIF_ERR_IMAGE_DEFECT;
-//						return GIF_ERROR;
-//					}
-//				}
-//				else
-//					CrntPrefix = CrntCode;
-//
-//				/* Now (if image is O.K.) we should not get a NO_SUCH_CODE
-//				 * during the trace. As we might loop forever, in case of
-//				 * defective image, we use StackPtr as loop counter and stop
-//				 * before overflowing Stack[]. */
-//				while (StackPtr < LZ_MAX_CODE &&
-//					CrntPrefix > ClearCode && CrntPrefix <= LZ_MAX_CODE) {
-//					Stack[StackPtr++] = Suffix[CrntPrefix];
-//					CrntPrefix = Prefix[CrntPrefix];
-//				}
-//				if (StackPtr >= LZ_MAX_CODE || CrntPrefix > LZ_MAX_CODE) {
-//					GifFile->Error = D_GIF_ERR_IMAGE_DEFECT;
-//					return GIF_ERROR;
-//				}
-//				/* Push the last character on stack: */
-//				Stack[StackPtr++] = CrntPrefix;
-//
-//				/* Now lets pop all the stack into output: */
-//				while (StackPtr != 0 && i < LineLen)
-//					Line[i++] = Stack[--StackPtr];
-//			}
-//			if (LastCode != NO_SUCH_CODE) {
-//				Prefix[Private->RunningCode - 2] = LastCode;
-//
-//				if (CrntCode == Private->RunningCode - 2) {
-//					/* Only allowed if CrntCode is exactly the running code:
-//					 * In that case CrntCode = XXXCode, CrntCode or the
-//					 * prefix code is last code and the suffix char is
-//					 * exactly the prefix of last code! */
-//					Suffix[Private->RunningCode - 2] =
-//						DGifGetPrefixChar(Prefix, LastCode, ClearCode);
-//				}
-//				else {
-//					Suffix[Private->RunningCode - 2] =
-//						DGifGetPrefixChar(Prefix, CrntCode, ClearCode);
-//				}
-//			}
-//			LastCode = CrntCode;
-//		}
-//	}
-//
-//	Private->LastCode = LastCode;
-//	Private->StackPtr = StackPtr;
-//
-//	return GIF_OK;
-//}
 
-bool TiffReader::open(const char* path)
+bool TiffReader::open(const wchar_t* path)
 {
 	uchar buffer[16];
+	ready = false;
+	isTile = false;
 
-	fopen_s(&pFile, path, "rb");
+	_wfopen_s(&pFile, path, L"rb");
 	if (pFile == NULL)
 	{
 		perror("Error opening file");
@@ -688,24 +378,12 @@ bool TiffReader::open(const char* path)
 	else
 	{
 		read(buffer, 0, 8);
-
-		//feof(pFile))
-		// fputs(buffer, stdout); !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//		if (buffer[0] == 'l' && buffer[1] == 'l')
 		imgByteOrder = buffer[0];
 		printHeader(buffer);
 		uint idfOffset = toInt(buffer + 4);
 		printIFD(idfOffset);
-
-		//		fseek(pFile, idfOffset, SEEK_SET);
-
-		//		fgets((char *) buffer, 2, pFile);
-
-
-//		this->printValue(0, 0);
-//		this->printValue(3500, 6000);
-		//		close();
 	}
+	ready = true;
 	return true;
 }
 
@@ -719,10 +397,6 @@ void TiffReader::close()
 	if (pFile)
 		fclose(pFile);
 }
-/*
-
-*/
-
 void parceTage(TiffTags& st, Tags tag, int value)
 {
 
@@ -840,86 +514,3 @@ void parceTage(TiffTags& st, Tags tag, int value)
 		break;
 	}
 }
-
-/*
-#include <string>
-#include <map>
-
-// Compress a string to a list of output symbols.
-// The result will be written to the output iterator
-// starting at "result"; the final iterator is returned.
-template <typename Iterator>
-Iterator compress(const std::string &uncompressed, Iterator result) {
-  // Build the dictionary.
-  int dictSize = 256;
-  std::map<std::string,int> dictionary;
-  for (int i = 0; i < 256; i++)
-	dictionary[std::string(1, i)] = i;
-
-  std::string w;
-  for (std::string::const_iterator it = uncompressed.begin();
-	   it != uncompressed.end(); ++it) {
-	char c = *it;
-	std::string wc = w + c;
-	if (dictionary.count(wc))
-	  w = wc;
-	else {
-	  *result++ = dictionary[w];
-	  // Add wc to the dictionary.
-	  dictionary[wc] = dictSize++;
-	  w = std::string(1, c);
-	}
-  }
-
-  // Output the code for w.
-  if (!w.empty())
-	*result++ = dictionary[w];
-  return result;
-}
-
-// Decompress a list of output ks to a string.
-// "begin" and "end" must form a valid range of ints
-template <typename Iterator>
-std::string decompress(Iterator begin, Iterator end) {
-  // Build the dictionary.
-  int dictSize = 256;
-  std::map<int,std::string> dictionary;
-  for (int i = 0; i < 256; i++)
-	dictionary[i] = std::string(1, i);
-
-  std::string w(1, *begin++);
-  std::string result = w;
-  std::string entry;
-  for ( ; begin != end; begin++) {
-	int k = *begin;
-	if (dictionary.count(k))
-	  entry = dictionary[k];
-	else if (k == dictSize)
-	  entry = w + w[0];
-	else
-	  throw "Bad compressed k";
-
-	result += entry;
-
-	// Add w+entry[0] to the dictionary.
-	dictionary[dictSize++] = w + entry[0];
-
-	w = entry;
-  }
-  return result;
-}
-
-#include <iostream>
-#include <iterator>
-#include <vector>
-
-int main() {
-  std::vector<int> compressed;
-  compress("TOBEORNOTTOBEORTOBEORNOT", std::back_inserter(compressed));
-  copy(compressed.begin(), compressed.end(), std::ostream_iterator<int>(std::cout, ", "));
-  std::cout << std::endl;
-  std::string decompressed = decompress(compressed.begin(), compressed.end());
-  std::cout << decompressed << std::endl;
-
-  return 0;
-}*/

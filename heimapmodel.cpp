@@ -32,7 +32,7 @@ void HeiMapModel::loadImage(QString path)
 		reader = new TiffReader();
 		break;
 	}
-	reader->open(path.toStdString().c_str());
+	reader->open(path.toStdWString().c_str());
 
 	beginInsertRows(QModelIndex(), 0, reader->height() * reader->widght());
 	sdata = new float *[reader->height()];

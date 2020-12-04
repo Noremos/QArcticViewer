@@ -1,11 +1,11 @@
 #include "backend.h"
-#include "tiffreader.h"
 
 //#include <QApplication>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
 #include <QQmlContext>
+#include <QtQuick3D/qquick3d.h>
 
 #include "heimapmodel.h"
 
@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
 	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
 	QGuiApplication app(argc, argv);
+	QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
 
 	qmlRegisterType<HeiMapModel>("My", 1, 0, "HeiMapModel");
 	QQmlApplicationEngine engine;
@@ -30,7 +31,8 @@ int main(int argc, char *argv[])
 
 	engine.load(url);
 	back.root = engine.rootObjects().first();
-//	back.test();
+	back.loadImage("D:\\1.tif");
+//	back.loadImage("D:\\Учеба\\БАР\\Москва\\50_60_1_1_2m_v3.0_reg_dem-002.tif");
 //	TiffReader img;
 //	img.open("D:\\1.tif");
 //	img.close();

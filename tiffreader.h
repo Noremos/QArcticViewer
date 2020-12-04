@@ -6,8 +6,7 @@ typedef unsigned char uchar;
 typedef unsigned int uint;
 typedef unsigned short ushort;
 
-enum class Tags
-{
+enum class Tags {
 	//A general indication of the kind of data contained in this subfile.
 	NewSubfileType = 254,
 
@@ -116,6 +115,10 @@ enum class Tags
 	//Copyright notice.
 	Copyright = 33432,
 
+	TileWidth = 322,
+	TileLength = 323,
+	TileOffsets = 324,
+	TileByteCounts = 325
 };
 
 
@@ -229,6 +232,14 @@ struct TiffTags
 	//Copyright notice.
 	int Copyright = 0;
 
+	int TileWidth = 0;
+
+	int TileLength = 0;
+
+	int TileOffsets = 0;
+
+	int TileByteCounts = 0;
+
 };
 
 
@@ -237,18 +248,24 @@ struct TiffTags
 #include <vector>
 #include <queue>
 #include <unordered_map>
+
+#include "Decoder.h"
+
+
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rdb8, argb8 };
 class ImageReader
 {
 public:
 	virtual void* getRowData(int ri)=0;
-	virtual bool open(const char *path)=0;
+	virtual bool open(const wchar_t *path)=0;
 	virtual void close()=0;
 	virtual ImageType getType()=0;
 	virtual int widght()=0;
 	virtual int height()=0;
 	std::queue<int> cashedRowIndexs;
 	std::unordered_map<int, void *> cashedRows;
+	bool ready = false;
+	bool isTile = true;
 
 	void *getRow(int i)
 	{
@@ -279,31 +296,30 @@ public:
 	}
 };
 
-
 class TiffReader: public ImageReader
 {
 	FILE * pFile;
 	TiffTags tiff;
 	uchar imgByteOrder;
 	uchar sysByteOredr;
+	uint tilesCount = 0;
 public:
 	TiffReader();
 
-	bool open(const char *path) override;
+	bool open(const wchar_t *path) override;
 	void close() override;
 	~TiffReader();
 	void printValue(int x, int y);
-	void printIFD(int offset);
-	std::string dectode(uchar* bf, int len);
-	void convert(uchar *bytes, int size);
+	void printIFD(offu64 offset);
+//	std::string dectode(uchar* bf, offu64 len);
 	void printHeader(uchar *buffer);
-	int getTagIntValue(int offOrValue, int count, char format);
+	int getTagIntValue(offu64 offOrValue, offu64 count, char format);
 	ushort toShort(uchar *mbytes);
 	uint toInt(uchar *bytes);
 	float toFloat(uchar* bytes);
 	double toDouble(uchar *bytes);
 	void printTag(uchar *buffer);
-	void read(uchar* buffer, int offset, int len);
+	void read(uchar* buffer, offu64 offset, offu64 len);
 
 	// ImageReader interface
 	void *getRowData(int ri) override;
@@ -330,10 +346,11 @@ public:
 	{
 		T *out = new T[len];
 		for (int i = 0; i < len; ++i)
-			convert(in + i * 4, out[i]);
+			convert(in + i * sizeof(T), out[i]);
 
 		return out;
 	}
+	void reorder(uchar *bytes, int size);
 };
 
 
