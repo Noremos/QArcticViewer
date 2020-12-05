@@ -40,7 +40,8 @@ import QtQuick3D 1.15
 
 Item {
     id: root
-    View3D {
+
+    /*  View3D {
         id: view
 
         anchors.fill: parent
@@ -80,4 +81,4 @@ Item {
             }
         }
     }
-}
+*/ }

@@ -125,120 +125,120 @@ enum class Tags {
 struct TiffTags
 {
 	//A general indication of the kind of data contained in this subfile.
-	int NewSubfileType = 0;
+	uint NewSubfileType = 0;
 
 	//A general indication of the kind of data contained in this subfile.
-	int SubfileType = 0;
+	uint SubfileType = 0;
 
 	//The number of columns in the image, i.e., the number of pixels per row.
-	int ImageWidth = 0;
+	uint ImageWidth = 0;
 
 	//The number of rows of pixels in the image.
-	int ImageLength = 0;
+	uint ImageLength = 0;
 
 	//Number of bits per component.
-	int BitsPerSample = 0;
+	uint BitsPerSample = 0;
 
 	//Compression scheme used on the image data.
-	int Compression = 0;
+	uint Compression = 0;
 
 	//The color space of the image data.
-	int PhotometricInterpretation = 0;
+	uint PhotometricInterpretation = 0;
 
 	//For black and white TIFF files that represent shades of gray, the technique used to convert from gray to black and white pixels.
-	int Threshholding = 0;
+	uint Threshholding = 0;
 
 	//The width of the dithering or halftoning matrix used to create a dithered or halftoned bilevel file.
-	int CellWidth = 0;
+	uint CellWidth = 0;
 
 	//The length of the dithering or halftoning matrix used to create a dithered or halftoned bilevel file.
-	int CellLength = 0;
+	uint CellLength = 0;
 
 	//The logical order of bits within a byte.
-	int FillOrder = 0;
+	uint FillOrder = 0;
 
 	//A string that describes the subject of the image.
-	int ImageDescription = 0;
+	uint ImageDescription = 0;
 
 	//The scanner manufacturer.
-	int Make = 0;
+	uint Make = 0;
 
 	//The scanner model name or number.
-	int Model = 0;
+	uint Model = 0;
 
 	//For each strip, the byte offset of that strip.
-	int StripOffsets = 0;
+	uint StripOffsets = 0;
 
 	//The orientation of the image with respect to the rows and columns.
-	int Orientation = 0;
+	uint Orientation = 0;
 
 	//The number of components per pixel.
-	int SamplesPerPixel = 0;
+	uint SamplesPerPixel = 0;
 
 	//The number of rows per strip.
-	int RowsPerStrip = 0;
+	uint RowsPerStrip = 0;
 
 	//For each strip, the number of bytes in the strip after compression.
-	int StripByteCounts = 0;
+	uint StripByteCounts = 0;
 
 	//The minimum component value used.
-	int MinSampleValue = 0;
+	uint MinSampleValue = 0;
 
 	//The maximum component value used.
-	int MaxSampleValue = 0;
+	uint MaxSampleValue = 0;
 
 	//The number of pixels per ResolutionUnit in the ImageWidth direction.
-	int XResolution = 0;
+	uint XResolution = 0;
 
 	//The number of pixels per ResolutionUnit in the ImageLength direction.
-	int YResolution = 0;
+	uint YResolution = 0;
 
 	//How the components of each pixel are stored.
-	int PlanarConfiguration = 0;
+	uint PlanarConfiguration = 0;
 
 	//For each string of contiguous unused bytes in a TIFF file, the byte offset of the string.
-	int FreeOffsets = 0;
+	uint FreeOffsets = 0;
 
 	//For each string of contiguous unused bytes in a TIFF file, the number of bytes in the string.
-	int FreeByteCounts = 0;
+	uint FreeByteCounts = 0;
 
 	//The precision of the information contained in the GrayResponseCurve.
-	int GrayResponseUnit = 0;
+	uint GrayResponseUnit = 0;
 
 	//For grayscale data, the optical density of each possible pixel value.
-	int GrayResponseCurve = 0;
+	uint GrayResponseCurve = 0;
 
 	//The unit of measurement for XResolution and YResolution.
-	int ResolutionUnit = 0;
+	uint ResolutionUnit = 0;
 
 	//Name and version number of the software package(s) used to create the image.
-	int Software = 0;
+	uint Software = 0;
 
 	//Date and time of image creation.
-	int DateTime = 0;
+	uint DateTime = 0;
 
 	//Person who created the image.
-	int Artist = 0;
+	uint Artist = 0;
 
 	//The computer and/or operating system in use at the time of image creation.
-	int HostComputer = 0;
+	uint HostComputer = 0;
 
 	//A color map for palette color images.
-	int ColorMap = 0;
+	uint ColorMap = 0;
 
 	//Description of extra components.
-	int ExtraSamples = 0;
+	uint ExtraSamples = 0;
 
 	//Copyright notice.
-	int Copyright = 0;
+	uint Copyright = 0;
 
-	int TileWidth = 0;
+	uint TileWidth = 0;
 
-	int TileLength = 0;
+	uint TileLength = 0;
 
-	int TileOffsets = 0;
+	uint TileOffsets = 0;
 
-	int TileByteCounts = 0;
+	uint TileByteCounts = 0;
 
 };
 
@@ -249,7 +249,7 @@ struct TiffTags
 #include <queue>
 #include <unordered_map>
 
-#include <bits/unique_ptr.h>
+//#include <bits/unique_ptr.h>
 
 #include "Decoder.h"
 

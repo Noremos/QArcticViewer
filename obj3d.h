@@ -43,6 +43,12 @@ public:
 	//	QVector<Face3d *> faces;
 	//	QVector<Point3f> grid;
 	float **data;
+
+	typedef QPair<int,int> NullIndex;
+
+
+	QVector<NullIndex> nulls;
+
 	Obj3d(int wid, int hei, int step = 1) : width(wid), height(hei), step(step)
 	{
 		//		width = 500;
@@ -87,7 +93,6 @@ public:
 	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
-
 	void write(QString path, Point3f scale = Point3f(0.1, 0.1, 0.1))
 	{
 		QFile out(path);
@@ -108,22 +113,34 @@ public:
 
 		float min = 99999;
 		float max = -99999;
-
+		int lastCount = 0;
 		for (int h = 0; h < 500; ++h)
 		{
 			if (h != 0)
 			{
+				nulls.remove(0, lastCount);
+				lastCount = nulls.size();
 				delete[] data[0];
 				data[0] = data[1];
 			}
 
 			data[1] = reinterpret_cast<float *>(reader->getRowData(h));
-
+			bool firstNull = true;
+			int nullCounter = 0;
 			for (int w = 0; w < width; ++w)
 			{
 				float value = data[1][w];
 				if (value == -9999)
+				{
+					++nullCounter;
 					continue;
+				}
+
+				if (nullCounter != 0)
+				{
+					nulls.push_back(NullIndex( width * h + w, nullCounter);
+					nullCounter = 0;
+				}
 
 				if (value < min)
 					min = value;

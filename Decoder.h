@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <QDebug>
 
 using namespace std;
 
@@ -33,14 +34,60 @@ public:
 	const int EOI_CODE = 257; // end of information
 	const int MAX_BYTELENGTH = 12;
 	int arrLen;
-	int getByte(uchar* arry, int position, int length)
+
+	int getByte2(uchar *arry, int pos, int len = 8)
 	{
-		const int d = position % 8;
-		const int a = floor(position / 8);
-		const int de = 8 - d;
-		const int ef = (position + length) - ((a + 1) * 8);
-		int fg = (8 * (a + 2)) - (position + length);
-		const int dg = ((a + 2) * 8) - position;
+		//9 bit
+		int k = pos / 8;
+		int l = pos % 8;
+		int r = 0;
+		int lnm = len / 8;
+		int mask = 0;
+		for (uchar cs = 0; cs <= lnm; ++cs)
+		{
+			r |= arry[k + cs] << (lnm - cs) * 8;
+			mask |= 255 << (lnm - cs) * 8;
+		}
+		lnm += 1;
+//		int r = int(arry[k] << 8 | arry[k + 1]);
+		char ds = lnm * 8 - len - l;
+		if (ds < 0)
+		{
+			cout << ("ran off the end of the buffer before finding EOI_CODE (end on input code)");
+			return EOI_CODE;
+		}
+		r = (r << l) & mask;
+		r = r >> (ds + l);
+		return r;
+	}
+	ushort getByte3(uchar *arry, int pos, int len = 9)
+	{
+		//9 bit
+		int k = pos / 8;
+		int l = pos % 8;
+		if (l + len <= 16)// l + len <= 16
+		{
+			ushort r = ushort(arry[k] << 8 | arry[k + 1]);
+			r = r << l;
+			r = r >> (16 - len);
+			return r;
+		}
+		else
+		{
+			uint r = uint(0 | arry[k] << 16 | arry[k + 1] << 8 | arry[k + 2]);
+			r = r << (l + 8);
+			r = r >> (32 - len);
+			return ushort(r);
+		}
+	}
+	ushort getByte(uchar* arry,const int position, const int length)
+	{
+		const int d = position % 8;// bit start pos
+		const int a = position / 8;// byte start pos
+		const int de = 8 - d;// bits in byte that needs
+		const int ef = (position + length) - ((a + 1) * 8);// bits to reed?
+		int fg = (8 * (a + 2)) - (position + length);// start offset from second byte
+		const int dg = ((a + 2) * 8) - position;//need to reeds?
 		fg = max(0, fg);
 		if (a >= arrLen)
 		{
@@ -50,7 +97,7 @@ public:
 
 		int chunk1 = arry[a] & (st(8 - d) - 1);
 		chunk1 = chunk1 << (length - de);
-		int chunks = chunk1;
+		int chunks = chunk1;//get bits from first byte
 		if (a + 1 < arrLen)
 		{
 			int chunk2 = arry[a + 1] >> fg;
@@ -79,31 +126,36 @@ public:
 		}
 	}
 
-	void initDictionary()
+	inline void initDictionary()
 	{
 		dictionaryLength = 258;
 		byteLength = MIN_BITS;
 	}
 	ushort getNext(uchar* arry)
 	{
-		const ushort byte2 = getByte(arry, position, byteLength);
+		//2295-b2 2335-b3
+//		if (position == 3175)
+//			qDebug()<<"";
+//		const int byte2_2 = getByte(arry, position, byteLength);
+		const ushort byte2 = getByte3(arry, position, byteLength);
+//		if (abs(byte2_2 - byte2)>0)
+//			qDebug()<<"";
 		position += byteLength;
 		return byte2;
 	}
-	int addToDictionary(ushort i, uchar c)
+	void addToDictionary(int i, uchar c)
 	{
 		dictionaryChar[dictionaryLength] = c;
-		dictionaryIndex[dictionaryLength] = i;
-		dictionaryLength++;
-		return dictionaryLength - 1;
+		dictionaryIndex[dictionaryLength++] = i;
 	}
 
-	ushort dictionaryIndex[4093];
+	int dictionaryIndex[4093];
 	uchar dictionaryChar[4093];
 	int dictionaryLength = 258;
 	int byteLength = MIN_BITS;
 	uint position = 0;
 
+public:
 	void decompress(uchar* input, offu64 size, buffer& result, uint maxVal = UINT32_MAX)
 	{
 		memset(&dictionaryIndex, 0, 4093 * 2);

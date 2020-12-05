@@ -251,13 +251,13 @@ void *TiffReader::getRowData(int y)
 {
 	vector<uchar> ret;
 
-	int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
-	int TilesDown = (tiff.ImageLength + tiff.TileLength - 1) / tiff.TileLength;
-	int TilesPerImage = TilesAcross * TilesDown;
 
 
-	if (TilesPerImage > 0)
+	if (tiff.TileWidth != 0)
 	{
+		int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
+//		int TilesDown = (tiff.ImageLength + tiff.TileLength - 1) / tiff.TileLength;
+//		int TilesPerImage = TilesAcross * TilesDown;
 		cachedTiles.setMaxElems(TilesAcross);
 
 		int tileNum = (y / tiff.TileLength) * TilesAcross;
