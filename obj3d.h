@@ -21,6 +21,8 @@ namespace
 #define nl = "\n" // Mac OS X uses \n
 #endif
 }
+//#define USE_ROW
+
 
 struct Point3f
 {
@@ -38,16 +40,50 @@ class Obj3d
 
 	ImageReader *reader;
 	QString name;
+	float **data;
+#ifdef USE_ROW
+	int* nullRow;
+#else
+	typedef QPair<objoff,objoff> NullIndex;
+	QVector<NullIndex> nulls;
+	void setStep(int step) { this->step = step; }
+	//	void setRow(int ind, float *rowI) { data[ind] = rowI; }
+
+	objoff getIndex(int x, int y, int realH)
+	{
+		if (data[y][x] == NAN_VALUE)
+			return 0;
+
+		objoff st = width * realH  + x;
+		//		objoff ed = width * (realH - 1 + yCur) + xCur;
+
+		objoff nullCount = 0;
+		objoff poz = 1, total = nulls.size();
+		for (; poz < total; ++poz)
+			if (st < nulls[poz].first)
+				break;
+
+		nullCount = nulls[poz - 1].second;
+		//		{
+		//			// curretns nulls - null.count before a
+		//			nullCount = nulls[total - 1].second - nulls[poz - 1].second ;
+		////			nullCount = nulls[nullCount].second  - nulls[total - 1].second;
+		//		}
+
+		//		for (objoff i = nulls.size(); i > 0; --i)
+		//		{
+		//			auto &ref = nulls[i - 1];
+		//			if (ref.first >= st)
+		//				break;
+
+		//			nullCount += ref.second;
+		//		}
+
+		return st - nullCount;
+	}
+#endif
 
 public:
-	//	QVector<Face3d *> faces;
-	//	QVector<Point3f> grid;
-	float **data;
-
-	typedef QPair<int,int> NullIndex;
-
-
-	QVector<NullIndex> nulls;
 
 	Obj3d(int wid, int hei, int step = 1) : width(wid), height(hei), step(step)
 	{
@@ -63,33 +99,6 @@ public:
 		width = reader->widght();
 		height =reader->height();
 		//		data = new float *[hei];
-	}
-	void setStep(int step) { this->step = step; }
-	//	void setRow(int ind, float *rowI) { data[ind] = rowI; }
-
-	void getXY(objoff index, int &x, int &y)
-	{
-		x = index % width;
-		y = index / width;
-	}
-
-	objoff getIndex(int x, int y, int xOr, int yOr)
-	{
-		if (data[y][x] == NAN_VALUE)
-			return 0;
-
-		objoff st = width * y + x;
-		objoff ed = width * yOr + xOr;
-		objoff cou = 0;
-		for (objoff i = st; i <= ed; ++i)
-		{
-			int px, py;
-			getXY(i, px, py);
-
-			if (data[py][px] != NAN_VALUE)
-				++cou;
-		}
-		return -cou;
 	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
@@ -114,22 +123,27 @@ public:
 		float min = 99999;
 		float max = -99999;
 		int lastCount = 0;
+		int nullCounter = 0;
+		nulls.clear();
+		// starts with 1
+		nulls.push_back(NullIndex(0,-1));
 		for (int h = 0; h < 500; ++h)
 		{
 			if (h != 0)
 			{
-				nulls.remove(0, lastCount);
-				lastCount = nulls.size();
+				nulls.remove(1, lastCount);
+				lastCount = nulls.size() - 1;
 				delete[] data[0];
 				data[0] = data[1];
 			}
 
 			data[1] = reinterpret_cast<float *>(reader->getRowData(h));
-			bool firstNull = true;
-			int nullCounter = 0;
-			for (int w = 0; w < width; ++w)
+
+			float *dataPointer = data[1];
+			for (int w = 0; w < width; ++w, ++dataPointer)
 			{
-				float value = data[1][w];
+				float value = *dataPointer;
+
 				if (value == -9999)
 				{
 					++nullCounter;
@@ -138,7 +152,8 @@ public:
 
 				if (nullCounter != 0)
 				{
-					nulls.push_back(NullIndex( width * h + w, nullCounter);
+					int add =  nulls[nulls.size() - 1].second;
+					nulls.push_back(NullIndex( width * h + w, nullCounter + add));
 					nullCounter = 0;
 				}
 
@@ -149,25 +164,30 @@ public:
 
 				sw.append("v " + normConv(w, scale.X) + " " + normConv(value, scale.Z) + " " + normConv(h, scale.Y));
 				sw.append(nl);
-
+/*v 0 69.1359 0.2
+v 0.1 68.3289 0.2
+f 724 364 363   w==1 y==2
+f 363 723 724*/
+				if (w == 1 && h == 2)
+					qDebug() << "";
 
 				if (h > 0 && w > 0)
 				{
 					//0*
 					//00
-					objoff i_tr = getIndex(w, 0, w, 1);
+					objoff i_tr = getIndex(w, 0, h - 1);
 
 					//00
 					//0*
-					objoff i_br = getIndex(w, 1, w, 1);
+					objoff i_br = (width * h + w - nulls[nulls.size() - 1].second);
 
 					//*0
 					//00
-					objoff i_tl = getIndex(w - 1, 0, w, 1);
+					objoff i_tl = getIndex(w - 1, 0, h -1);
 
 					//00
 					//*0
-					objoff i_bl = getIndex(w - 1, 1, w, 1);
+					objoff i_bl = getIndex(w - 1, 1, h);
 
 					//32
 					//01
@@ -188,6 +208,8 @@ public:
 						sw.append(f1.buildStr());
 						sw.append(nl);
 					}
+
+
 				}
 
 				if (sw.length() >= BUFFER)

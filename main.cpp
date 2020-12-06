@@ -31,8 +31,8 @@ int main(int argc, char *argv[])
 
 	engine.load(url);
 	back.root = engine.rootObjects().first();
-//	back.loadImage("D:\\1.tif");
-	back.loadImage("D:\\Учеба\\БАР\\Москва\\50_60_1_1_2m_v3.0_reg_dem-002.tif");
+	back.loadImage("D:\\1.tif");
+//	back.loadImage("D:\\Учеба\\БАР\\Москва\\50_60_1_1_2m_v3.0_reg_dem-002.tif");
 //	TiffReader img;
 //	img.open("D:\\1.tif");
 //	img.close();

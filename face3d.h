@@ -30,10 +30,9 @@ public:
 	{
 		QString st = "f ";
 		for(auto v : nums)
-		{
-			st += QString::number(v+ offset) + " ";
-		}
-		return st.remove(st.length() - 1);
+			st += QString::number(v + offset) + " ";
+
+		return st.remove(st.length() - 1, 1);
 	}
 
 	~Face3d()
