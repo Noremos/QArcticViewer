@@ -48,5 +48,5 @@ void  Backend::loadImage(QString path)
 	Obj3d object(reader);
 
 
-	object.write("D:\\1.obj");
+	object.write("D:\\2.obj");
 }

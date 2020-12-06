@@ -21,7 +21,8 @@ namespace
 #define nl = "\n" // Mac OS X uses \n
 #endif
 }
-//#define USE_ROW
+
+#define USE_ROW
 
 
 struct Point3f
@@ -32,6 +33,8 @@ struct Point3f
 #include <fstream> // for std::filebuf
 #include <iterator> // for std::{i,o}streambuf_iterator
 
+typedef QPair<objoff, objoff> NullIndex;
+
 class Obj3d
 {
 	int width, height;
@@ -40,13 +43,17 @@ class Obj3d
 
 	ImageReader *reader;
 	QString name;
-	float **data;
+	float *data[2];
 #ifdef USE_ROW
-	int* nullRow;
+	objoff *currNullRow;
+	objoff *prevNullRow;
+//	objoff* nullRow[2];
+	objoff getIndex(int x, int y, int realH)
+	{
+		return y==0 ? prevNullRow[x] : currNullRow[x];
+	}
 #else
-	typedef QPair<objoff,objoff> NullIndex;
 	QVector<NullIndex> nulls;
-	void setStep(int step) { this->step = step; }
 	//	void setRow(int ind, float *rowI) { data[ind] = rowI; }
 
 	objoff getIndex(int x, int y, int realH)
@@ -55,7 +62,6 @@ class Obj3d
 			return 0;
 
 		objoff st = width * realH  + x;
-		//		objoff ed = width * (realH - 1 + yCur) + xCur;
 
 		objoff nullCount = 0;
 		objoff poz = 1, total = nulls.size();
@@ -64,40 +70,28 @@ class Obj3d
 				break;
 
 		nullCount = nulls[poz - 1].second;
-		//		{
-		//			// curretns nulls - null.count before a
-		//			nullCount = nulls[total - 1].second - nulls[poz - 1].second ;
-		////			nullCount = nulls[nullCount].second  - nulls[total - 1].second;
-		//		}
-
-		//		for (objoff i = nulls.size(); i > 0; --i)
-		//		{
-		//			auto &ref = nulls[i - 1];
-		//			if (ref.first >= st)
-		//				break;
-
-		//			nullCount += ref.second;
-		//		}
-
 		return st - nullCount;
 	}
 #endif
 
+	void setStep(int step) { this->step = step; }
 public:
 
-	Obj3d(int wid, int hei, int step = 1) : width(wid), height(hei), step(step)
-	{
-		//		width = 500;
-		//		height = 500;
-		data = new float *[hei];
-	}
+//	Obj3d(int wid, int hei, int step = 1) : width(wid), height(hei), step(step)
+//	{
+//		//		width = 500;
+//		//		height = 500;
+//		data = new float *[hei];
+//	}
 	Obj3d(ImageReader *reader)
 	{
 		this->reader = reader;
-		data = new float *[2] { nullptr, nullptr };
+		data[0] = nullptr;
+		data[1] = nullptr;
 
 		width = reader->widght();
 		height =reader->height();
+
 		//		data = new float *[hei];
 	}
 
@@ -122,22 +116,44 @@ public:
 
 		float min = 99999;
 		float max = -99999;
-		int lastCount = 0;
-		int nullCounter = 0;
+
+		data[0] = nullptr;
+#ifndef USE_ROW
+		objoff nullCounter = 0;
+		objoff lastCount = 0;
 		nulls.clear();
 		// starts with 1
-		nulls.push_back(NullIndex(0,-1));
-		for (int h = 0; h < 500; ++h)
+		nulls.push_back(NullIndex(0, -1));
+#else
+		objoff counter = 0;
+		const objoff typeSize = sizeof(objoff);
+
+		prevNullRow = new objoff[width];
+		currNullRow = new objoff[width];
+
+		memset(prevNullRow, 0, width * typeSize);
+		memset(currNullRow, 0, width * typeSize);
+#endif
+		for (int h = 0; h < height; ++h)
 		{
 			if (h != 0)
 			{
+#ifndef USE_ROW
 				nulls.remove(1, lastCount);
 				lastCount = nulls.size() - 1;
-				delete[] data[0];
+#else
+				objoff *temp = prevNullRow;
+				prevNullRow = currNullRow;
+				currNullRow = temp;
+				memset(currNullRow, 0, width * typeSize);
+#endif
+				if (data[0] != nullptr)
+					delete[] data[0];
 				data[0] = data[1];
 			}
 
 			data[1] = reinterpret_cast<float *>(reader->getRowData(h));
+
 
 			float *dataPointer = data[1];
 			for (int w = 0; w < width; ++w, ++dataPointer)
@@ -146,16 +162,20 @@ public:
 
 				if (value == -9999)
 				{
+#ifndef USE_ROW
 					++nullCounter;
+#endif
 					continue;
 				}
 
+#ifndef USE_ROW
 				if (nullCounter != 0)
 				{
 					int add =  nulls[nulls.size() - 1].second;
 					nulls.push_back(NullIndex( width * h + w, nullCounter + add));
 					nullCounter = 0;
 				}
+#endif
 
 				if (value < min)
 					min = value;
@@ -164,23 +184,25 @@ public:
 
 				sw.append("v " + normConv(w, scale.X) + " " + normConv(value, scale.Z) + " " + normConv(h, scale.Y));
 				sw.append(nl);
-/*v 0 69.1359 0.2
-v 0.1 68.3289 0.2
-f 724 364 363   w==1 y==2
-f 363 723 724*/
-				if (w == 1 && h == 2)
-					qDebug() << "";
 
+#ifdef USE_ROW
+				currNullRow[w] = ++counter;
+#endif
+				if (h == 1 && w == 314)
+					qDebug() << "";
 				if (h > 0 && w > 0)
 				{
 					//0*
 					//00
 					objoff i_tr = getIndex(w, 0, h - 1);
-
 					//00
 					//0*
+#ifndef USE_ROW
 					objoff i_br = (width * h + w - nulls[nulls.size() - 1].second);
+#else
+					objoff i_br = getIndex(w, 1, h);
 
+#endif
 					//*0
 					//00
 					objoff i_tl = getIndex(w - 1, 0, h -1);
@@ -223,11 +245,18 @@ f 363 723 724*/
 				qDebug() << h;
 
 		}
-
 		qDebug() << "Min:" << min << " Max:" << max;
 		stream << sw;
 		out.close();
 		sw.clear();
+		delete[] data[0];
+		delete[] data[1];
+#ifdef USE_ROW
+		delete[] prevNullRow;
+		delete[] currNullRow;
+#else
+		nulls.clear();
+#endif
 	}
 
 	QString normConv(double f, double scale)
