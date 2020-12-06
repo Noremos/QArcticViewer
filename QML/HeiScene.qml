@@ -41,7 +41,7 @@ import QtQuick3D 1.15
 Item {
     id: root
 
-    /*  View3D {
+    View3D {
         id: view
 
         anchors.fill: parent
@@ -69,7 +69,7 @@ Item {
             //                    z: -600
             //                }
             Model {
-                source: "file:///D:\\1.obj" //"#Cube"
+                source: "file:///D:/2obj.obj" //"#Cube"
                 y: -104
                 scale: Qt.vector3d(3, 3, 0.1)
                 eulerRotation.x: -90
@@ -81,4 +81,4 @@ Item {
             }
         }
     }
-*/ }
+}

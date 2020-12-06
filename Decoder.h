@@ -1,21 +1,12 @@
 #pragma once
-#include <vector>
 #include <iostream>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <QDebug>
 
+#include "base.h"
 using namespace std;
-
-typedef unsigned char uchar;
-typedef unsigned int uint;
-typedef unsigned short ushort;
-
-typedef vector<uchar> buffer;
-
-//typedef unsigned long long offu64;
-typedef unsigned int offu64;
 
 
 inline long long st(long long st)
@@ -35,7 +26,7 @@ public:
 	const int MAX_BYTELENGTH = 12;
 	int arrLen;
 
-	int getByte2(uchar *arry, int pos, int len = 8)
+/*	int getByte2(uchar *arry, int pos, int len = 8)
 	{
 		//9 bit
 		int k = pos / 8;
@@ -59,12 +50,12 @@ public:
 		r = (r << l) & mask;
 		r = r >> (ds + l);
 		return r;
-	}
-	ushort getByte3(uchar *arry, int pos, int len = 9)
+	}*/
+	ushort getByte3(uchar *arry, uint pos, int len = 9)
 	{
 		//9 bit
-		int k = pos / 8;
-		int l = pos % 8;
+		uint k = pos / 8;
+		uint l = pos % 8;
 		if (l + len <= 16)// l + len <= 16
 		{
 			ushort r = ushort(arry[k] << 8 | arry[k + 1]);
@@ -74,7 +65,7 @@ public:
 		}
 		else
 		{
-			uint r = uint(0 | arry[k] << 16 | arry[k + 1] << 8 | arry[k + 2]);
+			uint r = uint(0 | arry[k] << 16 | (k + 1<arrLen? arry[k + 1] << 8 : 0) | (k + 2<arrLen? arry[k + 2]: 0));
 			r = r << (l + 8);
 			r = r >> (32 - len);
 			return ushort(r);
@@ -115,7 +106,7 @@ public:
 
 	void appendReversed(buffer& dest, const buffer& source)
 	{
-		for (int i = source.size() - 1; i >= 0; i--)
+		for (int i = (int)source.size() - 1; i >= 0; i--)
 			dest.push_back(source[i]);
 	}
 	void getDictionaryReversed(int n, buffer& rev)
@@ -134,23 +125,23 @@ public:
 	ushort getNext(uchar* arry)
 	{
 		//2295-b2 2335-b3
-//		if (position == 3175)
-//			qDebug()<<"";
-//		const int byte2_2 = getByte(arry, position, byteLength);
+//		const int byte2 = getByte(arry, position, byteLength);
 		const ushort byte2 = getByte3(arry, position, byteLength);
-//		if (abs(byte2_2 - byte2)>0)
-//			qDebug()<<"";
+
 		position += byteLength;
 		return byte2;
 	}
 	void addToDictionary(int i, uchar c)
 	{
+		assert(dictionaryLength < 4093); //864689
+//		if (position == 864689)
+//			qDebug() << "";
 		dictionaryChar[dictionaryLength] = c;
 		dictionaryIndex[dictionaryLength++] = i;
 	}
 
 	int dictionaryIndex[4093];
-	uchar dictionaryChar[4093];
+	short dictionaryChar[4093];
 	int dictionaryLength = 258;
 	int byteLength = MIN_BITS;
 	uint position = 0;
@@ -158,15 +149,15 @@ public:
 public:
 	void decompress(uchar* input, offu64 size, buffer& result, uint maxVal = UINT32_MAX)
 	{
-		memset(&dictionaryIndex, 0, 4093 * 2);
-		memset(&dictionaryChar, 0, 4093);
+		memset(&dictionaryIndex, 0, 4093 * 4);
+		memset(&dictionaryChar, 0, 4093  * 2);
 		arrLen = size;
 		for (int i = 0; i <= 257; i++)
 		{
 			dictionaryIndex[i] = 4096;
 			dictionaryChar[i] = i;
 		}
-		uint added = result.size();
+		uint added = (uint)result.size();
 		initDictionary();
 		auto arry = input;
 		ushort code = getNext(arry);
@@ -195,6 +186,7 @@ public:
 					buffer val;
 					getDictionaryReversed(code, val);
 					appendReversed(result, val);
+					added += val.size();
 					if (result.size() - added >= maxVal)
 						return;
 
@@ -206,6 +198,7 @@ public:
 				buffer val;
 				getDictionaryReversed(code, val);
 				appendReversed(result, val);
+				added += val.size();
 				if (result.size() - added >= maxVal)
 					return;
 
@@ -223,7 +216,7 @@ public:
 				}
 				appendReversed(result, oldVal);
 				result.push_back(oldVal[oldVal.size() - 1]);
-				if (result.size() - added >= maxVal)
+				if (result.size() - ++added >= maxVal)
 					return;
 
 				addToDictionary(oldCode, oldVal[oldVal.size() - 1]);

@@ -13,15 +13,7 @@ using namespace std;
 
 #include <algorithm>
 
-string dectodeTEST(uchar* buffer, int len);
-#include <map>
-#include <unordered_map>
-typedef vector<int> bytesCode;
 
-typedef unordered_map<int, string> dictT;
-typedef pair< int, string> ppairT;
-typedef unordered_map<int, string> dict;
-typedef pair< int, string> ppair;
 #include <string>
 #include <cassert>
 string dectodeTEST(uchar* buffer, int len);
@@ -33,20 +25,6 @@ TiffReader::TiffReader()
 	//	dectodeTEST(cs, 11);
 }
 
-
-// Method to convert integer to its binary value
-string converToBinary(uchar value)//, int len = 8
-{
-	string finalValue = "";
-	uchar mask = 128;
-	for (size_t i = 0; i < 8; i++)
-	{
-		finalValue += value & mask ? "1" : "0";
-		mask = mask >> 1;
-	}
-
-	return finalValue;
-}
 
 union toduble
 {

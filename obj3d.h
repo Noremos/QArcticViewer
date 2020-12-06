@@ -38,7 +38,6 @@ typedef QPair<objoff, objoff> NullIndex;
 class Obj3d
 {
 	int width, height;
-	int step;
 	int NAN_VALUE = -9999;
 
 	ImageReader *reader;
@@ -48,20 +47,19 @@ class Obj3d
 	objoff *currNullRow;
 	objoff *prevNullRow;
 //	objoff* nullRow[2];
-	objoff getIndex(int x, int y, int realH)
+	objoff getIndex(int x, int y, int /*realH*/)
 	{
-		return y==0 ? prevNullRow[x] : currNullRow[x];
+		return y==0 ? prevNullRow[x/step] : currNullRow[x/step];
 	}
 #else
 	QVector<NullIndex> nulls;
-	//	void setRow(int ind, float *rowI) { data[ind] = rowI; }
 
 	objoff getIndex(int x, int y, int realH)
 	{
 		if (data[y][x] == NAN_VALUE)
 			return 0;
 
-		objoff st = width * realH  + x;
+		objoff st = width * realH / (step*step)  + x;
 
 		objoff nullCount = 0;
 		objoff poz = 1, total = nulls.size();
@@ -74,8 +72,9 @@ class Obj3d
 	}
 #endif
 
-	void setStep(int step) { this->step = step; }
+	int step = 1;
 public:
+	void setStep(int step) { this->step = step; }
 
 //	Obj3d(int wid, int hei, int step = 1) : width(wid), height(hei), step(step)
 //	{
@@ -96,7 +95,7 @@ public:
 	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
-	void write(QString path, Point3f scale = Point3f(0.1, 0.1, 0.1))
+	void write(QString path, Point3f scale = Point3f(0.1f, 0.1f, 0.1f))
 	{
 		QFile out(path);
 		if (out.exists())
@@ -118,6 +117,7 @@ public:
 		float max = -99999;
 
 		data[0] = nullptr;
+		const objoff sWidth = width / this->step;
 #ifndef USE_ROW
 		objoff nullCounter = 0;
 		objoff lastCount = 0;
@@ -128,13 +128,13 @@ public:
 		objoff counter = 0;
 		const objoff typeSize = sizeof(objoff);
 
-		prevNullRow = new objoff[width];
-		currNullRow = new objoff[width];
+		prevNullRow = new objoff[sWidth];
+		currNullRow = new objoff[sWidth];
 
-		memset(prevNullRow, 0, width * typeSize);
-		memset(currNullRow, 0, width * typeSize);
+		memset(prevNullRow, 0, sWidth * typeSize);
+		memset(currNullRow, 0, sWidth * typeSize);
 #endif
-		for (int h = 0; h < height; ++h)
+		for (int h = 0; h < height; h += step)
 		{
 			if (h != 0)
 			{
@@ -145,7 +145,7 @@ public:
 				objoff *temp = prevNullRow;
 				prevNullRow = currNullRow;
 				currNullRow = temp;
-				memset(currNullRow, 0, width * typeSize);
+				memset(currNullRow, 0, sWidth * typeSize);
 #endif
 				if (data[0] != nullptr)
 					delete[] data[0];
@@ -156,7 +156,7 @@ public:
 
 
 			float *dataPointer = data[1];
-			for (int w = 0; w < width; ++w, ++dataPointer)
+			for (int w = 0; w < width; w += step, dataPointer+=step)
 			{
 				float value = *dataPointer;
 
@@ -172,7 +172,7 @@ public:
 				if (nullCounter != 0)
 				{
 					int add =  nulls[nulls.size() - 1].second;
-					nulls.push_back(NullIndex( width * h + w, nullCounter + add));
+					nulls.push_back(NullIndex( sWidth * h / step + w, nullCounter + add));
 					nullCounter = 0;
 				}
 #endif
@@ -186,10 +186,9 @@ public:
 				sw.append(nl);
 
 #ifdef USE_ROW
-				currNullRow[w] = ++counter;
+				currNullRow[w/step] = ++counter;
 #endif
-				if (h == 1 && w == 314)
-					qDebug() << "";
+
 				if (h > 0 && w > 0)
 				{
 					//0*
@@ -198,7 +197,7 @@ public:
 					//00
 					//0*
 #ifndef USE_ROW
-					objoff i_br = (width * h + w - nulls[nulls.size() - 1].second);
+					objoff i_br = (sWidth * h + w - nulls[nulls.size() - 1].second);
 #else
 					objoff i_br = getIndex(w, 1, h);
 

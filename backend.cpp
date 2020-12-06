@@ -47,6 +47,6 @@ void  Backend::loadImage(QString path)
 //	int hei = 500;
 	Obj3d object(reader);
 
-
-	object.write("D:\\2.obj");
+//	object.setStep(10);
+//	object.write("D:\\2.obj");
 }

@@ -49,6 +49,7 @@ else:unix: LIBS += -LD:/MyA/Libraries/Libs/ -lopencv_world411
 HEADERS += \
     Decoder.h \
     backend.h \
+    base.h \
     face3d.h \
     heimapmodel.h \
     obj3d.h \

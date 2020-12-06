@@ -3,8 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
-
-typedef long long objoff;
+#include "base.h"
 
 class Face3d
 {

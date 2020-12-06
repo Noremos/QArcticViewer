@@ -11,7 +11,7 @@ QHash<int, QByteArray> HeiMapModel::roleNames() const
 	return { {Qt::DisplayRole, "display"}, {Qt::UserRole+1, "row"}, {Qt::UserRole+2, "column"}, {Qt::UserRole+3, "value"} };
 }
 
-QVariant HeiMapModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant HeiMapModel::headerData(int /*section*/, Qt::Orientation /*orientation*/, int /*role*/) const
 {
 	return QVariant();
 	// FIXME: Implement me!

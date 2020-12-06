@@ -267,7 +267,7 @@ public:
 		  maxElementsSize(maxElemCount), maxCacheSize(maxCachSize), elementSize(sizeOfElement)
 	{ }
 
-	virtual void free(int index)
+	virtual void free(int /*index*/)
 	{
 
 	}
