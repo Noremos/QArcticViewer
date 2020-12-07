@@ -326,7 +326,7 @@ public:
 
 	}
 	void clear() {
-		for (std::pair<int, T> &it : cachedData)
+		for (auto &it : cachedData)
 		{
 			free(it.first);
 		}

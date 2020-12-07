@@ -88,6 +88,13 @@ public:
 
 		//		data = new float *[hei];
 	}
+	bool checkSuper(objoff w)
+	{
+		objoff wp = (w - 1) / step;
+		objoff wc = w / step;
+		float d1 = data[0][wp];
+		return d1 == data[0][wp] && d1 == data[0][wc] && d1 == data[1][wp] && d1 == data[1][wc] && d1 != 0;
+	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
 	void write(QString path, Point3f scale = Point3f(0.1f, 0.1f, 0.1f))
@@ -110,6 +117,7 @@ public:
 
 		float min = 99999;
 		float max = -99999;
+		int k = 0;
 
 		data[0] = nullptr;
 		const objoff sWidth = width / this->step;
@@ -208,22 +216,28 @@ public:
 					//32
 					//01
 					objoff face[3]{i_br, i_tr, i_tl};
-					if (check(face))
+					if (checkSuper(w))
 					{
-						Face3d::createVstr(face, face, 3, vers);
+						Face3d::createVstr(face, face, 4, vers);
 						sw.append(vers);
-					}
-
-					//10
-					//23
-					objoff face1[3]{i_tl, i_bl, i_br};
-					if (check(face1))
+						++k;
+					}else
 					{
-						Face3d::createVstr(face1, face1, 3, vers);
-						sw.append(vers);
+						if (check(face))
+						{
+							Face3d::createVstr(face, face, 3, vers);
+							sw.append(vers);
+						}
+
+						//10
+						//23
+						objoff face1[3]{i_tl, i_bl, i_br};
+						if (check(face1))
+						{
+							Face3d::createVstr(face1, face1, 3, vers);
+							sw.append(vers);
+						}
 					}
-
-
 				}
 
 				if (sw.length() >= BUFFER)
@@ -238,6 +252,7 @@ public:
 
 		}
 		qDebug() << "Min:" << min << " Max:" << max;
+		qDebug() << "Optimized:" << k;
 		stream << sw;
 		out.close();
 		sw.clear();

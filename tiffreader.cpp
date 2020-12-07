@@ -402,6 +402,9 @@ void TiffReader::close()
 {
 	if (pFile)
 		fclose(pFile);
+
+	cachedRows.clear();
+	cachedTiles.clear();
 }
 void parceTage(TiffTags& st, Tags tag, int value)
 {

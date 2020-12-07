@@ -56,9 +56,14 @@ public:
 		//9 bit
 		uint k = pos / 8;
 		uint l = pos % 8;
+		if (k >= arrLen)
+		{
+			cout << ("ran off the end of the buffer before finding EOI_CODE (end on input code)");
+			return EOI_CODE;
+		}
 		if (l + len <= 16)// l + len <= 16
 		{
-			ushort r = ushort(arry[k] << 8 | arry[k + 1]);
+			ushort r = ushort(arry[k] << 8 | ((k + 1)<arrLen? arry[k + 1] : 0));
 			r = r << l;
 			r = r >> (16 - len);
 			return r;
@@ -124,10 +129,10 @@ public:
 	}
 	ushort getNext(uchar* arry)
 	{
-		//2295-b2 2335-b3
-//		const int byte2 = getByte(arry, position, byteLength);
+//		if (position == 75953)			qDebug() << "";
+//		const ushort byte2 = getByte(arry, position, byteLength);
 		const ushort byte2 = getByte3(arry, position, byteLength);
-
+//		if (byte2 != byte22)qDebug() << "";
 		position += byteLength;
 		return byte2;
 	}

@@ -5,7 +5,9 @@
 using namespace cv;
 Backend::Backend(QObject *parent) : QObject(parent)
 {
-
+	reader = new TiffReader();
+	reader->open(L"D:\\Учеба\\БАР\\Москва\\50_59_1_2_2m_v3.0\\50_59_1_2_2m_v3.0_reg_dem.tif");
+	reader->getRowData(20020);
 }
 
 void Backend::test(QString path)
@@ -49,5 +51,8 @@ QString Backend::loadImage(QString path, int step, int type)
 	object.setMode((::ProcessMode) type);
 	object.setStep(step);
 	object.write("D:\\2.obj");
+	reader->close();
+	delete reader;
+	reader = nullptr;
 	return "D:\\2.obj";
 }
