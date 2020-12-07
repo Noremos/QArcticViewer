@@ -14,4 +14,16 @@ typedef unsigned int offu64;
 
 typedef unsigned int objoff;
 
+
+namespace
+{
+#ifdef _WIN32
+#define nl "\r\n"
+#elif defined macintosh // OS 9
+#define nl = "\r"
+#elif
+#define nl = "\n" // Mac OS X uses \n
+#endif
+}
+
 #endif // BASE_H

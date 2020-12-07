@@ -20,11 +20,24 @@ public:
 	{
 		nums.clear();
 	}
-	void add(int f)
-	{
-		nums.append(f);
-	}
+	void add(int f) { nums.append(f); }
 
+	static void createVstr(objoff *faces, objoff len, QString &out)
+	{
+		out = "f ";
+		for (objoff i = 0; i < len - 1; ++i)
+			out += QString::number(faces[i]) + " ";
+
+		out += QString::number(faces[len - 1]) + nl;
+	}
+	static void createVstr(objoff *faces, objoff *texts, objoff len, QString &out)
+	{
+		out = "f ";
+		for (objoff i = 0; i < len - 1; ++i)
+			out += QString::number(faces[i]) +"/"+  QString::number(texts[i]) + " ";
+
+		out += QString::number(faces[len - 1]) +"/"+  QString::number(texts[len-1]) + nl;
+	}
 	QString buildStr(objoff offset=0)
 	{
 		QString st = "f ";

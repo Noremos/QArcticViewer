@@ -25,8 +25,7 @@ cv::Mat Backend::imgread(QString path)
 	return cv::Mat();
 }
 
-
-void  Backend::loadImage(QString path)
+QString Backend::loadImage(QString path, int step, int type)
 {
 	if (reader)
 	{
@@ -34,19 +33,21 @@ void  Backend::loadImage(QString path)
 		reader = nullptr;
 	}
 
-	int type = 0;
-	switch (type)
+	int imgtype = 0;
+	switch (imgtype)
 	{
 	default:
 		reader = new TiffReader();
 		break;
 	}
+
 	reader->open(path.toStdWString().c_str());
 	if (!reader->ready)
-		return;
+		return "";
 //	int hei = 500;
 	Obj3d object(reader);
-
-//	object.setStep(10);
-//	object.write("D:\\2.obj");
+	object.setMode((::ProcessMode) type);
+	object.setStep(step);
+	object.write("D:\\2.obj");
+	return "D:\\2.obj";
 }

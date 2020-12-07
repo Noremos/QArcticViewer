@@ -1,10 +1,11 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
-import Qt3D.Core 2.14
-import Qt3D.Render 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+
 import QtQuick.Scene3D 2.15
 import My 1.0
+import "."
 
 ApplicationWindow {
     id: applicationWindow
@@ -35,10 +36,38 @@ ApplicationWindow {
             LoadButton {
                 id: fileDialog
                 onAccepted: {
+                    filePath = backend.loadImage(filePath.toString().substring(
+                                                     8), simpithithion.value,
+                                                 proiz.checked ? 0 : 1)
 
-                    //                    mainZone.run(filePath.toString().substring(8))
+                    surf.setModelSource(filePath)
                 }
             }
+            SpinBox {
+                id: simpithithion
+                from: 1
+                value: 10
+                to: 1000
+                editable: true
+            }
+
+            //            ColumnLayout {
+            RadioButton {
+                id: proiz
+                checked: true
+                text: qsTr("Предпочтительней производительность")
+            }
+            RadioButton {
+                text: qsTr("Предпочтительней скорость работы (требутся больше оперативной памяти)")
+            }
+            LoadButton {
+                id: textureLoder
+                onAccepted: {
+
+                    surf.setTextureSource(filePath)
+                }
+            }
+            //            }
         }
     }
     Rectangle {
@@ -60,9 +89,10 @@ ApplicationWindow {
             anchors.fill: parent
         }
     }
+    Rectangle {
 
-    HeiScene {
         id: mainZone
+
         anchors.left: leftmenu.right
         anchors.right: parent.right
         anchors.top: topmenu.bottom
@@ -71,5 +101,19 @@ ApplicationWindow {
         anchors.rightMargin: 0
         anchors.bottomMargin: 0
         anchors.topMargin: 0
+        color: "gray"
+        SurfaceScene {
+            id: surf
+            anchors.fill: parent
+        }
+    }
+    ProgressBar {
+        anchors.left: leftmenu.right
+        anchors.right: parent.right
+        anchors.top: topmenu.bottom
+        value: 0
+        from: 0
+        to: 100
+        visible: false
     }
 }

@@ -1,4 +1,4 @@
-QT += quick datavisualization quick3d
+QT += quick datavisualization 3dcore 3drender 3dinput 3dquick 3dquickextras
 
 CONFIG += c++20
 
@@ -14,7 +14,8 @@ SOURCES += \
     obj3d.cpp \
     tiffreader.cpp
 
-RESOURCES += qml.qrc
+RESOURCES += qml.qrc \
+    shaders.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -32,10 +33,13 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
-    QML/DataImage.qml \
-    QML/HeiScene.qml \
+    QML/BasicCamera.qml \
     QML/NewButton.qml \
     QML/SideMenu.qml \
+    QML/SurfaceEffect.qml \
+    QML/SurfaceEntry.qml \
+    QML/SurfaceMaterial.qml \
+    QML/SurfaceScene.qml \
     QML/main.qml
 
 

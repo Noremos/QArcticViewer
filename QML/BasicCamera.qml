@@ -1,0 +1,33 @@
+import Qt3D.Core 2.15
+import Qt3D.Render 2.15
+import Qt3D.Extras 2.15
+
+//OrbitCameraController {
+FirstPersonCameraController {
+    property alias baseCamer: camera
+    camera: Camera {
+
+        //    id: mainCamera
+        //    projectionType: CameraLens.PerspectiveProjection
+        //    fieldOfView: 22.5
+        //    //    aspectRatio: _window.width / _window.height
+        //    nearPlane: 0.01
+        //    farPlane: 1000.0
+        //    viewCenter: Qt.vector3d(0.0, 0.0, 0.0)
+        //    upVector: Qt.vector3d(0.0, 1.0, 0.0)
+        id: camera
+        projectionType: CameraLens.PerspectiveProjection
+        fieldOfView: 45
+        nearPlane: 0.1
+        farPlane: 100000.0
+        position: Qt.vector3d(0.0, 500.0, 0.0)
+        upVector: Qt.vector3d(0.0, 1.0, 0.0)
+        viewCenter: Qt.vecto.r3d(10.0, 0.0, 10.0)
+        onUpVectorChanged: {
+            console.log(position)
+            //            console.log(viewCenter) //13.0675, 94.827, 21.8682
+        }
+    }
+
+    linearSpeed: 100
+}

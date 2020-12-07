@@ -24,7 +24,7 @@ public:
 	const int CLEAR_CODE = 256; // clear code
 	const int EOI_CODE = 257; // end of information
 	const int MAX_BYTELENGTH = 12;
-	int arrLen;
+	uint arrLen;
 
 /*	int getByte2(uchar *arry, int pos, int len = 8)
 	{
@@ -65,7 +65,7 @@ public:
 		}
 		else
 		{
-			uint r = uint(0 | arry[k] << 16 | (k + 1<arrLen? arry[k + 1] << 8 : 0) | (k + 2<arrLen? arry[k + 2]: 0));
+			uint r = uint(0 | arry[k] << 16 | ((k + 1)<arrLen? arry[k + 1] << 8 : 0) | ((k + 2) < arrLen? arry[k + 2]: 0));
 			r = r << (l + 8);
 			r = r >> (32 - len);
 			return ushort(r);

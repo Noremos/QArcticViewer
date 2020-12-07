@@ -11,16 +11,7 @@
 
 #include "face3d.h"
 #include "tiffreader.h"
-namespace
-{
-#ifdef _WIN32
-#define nl "\r\n"
-#elif defined macintosh // OS 9
-#define nl = "\r"
-#elif
-#define nl = "\n" // Mac OS X uses \n
-#endif
-}
+
 
 #define USE_ROW
 
@@ -34,12 +25,16 @@ struct Point3f
 #include <iterator> // for std::{i,o}streambuf_iterator
 
 typedef QPair<objoff, objoff> NullIndex;
+enum class ProcessMode{
+	performance = 0,
+	speed
+};
 
 class Obj3d
 {
 	int width, height;
 	int NAN_VALUE = -9999;
-
+	ProcessMode mode = ProcessMode::performance;
 	ImageReader *reader;
 	QString name;
 	float *data[2];
@@ -154,7 +149,7 @@ public:
 
 			data[1] = reinterpret_cast<float *>(reader->getRowData(h));
 
-
+			QString vers;
 			float *dataPointer = data[1];
 			for (int w = 0; w < width; w += step, dataPointer+=step)
 			{
@@ -182,8 +177,8 @@ public:
 				if (value > max)
 					max = value;
 
-				sw.append("v " + normConv(w, scale.X) + " " + normConv(value, scale.Z) + " " + normConv(h, scale.Y));
-				sw.append(nl);
+				sw.append("v " + normConv(w, scale.X) + " " + normConv(value, scale.Z) + " " + normConv(h, scale.Y) + nl);
+				sw.append("vt " + QString::number((float)w/width) + " " + QString::number((float)h/height) + nl);
 
 #ifdef USE_ROW
 				currNullRow[w/step] = ++counter;
@@ -215,9 +210,8 @@ public:
 					objoff face[3]{i_br, i_tr, i_tl};
 					if (check(face))
 					{
-						Face3d f0(face, 3);
-						sw.append(f0.buildStr());
-						sw.append(nl);
+						Face3d::createVstr(face, face, 3, vers);
+						sw.append(vers);
 					}
 
 					//10
@@ -225,9 +219,8 @@ public:
 					objoff face1[3]{i_tl, i_bl, i_br};
 					if (check(face1))
 					{
-						Face3d f1(face1, 3);
-						sw.append(f1.buildStr());
-						sw.append(nl);
+						Face3d::createVstr(face1, face1, 3, vers);
+						sw.append(vers);
 					}
 
 
@@ -258,14 +251,13 @@ public:
 #endif
 	}
 
-	QString normConv(double f, double scale)
+
+	QString normConv(float f, double scale)
 	{
 		f *= scale;
 		//		if (f < .000001 || f > 100000)
-		if (f==-9999)
-			f = 0;
 
-		QString s = QString::number(f);
+		QString s = QString::number(f).replace(",", ".");
 		return s.replace(",", ".");
 	}
 
@@ -273,6 +265,8 @@ public:
 	void clear()
 	{
 	}
+	ProcessMode getMode() const;
+	void setMode(const ProcessMode &value);
 };
 
 #endif // OBJ3D_H

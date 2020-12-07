@@ -26,7 +26,7 @@ public:
 	QObject *root = nullptr;
 	Q_INVOKABLE void test(QString path);
 	cv::Mat imgread(QString path);
-	Q_INVOKABLE void loadImage(QString path);
+	Q_INVOKABLE QString loadImage(QString path, int step, int type);
 signals:
 
 };
