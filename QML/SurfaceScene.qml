@@ -16,12 +16,15 @@ Scene3D {
 
         components: [
             RenderSettings {
+                id: render
                 activeFrameGraph: ForwardRenderer {
                     camera: smesh.mainCamera.baseCamer
                     clearColor: "transparent"
                 }
             },
-            InputSettings {}
+            InputSettings {
+                id: inputs
+            }
         ]
 
         SurfaceEntry {
@@ -39,6 +42,9 @@ Scene3D {
         let needUpdateSRC = smesh.setTextureSource(filePath)
         if (needUpdateSRC)
             scene3d.update()
+    }
+    function setDrawingMode(useText) {
+        smesh.setMaterial(useText)
     }
 
     //    Entity {

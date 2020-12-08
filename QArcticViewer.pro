@@ -10,6 +10,7 @@ SOURCES += \
     backend.cpp \
     face3d.cpp \
     heimapmodel.cpp \
+    imagesearcher.cpp \
     main.cpp \
     obj3d.cpp \
     tiffreader.cpp
@@ -56,6 +57,7 @@ HEADERS += \
     base.h \
     face3d.h \
     heimapmodel.h \
+    imagesearcher.h \
     obj3d.h \
     tiffreader.h
 

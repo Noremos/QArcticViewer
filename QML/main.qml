@@ -30,7 +30,7 @@ ApplicationWindow {
 
         anchors.top: parent.top
         anchors.topMargin: 0
-        height: 50
+        height: 100
         Row {
             anchors.fill: parent
             LoadButton {
@@ -40,7 +40,7 @@ ApplicationWindow {
                                                      8), simpithithion.value,
                                                  proiz.checked ? 0 : 1)
 
-                    surf.setModelSource(filePath)
+                    surf.setModelSource("file:///" + filePath)
                 }
             }
             SpinBox {
@@ -51,15 +51,23 @@ ApplicationWindow {
                 editable: true
             }
 
-            //            ColumnLayout {
-            RadioButton {
-                id: proiz
-                checked: true
-                text: qsTr("Предпочтительней производительность")
+            ColumnLayout {
+                RadioButton {
+                    id: proiz
+                    checked: true
+                    text: qsTr("Предпочтительней производительность")
+                }
+                RadioButton {
+                    text: qsTr("Предпочтительней скорость работы (требутся больше оперативной памяти)")
+                }
             }
-            RadioButton {
-                text: qsTr("Предпочтительней скорость работы (требутся больше оперативной памяти)")
+            CheckBox {
+                id: useText
+                text: "Использовать текстуру"
+                checked: false
+                onCheckedChanged: surf.setDrawingMode(checked)
             }
+
             LoadButton {
                 id: textureLoder
                 onAccepted: {
@@ -67,7 +75,6 @@ ApplicationWindow {
                     surf.setTextureSource(filePath)
                 }
             }
-            //            }
         }
     }
     Rectangle {
@@ -102,9 +109,27 @@ ApplicationWindow {
         anchors.bottomMargin: 0
         anchors.topMargin: 0
         color: "gray"
+
         SurfaceScene {
             id: surf
             anchors.fill: parent
+            onFocusChanged: {
+                if (focus === false) {
+                    focusArea.enabled = true
+                    //                    mainZone.chi
+                }
+            }
+        }
+        MouseArea {
+            id: focusArea
+            enabled: false
+            anchors.fill: parent
+            //            preventStealing: false
+            //            propagateComposedEvents: false
+            onClicked: {
+                surf.focus = true
+                enabled = false
+            }
         }
     }
     ProgressBar {

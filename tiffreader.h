@@ -404,7 +404,6 @@ public:
 class TiffReader: public ImageReader
 {
 	FILE * pFile;
-	TiffTags tiff;
 	uchar imgByteOrder;
 	uchar sysByteOredr;
 	uint tilesCount = 0;
@@ -412,6 +411,8 @@ class TiffReader: public ImageReader
 
 
 public:
+	TiffTags tiff;
+
 	TiffReader();
 
 	bool open(const wchar_t *path) override;
@@ -460,6 +461,7 @@ public:
 	}
 	void reorder(uchar *bytes, int size);
 	void **checkTileInCache(int x, int y);
+	uchar *getTile(int ind);
 };
 
 

@@ -33,7 +33,7 @@ enum class ProcessMode{
 class Obj3d
 {
 	int width, height;
-	int NAN_VALUE = -9999;
+	float NAN_VALUE = -9999;
 	ProcessMode mode = ProcessMode::performance;
 	ImageReader *reader;
 	QString name;
@@ -93,7 +93,7 @@ public:
 		objoff wp = (w - 1) / step;
 		objoff wc = w / step;
 		float d1 = data[0][wp];
-		return d1 == data[0][wp] && d1 == data[0][wc] && d1 == data[1][wp] && d1 == data[1][wc] && d1 != 0;
+		return d1 == data[0][wc] && d1 == data[1][wp] && d1 == data[1][wc] && d1 != NAN_VALUE;
 	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
@@ -137,6 +137,7 @@ public:
 		memset(prevNullRow, 0, sWidth * typeSize);
 		memset(currNullRow, 0, sWidth * typeSize);
 #endif
+//		objoff offset = 0;
 		for (int h = 0; h < height; h += step)
 		{
 			if (h != 0)
@@ -186,7 +187,7 @@ public:
 					max = value;
 
 				sw.append("v " + normConv(w, scale.X) + " " + normConv(value, scale.Z) + " " + normConv(h, scale.Y) + nl);
-				sw.append("vt " + QString::number((float)w/width) + " " + QString::number((float)h/height) + nl);
+				sw.append("vt " + QString::number((float)w/width) + " " + QString::number(1.f - (float)h/height) + nl);
 
 #ifdef USE_ROW
 				currNullRow[w/step] = ++counter;
@@ -207,7 +208,7 @@ public:
 #endif
 					//*0
 					//00
-					objoff i_tl = getIndex(w - 1, 0, h -1);
+					objoff i_tl = getIndex(w - 1, 0, h - 1);
 
 					//00
 					//*0
@@ -215,7 +216,7 @@ public:
 
 					//32
 					//01
-					objoff face[3]{i_br, i_tr, i_tl};
+					objoff face[4]{i_br, i_tr, i_tl, i_bl};
 					if (checkSuper(w))
 					{
 						Face3d::createVstr(face, face, 4, vers);

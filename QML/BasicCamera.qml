@@ -17,13 +17,14 @@ FirstPersonCameraController {
         //    upVector: Qt.vector3d(0.0, 1.0, 0.0)
         id: camera
         projectionType: CameraLens.PerspectiveProjection
-        fieldOfView: 45
+        fieldOfView: 60
         nearPlane: 0.1
         farPlane: 100000.0
         position: Qt.vector3d(0.0, 500.0, 0.0)
-        upVector: Qt.vector3d(0.0, 1.0, 0.0)
-        viewCenter: Qt.vector3d(10.0, 0.0, 10.0)
+        upVector: Qt.vector3d(0.0, 0.0, 1.0)
+        //        viewCenter: Qt.vector3d(10.0, 0.0, 10.0)
     }
-
+    //    acceleration: 0.1
+    //    deceleration: 1.0
     linearSpeed: 100
 }

@@ -224,10 +224,48 @@ ImageType TiffReader::getType()
 //	int index = tileY * TilesAcross + tileX;
 //	return cachedTiles.getData(tileNum, nullptr);
 //}
+uchar* TiffReader::getTile(int ind)
+{
+	uchar *n = nullptr;
+
+	uchar *data = cachedTiles.getData(ind, n);
+	const int bytsInTileWid = tiff.TileWidth * sizeof(float);
+
+	if (data == n)
+	{
+		//offset tile
+		uchar buffer[4];
+		read(buffer, tiff.TileOffsets + (ind) * sizeof(uint), sizeof(uint));
+		uint off = toInt(buffer);
+		//************
+
+		//Count
+		read(buffer, tiff.TileByteCounts + (ind) * sizeof(uint), sizeof(uint));
+		uint count = toInt(buffer);
+		uchar *buff = new uchar[count];
+		//*****
+
+		//data
+		read(buff, off, count);
+		decorder decod;
+
+		vector<uchar> temp;
+		decod.decompress(buff, count, temp); // (rowInTile + 1) * bytsInTileWid
+		delete[] buff;
+
+		size_t ft = bytsInTileWid * tiff.TileLength;
+		data = new uchar[ft];
+
+		memcpy(data, temp.data(), ft);
+		cachedTiles.storeData(ind, data);
+	}
+	return data;
+}
 
 void *TiffReader::getRowData(int y)
 {
 	vector<uchar> ret;
+	ret.reserve(tiff.ImageWidth);
 
 
 
@@ -242,11 +280,17 @@ void *TiffReader::getRowData(int y)
 		int rowInTile = y % tiff.TileLength;
 
 		const int bytsInTileWid = tiff.TileWidth * sizeof(float);
-
 		for (int i = 0; i < TilesAcross; ++i)
 		{
 			uchar *n = nullptr;
-			uchar *data = cachedTiles.getData(tileNum + i, n);
+			uchar* data = getTile(tileNum+i);
+			data += rowInTile * bytsInTileWid;
+//			ret.reserve( ret.size() + bytsInTileWid );
+
+			ret.insert(ret.end(), data, data + bytsInTileWid);
+			continue;
+			//
+			data = cachedTiles.getData(tileNum + i, n);
 			if (data != nullptr)
 			{
 				data += rowInTile * bytsInTileWid;
