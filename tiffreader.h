@@ -381,6 +381,7 @@ public:
 	PointerArrayCache<void*> cachedRows;
 	bool ready = false;
 	bool isTile = true;
+	float max, min;
 
 	void *getRow(int i)
 	{
@@ -409,7 +410,23 @@ class TiffReader: public ImageReader
 	uint tilesCount = 0;
 	Cache<uchar*> cachedTiles;
 
+	void convert(uchar *bytes, float &out) { out = toFloat(bytes); }
+	void convert(uchar *bytes, int &out) { out = toInt(bytes);}
+	void convert(uchar* bytes, uchar& out)	{ out = bytes[0];}
+	void convert(uchar* bytes, double& out)	{out = toDouble(bytes);}
+	void convert(uchar* bytes, ushort& out)	{out = toShort(bytes);}
+	void convert(uchar* bytes, short& out)	{out = toShort(bytes);}
+	void reorder(uchar *bytes, int size);
+	void **checkTileInCache(int x, int y);
+	template<class T>
+	T *setData(uchar *in, int len)
+	{
+		T *out = new T[len];
+		for (int i = 0; i < len; ++i)
+			convert(in + i * sizeof(T), out[i]);
 
+		return out;
+	}
 public:
 	TiffTags tiff;
 
@@ -429,39 +446,19 @@ public:
 	double toDouble(uchar *bytes);
 	void printTag(uchar *buffer);
 	void read(uchar* buffer, offu64 offset, offu64 len);
-
+	void setTitleCacheSize(size_t n);
+	void setRowsCacheSize(size_t n);
 	// ImageReader interface
 	void *getRowData(int ri) override;
 
 	int widght() override;
 	int height() override;
 
-	// ImageReader interface
-
-	// ImageReader interface
-public:
 	ImageType getType() override;
 
-
-	void convert(uchar *bytes, float &out) { out = toFloat(bytes); }
-	void convert(uchar *bytes, int &out) { out = toInt(bytes);}
-	void convert(uchar* bytes, uchar& out)	{ out = bytes[0];}
-	void convert(uchar* bytes, double& out)	{out = toDouble(bytes);}
-	void convert(uchar* bytes, ushort& out)	{out = toShort(bytes);}
-	void convert(uchar* bytes, short& out)	{out = toShort(bytes);}
-
-	template<class T>
-	T *setData(uchar *in, int len)
-	{
-		T *out = new T[len];
-		for (int i = 0; i < len; ++i)
-			convert(in + i * sizeof(T), out[i]);
-
-		return out;
-	}
-	void reorder(uchar *bytes, int size);
-	void **checkTileInCache(int x, int y);
 	uchar *getTile(int ind);
+	void *processData(uchar *bytes);
+
 };
 
 

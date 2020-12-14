@@ -81,6 +81,7 @@ uint TiffReader::toInt(uchar* bytes)
 	return int((unsigned char)(bytes[t.v()]) << 24 | (bytes[t.v()]) << 16 | (bytes[t.v()]) << 8 | (bytes[t.v()]));
 }
 
+
 void TiffReader::reorder(uchar* bytes, int size)
 {
 	if (sysByteOredr != imgByteOrder)
@@ -201,6 +202,16 @@ void TiffReader::read(uchar* buffer, offu64 offset, offu64 len)
 		OUT << "ERROR2?";
 }
 
+void TiffReader::setTitleCacheSize(size_t n)
+{
+	cachedTiles.setMaxElems(n);
+}
+
+void TiffReader::setRowsCacheSize(size_t n)
+{
+	cachedRows.setMaxElems(n);
+}
+
 
 int TiffReader::widght()
 {
@@ -262,6 +273,18 @@ uchar* TiffReader::getTile(int ind)
 	return data;
 }
 
+void* TiffReader::processData(uchar* bytes)
+{
+	int len = widght();
+	void *data;
+	switch (getType())
+	{
+	case ImageType::float32:
+		data = setData<float>(bytes, len);
+	}
+	return data;
+}
+
 void *TiffReader::getRowData(int y)
 {
 	vector<uchar> ret;
@@ -282,52 +305,12 @@ void *TiffReader::getRowData(int y)
 		const int bytsInTileWid = tiff.TileWidth * sizeof(float);
 		for (int i = 0; i < TilesAcross; ++i)
 		{
-			uchar *n = nullptr;
 			uchar* data = getTile(tileNum+i);
 			data += rowInTile * bytsInTileWid;
 //			ret.reserve( ret.size() + bytsInTileWid );
 
 			ret.insert(ret.end(), data, data + bytsInTileWid);
 			continue;
-			//
-			data = cachedTiles.getData(tileNum + i, n);
-			if (data != nullptr)
-			{
-				data += rowInTile * bytsInTileWid;
-				std::copy(data, data + bytsInTileWid, std::back_inserter(ret));
-				//				ret.insert(ret.end(), data[rowInTile],  reinterpret_cast<void *>(temp));
-			}
-			else
-			{
-				//offset tile
-				uchar buffer[4];
-				read(buffer, tiff.TileOffsets + (tileNum + i) * sizeof(uint), sizeof(uint));
-				uint off = toInt(buffer);
-				//************
-
-				//Count
-				read(buffer, tiff.TileByteCounts + (tileNum + i) * sizeof(uint), sizeof(uint));
-				uint count = toInt(buffer);
-				uchar *buff = new uchar[count];
-				//*****
-
-				//data
-				read(buff, off, count);
-				decorder decod;
-
-				vector<uchar> temp;
-				decod.decompress(buff, count, temp); // (rowInTile + 1) * bytsInTileWid
-
-
-				ret.insert(ret.end(), temp.begin() + rowInTile * bytsInTileWid, temp.begin() + (rowInTile + 1) *bytsInTileWid);
-				size_t ft = bytsInTileWid * tiff.TileLength;
-				uchar *data = new uchar[ft];
-				memcpy(data, temp.data(), ft);
-				cachedTiles.storeData(tileNum + i, data);
-
-				delete[] buff;
-			}
-			//****
 		}
 	}else
 	{
@@ -346,13 +329,8 @@ void *TiffReader::getRowData(int y)
 		decod.decompress(buff, count, ret);
 		delete[] buff;
 	}
-	int len = widght();
-	void *data;
-	switch (getType())
-	{
-	case ImageType::float32:
-		data = setData<float>(ret.data(), len);
-	}
+
+	void *data = processData(ret.data());
 	ret.clear();
 	return data;
 }

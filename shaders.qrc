@@ -2,5 +2,9 @@
     <qresource prefix="/">
         <file>shaders/simpleColor.vert</file>
         <file>shaders/simpleColor.frag</file>
+        <file>shaders/spotZone.frag</file>
+        <file>shaders/spotZone.vert</file>
+        <file>shaders/marker.vert</file>
+        <file>shaders/marker.frag</file>
     </qresource>
 </RCC>

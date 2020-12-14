@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
 	QGuiApplication app(argc, argv);
-	setSurfaceFormat();
+	//setSurfaceFormat();
 //	QSurfaceFormat::setDefaultFormat(QQuick3D::idealSurfaceFormat());
 
 	qmlRegisterType<HeiMapModel>("My", 1, 0, "HeiMapModel");

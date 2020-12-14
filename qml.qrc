@@ -10,6 +10,8 @@
         <file>QML/SurfaceMaterial.qml</file>
         <file>QML/SurfaceEntry.qml</file>
         <file>QML/BasicCamera.qml</file>
+        <file>QML/SpotItems.qml</file>
+        <file>QML/SpotsEffect.qml</file>
     </qresource>
     <qresource prefix="/heightmaps">
         <file>layer_1.png</file>

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>marker.obj</file>
+        <file>spot.obj</file>
+    </qresource>
+</RCC>

@@ -11,18 +11,19 @@ Entity {
     }
 
     function setSource(filePath) {
-        if (mesh.source === filePath)
-            return true
-
+        if (mesh.source.toString() === filePath.toString()) {
+            mesh.source = ""
+            update()
+        }
         mesh.source = filePath
-        return true
+        return false
     }
     function setTextureSource(filePath) {
         if (material.texuteSource === filePath)
             return true
 
         material.texuteSource = filePath
-        return true
+        return false
     }
     function setMaterial(isTexu) {
         if (isTexu) {

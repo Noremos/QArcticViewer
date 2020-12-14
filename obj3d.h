@@ -252,6 +252,8 @@ public:
 				qDebug() << h;
 
 		}
+		reader->max = max;
+		reader->min = min;
 		qDebug() << "Min:" << min << " Max:" << max;
 		qDebug() << "Optimized:" << k;
 		stream << sw;

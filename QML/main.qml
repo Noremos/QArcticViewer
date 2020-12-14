@@ -14,6 +14,8 @@ ApplicationWindow {
     visible: true
     title: qsTr("Hello World")
 
+    property alias spotZones: surf.spotZones
+    property alias markerZones: surf.markerZones
     //    DataImage {
     //        id: surfaceData
     //    }
@@ -55,10 +57,10 @@ ApplicationWindow {
                 RadioButton {
                     id: proiz
                     checked: true
-                    text: qsTr("Предпочтительней производительность")
+                    text: qsTr("Производительность")
                 }
                 RadioButton {
-                    text: qsTr("Предпочтительней скорость работы (требутся больше оперативной памяти)")
+                    text: qsTr("Скорость")
                 }
             }
             CheckBox {
@@ -73,6 +75,15 @@ ApplicationWindow {
                 onAccepted: {
 
                     surf.setTextureSource(filePath)
+                }
+            }
+            Button {
+                id: findZones
+                onClicked: {
+
+                    backend.findZones(simpithithion.value)
+                    surf.update()
+                    surf.ude()
                 }
             }
         }
@@ -112,6 +123,7 @@ ApplicationWindow {
 
         SurfaceScene {
             id: surf
+            objectName: "surf"
             anchors.fill: parent
             onFocusChanged: {
                 if (focus === false) {

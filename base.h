@@ -3,6 +3,8 @@
 #define LOG
 #include <vector>
 
+
+#define USE_OPENCV
 typedef unsigned char uchar;
 typedef unsigned int uint;
 typedef unsigned short ushort;

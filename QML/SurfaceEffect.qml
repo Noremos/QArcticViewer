@@ -1,5 +1,5 @@
-import Qt3D.Core 2.0
-import Qt3D.Render 2.0
+import Qt3D.Core 2.15
+import Qt3D.Render 2.15
 
 Effect {
     id: root
@@ -14,7 +14,7 @@ Effect {
                 majorVersion: 3
                 minorVersion: 1
             }
-
+// for texture
             filterKeys: [
                 FilterKey {
                     name: "renderingStyle"

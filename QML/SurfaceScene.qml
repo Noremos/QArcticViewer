@@ -5,14 +5,22 @@ import Qt3D.Input 2.15
 import Qt3D.Extras 2.15
 import QtQuick.Scene3D 2.0
 
+import QtQml 2.15
+
 Scene3D {
     id: scene3d
     focus: true
     aspects: ["input", "logic"]
     cameraAspectRatioMode: Scene3D.AutomaticAspectRatio
 
+    property alias spotZones: spotZones
+    property alias markerZones: markerZones
+
+    Component.onCompleted: backend.setStopItem(spotZones)
+
     Entity {
         id: sceneRoot
+        objectName: "entity"
 
         components: [
             RenderSettings {
@@ -27,24 +35,45 @@ Scene3D {
             }
         ]
 
+        SpotItems {
+            id: spotZones
+            objectName: "spotZones"
+            //            enabled: false
+            //            SpotsEffect {
+
+            //                //                id: test
+            //                position: Qt.vector3d(10, 20, 30)
+            //            }
+        }
+        SpotItems {
+            id: markerZones
+            objectName: "markerZones"
+        }
+
         SurfaceEntry {
             id: smesh
         }
     }
 
     function setModelSource(filePath) {
-        let needUpdateSRC = smesh.setSource(filePath)
-        if (needUpdateSRC)
-            scene3d.update()
+        smesh.setSource(filePath)
+        //        if (needUpdateSRC)
+        //            scene3d.update()
     }
 
     function setTextureSource(filePath) {
         let needUpdateSRC = smesh.setTextureSource(filePath)
-        if (needUpdateSRC)
-            scene3d.update()
+        //        if (needUpdateSRC)
+        //            scene3d.update()
     }
     function setDrawingMode(useText) {
         smesh.setMaterial(useText)
+    }
+
+    function ude() {
+        spotZones.enabled = true
+        console.log(spotZones.childNodes[5].components)
+        scene3d.update()
     }
 
     //    Entity {
