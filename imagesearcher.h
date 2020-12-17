@@ -98,6 +98,8 @@ enum class AvgType
 };
 struct Img
 {
+	int minVal = -9999;
+	int maxVal = -9999;
 	float *data;
 	int wid;
 	int hei;
@@ -154,7 +156,7 @@ public:
 	void findZones(vector<boundy> &bounds);
 	RetImg process(Img tile, AvgType avgType, ProcessType funType, uchar porog);
 	float findHistAVG(Img tile);
-	float findSumdivAVG(Img tile);
+	float findSumdivAVG(Img &tile);
 };
 
 #endif // IMAGESEARCHER_H

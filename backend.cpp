@@ -40,7 +40,6 @@ QEntity *Backend::getSpotZone()
 void Backend::setStopItem(QEntity *area)
 {
 	spotZone = area;
-
 }
 
 int Backend::getHei()

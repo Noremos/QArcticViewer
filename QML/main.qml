@@ -86,6 +86,11 @@ ApplicationWindow {
                     surf.ude()
                 }
             }
+            CheckBox {
+                text: "Показать найденные"
+                checked: true
+                onCheckedChanged: surf.setFindingMode(checked)
+            }
         }
     }
     Rectangle {

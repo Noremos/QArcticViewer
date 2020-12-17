@@ -69,7 +69,7 @@ Entity {
     }
 
     Entity {
-        objectName: "test2"
+        objectName: "ZeroArrow"
         //                id: test
         Transform {
             id: trans2

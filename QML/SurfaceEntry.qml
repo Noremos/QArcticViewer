@@ -27,9 +27,9 @@ Entity {
     }
     function setMaterial(isTexu) {
         if (isTexu) {
-            components = [transform, mesh, material]
+            components = [transform, mesh, light, material]
         } else {
-            components = [transform, mesh, phongMat]
+            components = [transform, mesh, light, phongMat]
         }
     }
 
@@ -47,7 +47,7 @@ Entity {
     SurfaceMaterial {
         id: material
     }
-    components: [transform, mesh, phongMat]
+    components: [transform, mesh, light, phongMat]
     //    LevelOfDetail {
     //        id: lod
     //        camera: mainCamera.baseCamer
@@ -62,9 +62,11 @@ Entity {
     }
     SpotLight {
         id: light
-        //            localDirection: Qt.vector3d(1.0, -1.0, 0.0)
-        //            color: Qt.rgba(0.2, 0.2, 0.2, 1.0)
+        localDirection: Qt.vector3d(1.0, 0.0, 1.0)
+        color: Qt.rgba(1.0, 1.0, 1.0, 1.0)
+        intensity: 0.9
     }
+
     //    SphereMesh {
     //        id: mesh
     //        radius: 3
@@ -82,6 +84,7 @@ Entity {
     //                   }
     Mesh {
         id: mesh
+        objectName: "terrain"
         source: "file:///2.obj" // "assets/obj/trefoil.obj"
     }
 }

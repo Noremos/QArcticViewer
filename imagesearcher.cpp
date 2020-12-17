@@ -15,16 +15,29 @@ float ImageSearcher::findHistAVG(Img tile)
 	map<float, int> hist;
 	return 0;
 }
-float ImageSearcher::findSumdivAVG(Img tile)
+
+float ImageSearcher::findSumdivAVG(Img& tile)
 {
+	float min = 9999;
+	float max = -9999;
 	float sum = 0;
+	int k = 0;
 	for (int var = 0; var < tile.getTotal(); ++var)
 	{
 		float val = tile.data[var];
 		if (val != -9999)
-			sum += abs(tile.data[var]);
+		{
+			sum += (tile.data[var]);
+			if (val < min)
+				min = val;
+			if (val > max)
+				max = val;
+			++k;
+		}
 	}
-	return sum / tile.getTotal();
+	tile.minVal = min;
+	tile.maxVal = max;
+	return (sum) / k;
 }
 
 RetImg ImageSearcher::process(Img tile, AvgType avgType, ProcessType funType, uchar porog)
@@ -44,6 +57,7 @@ RetImg ImageSearcher::process(Img tile, AvgType avgType, ProcessType funType, uc
 	default:
 		break;
 	}
+//	avg = 0;
 		qDebug() << avg;
 #ifdef USE_OPENCV
 	Mat newImg(tile.hei, tile.wid, CV_8UC1);
@@ -52,18 +66,34 @@ RetImg ImageSearcher::process(Img tile, AvgType avgType, ProcessType funType, uc
 #endif
 	switch (funType)
 	{
-	case ProcessType::AvgSdvig:
-		for (int j = 2; j < tile.hei - 2; ++j) //hei
+	case ProcessType::HistFromMI:
+		for (int j = 0; j < tile.hei; ++j) //hei
 		{
-			for (int i = 2; i < tile.wid - 2; ++i) //wid
+			for (int i = 0; i < tile.wid; ++i) //wid
 			{
-				auto p = abs(tile.get(i, j));
+				auto p = (tile.get(i, j));
+#ifdef USE_OPENCV
+				newImg.at<uchar>(j, i) = (p < tile.minVal + porog) ? 0 : 255;
+#else
+				newImg.set(i, j, (p < porog) ? 0 : 255);
+#endif
+			}
+		}
+		break;
+
+	case ProcessType::AvgSdvig:
+		for (int j = 0; j < tile.hei; ++j) //hei
+		{
+			for (int i = 0; i < tile.wid; ++i) //wid
+			{
+				auto p = (tile.get(i, j));
+				//-tile.minVal;
 				//p = abs(p-imax);
 				if (p > avg)
 					p = p - avg;
 				else
 					p = avg - p;
-
+				p = abs(p);
 #ifdef USE_OPENCV
 				newImg.at<uchar>(j, i) = (p < porog) ? 0 : 255;
 #else
@@ -130,6 +160,41 @@ RetImg ImageSearcher::process(Img tile, AvgType avgType, ProcessType funType, uc
 			}
 		}
 		break;
+
+	case ProcessType::Canny: {
+		//		Mat new_img;
+		//		cv::blur(gray, new_img, cv::Size(3, 3));
+		//		std::vector<std::vector<cv::Point>> contours;
+
+		//		/// Detect edges using canny
+		//		Canny(new_img, new_img, imax, imax * 2, 3);
+		//		/// Find contours
+		//		return new_img;
+	}
+	case ProcessType::Smoof: {
+		Mat gray(tile.hei, tile.wid, CV_8UC1);
+
+		float diff = tile.maxVal - tile.minVal;
+		for (int j = 0; j < tile.hei; ++j) //hei
+		{
+			for (int i = 0; i < tile.wid; ++i) //wid
+			{
+				float p = tile.get(i, j);
+				if (p != -9999)
+				{
+					gray.at<uchar>(j, i) = (uchar)(255 * (p - tile.minVal) / diff);
+				}else
+					gray.at<uchar>(j, i) = 0;
+
+			}
+		}
+		imshow("ds", gray);
+		waitKey(1);
+		//disp(gray);
+		cv::threshold(gray, newImg, 0, 255, THRESH_OTSU);
+		return newImg;
+	}
+
 	}
 	return newImg;
 }
@@ -297,8 +362,8 @@ void ImageSearcher::findZones(vector<boundy> &bounds)
 	}
 	else
 	{
-		tileWid = 1500;
-		tileHei = 1500;
+		tileWid = 1000;
+		tileHei = 1000;
 		reader->setRowsCacheSize(tileHei);
 	}
 	tilesInWid = reader->widght() / tileWid;
@@ -306,11 +371,14 @@ void ImageSearcher::findZones(vector<boundy> &bounds)
 
 	image = new float[(tileWid + diffset) * (tileHei + diffset)];
 
-	for (int i = 0, totalTiles = 10 + 0 *tilesInWid * tilesInHei; i < totalTiles; ++i)
+	for (int i = 0, totalTiles = tilesInWid * tilesInHei; i < totalTiles; ++i)
 	{
+		if (i==10)
+			break;;
+
 		Img img = getTile(i);
 //		int add = bounds.size();
-		Mat ret = process(img, AvgType::AvgNsum, ProcessType::AvgSdvig, 5);
+		Mat ret = process(img, AvgType::AvgNsum, ProcessType::Smoof, 2);
 		cv::imshow("ret", ret);
 		cv::waitKey(1);
 
@@ -324,6 +392,8 @@ void ImageSearcher::findZones(vector<boundy> &bounds)
 		for (int i = 0, total = conturs.size(); i < total; ++i)
 		{
 			Rect r = boundingRect(conturs[i]);
+			if (r.area()>= tileHei*tileHei*0.8)
+				continue;
 			boundy b(r.x, r.y, r.x + r.width, r.y + r.height);
 			float m0 = img.get(r.x, r.y);
 			float m1 = img.get(r.x + r.width - 1, r.y);

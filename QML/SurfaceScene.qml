@@ -17,6 +17,17 @@ Scene3D {
     property alias markerZones: markerZones
 
     Component.onCompleted: backend.setStopItem(spotZones)
+    function printHits(desc, hits) {
+        console.log(desc, hits.length)
+        for (var i = 0; i < hits.length; i++) {
+            if ("surface" !== hits[i].entity.objectName)
+                continue
+
+            console.log("  ", hits[i].worldIntersection.x,
+                        hits[i].worldIntersection.y,
+                        hits[i].worldIntersection.z)
+        }
+    }
 
     Entity {
         id: sceneRoot
@@ -32,6 +43,20 @@ Scene3D {
             },
             InputSettings {
                 id: inputs
+            },
+            ScreenRayCaster {
+                id: screenRayCaster
+                onHitsChanged: printHits("Screen hits", hits)
+            },
+            MouseHandler {
+                id: mouseHandler
+                sourceDevice: MouseDevice {}
+                onReleased: {
+                    onClicked: console.log(Qt.point(mouse.x, mouse.y))
+
+                    screenRayCaster.trigger(Qt.point(mouse.x, mouse.y))
+                    //                    printHits("Screen hits", screenRayCaster.hits)
+                }
             }
         ]
 
@@ -52,6 +77,7 @@ Scene3D {
 
         SurfaceEntry {
             id: smesh
+            objectName: "surface"
         }
     }
 
@@ -68,6 +94,9 @@ Scene3D {
     }
     function setDrawingMode(useText) {
         smesh.setMaterial(useText)
+    }
+    function setFindingMode(useText) {
+        spotZones.enabled = useText
     }
 
     function ude() {
