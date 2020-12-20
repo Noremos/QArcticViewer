@@ -35,7 +35,7 @@ public:
 
 
 	Qt3DCore::QEntity* spotZone;
-	Q_INVOKABLE void findZones(int step);
+	Q_INVOKABLE void findZones(int step, int str);
 	Q_INVOKABLE void test(QString path);
 	Q_INVOKABLE QString loadImage(QString path, int step, int type);
 

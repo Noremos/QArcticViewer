@@ -352,7 +352,7 @@ int ImageSearcher::getMaxTiles()
 	return reader->widght() * reader->height() / (tileWid * tileHei);
 }
 
-void ImageSearcher::findZones(vector<boundy> &bounds)
+void ImageSearcher::findZones(vector<boundy> &bounds, int start)
 {
 	if (reader->tiff.TileWidth != 0)
 	{
@@ -371,9 +371,9 @@ void ImageSearcher::findZones(vector<boundy> &bounds)
 
 	image = new float[(tileWid + diffset) * (tileHei + diffset)];
 
-	for (int i = 0, totalTiles = tilesInWid * tilesInHei; i < totalTiles; ++i)
+	for (int i = start, totalTiles = tilesInWid * tilesInHei; i < totalTiles; ++i)
 	{
-		if (i==10)
+		if (i==start+10)
 			break;;
 
 		Img img = getTile(i);

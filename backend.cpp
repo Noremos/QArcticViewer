@@ -90,7 +90,7 @@ QMaterial *createSpotMaterial(QEntity *prnt)
 	return mater;
 }
 
-void Backend::findZones(int step)
+void Backend::findZones(int step, int str)
 {
 //	QMesh *mesh1 = spotZone->findChild<QMesh *>("mesh");
 //	QMaterial *mater1 = spotZone->findChild<QMaterial *>("material");
@@ -115,7 +115,7 @@ float yScale = 10;
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
 	vector<boundy> objects;
-	imgsrch.findZones(objects);
+	imgsrch.findZones(objects, str);
 
 //	QEntity *stopZones = getSpotZone();
 

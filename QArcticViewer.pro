@@ -7,16 +7,17 @@ CONFIG += c++20
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-#    ../../../C++/Barcode/source/barcode.cpp \
-#    ../../../C++/Barcode/source/barcodeCreator.cpp \
-#    ../../../C++/Barcode/source/barcontainer.cpp \
-#    ../../../C++/Barcode/source/component.cpp \
-#    ../../../C++/Barcode/source/hole.cpp \
-#    ../../../C++/Barcode/source/point.cpp \
+    ../../../C++/Barcode/source/barcode.cpp \
+    ../../../C++/Barcode/source/barcodeCreator.cpp \
+    ../../../C++/Barcode/source/barcontainer.cpp \
+    ../../../C++/Barcode/source/component.cpp \
+    ../../../C++/Barcode/source/hole.cpp \
+    ../../../C++/Barcode/source/point.cpp \
     backend.cpp \
     face3d.cpp \
     heimapmodel.cpp \
     imagesearcher.cpp \
+    imgproxy.cpp \
     main.cpp \
     obj3d.cpp \
     tiffreader.cpp
@@ -55,6 +56,7 @@ DISTFILES += \
 
 
 INCLUDEPATH += D:/MyA/Libraries/Include
+INCLUDEPATH += ../../../C++/Barcode/include
 DEPENDPATH += D:/MyA/Libraries/Include
 
 
@@ -63,12 +65,20 @@ else:win32:CONFIG(debug, debug|release): LIBS += -LD:/MyA/Libraries/Libs/ -lopen
 else:unix: LIBS += -LD:/MyA/Libraries/Libs/ -lopencv_world411
 
 HEADERS += \
+    ../../../C++/Barcode/include/barcode.h \
+    ../../../C++/Barcode/include/barcodeCreator.h \
+    ../../../C++/Barcode/include/barcontainer.h \
+    ../../../C++/Barcode/include/component.h \
+    ../../../C++/Barcode/include/detectKnolls.h \
+    ../../../C++/Barcode/include/hole.h \
+    ../../../C++/Barcode/include/point.h \
     Decoder.h \
     backend.h \
     base.h \
     face3d.h \
     heimapmodel.h \
     imagesearcher.h \
+    imgproxy.h \
     obj3d.h \
     tiffreader.h
 

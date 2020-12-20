@@ -16,7 +16,7 @@ typedef unsigned int offu64;
 
 typedef unsigned int objoff;
 
-
+constexpr const int resol = 5;
 namespace
 {
 #ifdef _WIN32

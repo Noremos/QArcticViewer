@@ -153,7 +153,7 @@ public:
 	Img getTile(int index);
 	int getMaxTiles();
 
-	void findZones(vector<boundy> &bounds);
+	void findZones(vector<boundy> &bounds, int start);
 	RetImg process(Img tile, AvgType avgType, ProcessType funType, uchar porog);
 	float findHistAVG(Img tile);
 	float findSumdivAVG(Img &tile);

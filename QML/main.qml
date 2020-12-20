@@ -81,7 +81,7 @@ ApplicationWindow {
                 id: findZones
                 onClicked: {
 
-                    backend.findZones(simpithithion.value)
+                    backend.findZones(simpithithion.value, sah.value)
                     surf.update()
                     surf.ude()
                 }
@@ -90,6 +90,13 @@ ApplicationWindow {
                 text: "Показать найденные"
                 checked: true
                 onCheckedChanged: surf.setFindingMode(checked)
+            }
+            SpinBox {
+                id: sah
+                from: 0
+                value: 10
+                to: 1000000
+                editable: true
             }
         }
     }
