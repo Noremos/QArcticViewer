@@ -43,6 +43,7 @@ public:
 	Qt3DCore::QEntity *getSpotZone();
 
 	Q_INVOKABLE void setStopItem(Qt3DCore::QEntity *area);
+	Q_INVOKABLE void setFactorSpinBox(QQuickItem *spinBox);
 
 	Q_INVOKABLE int getHei();
 

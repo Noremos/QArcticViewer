@@ -265,6 +265,8 @@ constexpr int getTid(int tx, int ty, int wid)
 }
 
 //Img ImageSearcher::getTile(int tx, int ty)
+
+
 Img ImageSearcher::getTile(int index)
 {
 	int tx = index % tilesInWid;
@@ -275,6 +277,7 @@ Img ImageSearcher::getTile(int index)
 
 	if (reader->tiff.TileWidth != 0)
 	{
+
 		char offs[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
 		Img img(tileWid + diffset, tileHei + diffset);
 
@@ -351,7 +354,58 @@ int ImageSearcher::getMaxTiles()
 {
 	return reader->widght() * reader->height() / (tileWid * tileHei);
 }
+#include "barcodeCreator.h"
+using namespace bc;
 
+
+void findBootm()
+{}
+boundy getBounty(pmap &points)
+{
+	int minX = points[0].first.x, maxX = points[0].first.x;
+	int minY = points[0].first.y, maxY = points[0].first.y;
+	float minT = points[0].second, maxT = points[0].second;
+	for (int i = 1, total = points.size(); i < total; ++i)
+	{
+		ppair &val = points[i];
+
+//		if (maxT - val.second >= 2)
+//			continue;
+
+		if (minX > val.first.x)
+			minX = val.first.x;
+
+		if (maxX < val.first.x)
+			maxX = val.first.x;
+
+		if (minY > val.first.y)
+			minY = val.first.y;
+
+		if (maxY < val.first.y)
+			maxY = val.first.y;
+
+		if (minT > val.second)
+			minT = val.second;
+
+		if (maxT < val.second)
+			maxT = val.second;
+	}
+
+
+
+	boundy b(minX, minY, maxX, maxY);
+	b.z = minT;
+	b.endZ = maxT;
+	b.sizeWid = (maxX - minX) * resol;
+	b.sizeHei = (maxY - minY) * resol;
+	b.sizeTop = (maxT - minT) * resol;
+	return b;
+}
+void check(void *ptr)
+{
+	if (ptr == nullptr)
+		qDebug() << "PTR IS NULL";
+}
 void ImageSearcher::findZones(vector<boundy> &bounds, int start)
 {
 	if (reader->tiff.TileWidth != 0)
@@ -366,56 +420,95 @@ void ImageSearcher::findZones(vector<boundy> &bounds, int start)
 		tileHei = 1000;
 		reader->setRowsCacheSize(tileHei);
 	}
+
+	//!!!!!!!!!!!!!!!!!!!!!!!
+	diffset = 0;
+	tileWid = reader->widght();
+	tileHei = reader->height();
+	//!!!!!!!!!!!!!!!!!!!!!
+
 	tilesInWid = reader->widght() / tileWid;
 	tilesInHei = reader->height() / tileHei;
 
-	image = new float[(tileWid + diffset) * (tileHei + diffset)];
+	//	image = new float[(tileWid + diffset) * (tileHei + diffset)];
 
+	start = 0;//519;
+	qDebug() << tilesInWid * tilesInHei;
 	for (int i = start, totalTiles = tilesInWid * tilesInHei; i < totalTiles; ++i)
 	{
-		if (i==start+10)
+		if (i==start+1)
 			break;;
 
 		Img img = getTile(i);
-//		int add = bounds.size();
-		Mat ret = process(img, AvgType::AvgNsum, ProcessType::Smoof, 2);
-		cv::imshow("ret", ret);
-		cv::waitKey(1);
+		Mat imgmat(img.hei, img.wid, CV_32FC1);
 
-		vector<vector<Point>> conturs;
-		vector<cv::Vec4i> hierarchy;
-		findContours(ret, conturs, hierarchy, cv::RETR_CCOMP, cv::CHAIN_APPROX_SIMPLE);
-		//binFindObjects(img, bounds);
-
-		int totalX = tileWid * (i % tilesInWid);
-		int totalY = tileHei * (i / tilesInWid);
-		for (int i = 0, total = conturs.size(); i < total; ++i)
+		for (int j = 0; j < img.hei; ++j)
 		{
-			Rect r = boundingRect(conturs[i]);
-			if (r.area()>= tileHei*tileHei*0.8)
+			for (int i = 0; i < img.wid; ++i)
+			{
+				float val = img.get(i, j);
+				if (val == -9999)
+					continue;
+				imgmat.at<float>(j, i) = val;
+			}
+		}
+		img.release();
+
+		bc::barcodeCreator creator;
+
+		Barcontainer *bars = creator.searchHoles(imgmat);
+		Baritem *item = bars->get(0);
+
+		int tx = (i % tilesInWid) * tileWid;
+		int ty = (i / tilesInWid) * tileHei;
+
+		for (int i = 0, total = item->bar.size(); i < total; ++i)
+		{
+			bline *line = item->bar[i];
+//			check(line->matr);
+			boundy b = getBounty(*line->matr);
+
+			float coof;
+			int dmin, dmax;
+			if (b.sizeWid > b.sizeHei)
+			{
+				dmin = b.sizeHei;
+				dmax = b.sizeWid;
+			}
+			else
+			{
+				dmin = b.sizeWid;
+				dmax = b.sizeHei;
+			}
+
+			coof = float(dmax) / dmin;
+
+			// sootn
+//			if( coof>1.5)
+//				continue;
+
+			// diametr
+			if(dmin < 5 || dmin>400)
 				continue;
-			boundy b(r.x, r.y, r.x + r.width, r.y + r.height);
-			float m0 = img.get(r.x, r.y);
-			float m1 = img.get(r.x + r.width - 1, r.y);
-			float m2 = img.get(r.x, r.y + r.height - 1);
-			float m3 = img.get(r.x + r.width - 1, r.y + r.height - 1);
 
-			if (m1 > m0)
-				m0 = m1;
-			if (m2 > m0)
-				m0 = m1;
-			if (m3 > m0)
-				m0 = m1;
-
-			b.setMax(m0);
-			b.addXoffset(totalX);
-			b.addYoffset(totalY);
+//			if(b.sizeTop> 2)
+//				continue;
+//			if (b.sizeTop<2)
+//				continue;
+			b.addXoffset(tx);
+			b.addYoffset(ty);
 			bounds.push_back(b);
 		}
-		qDebug() << "Processed tiles: " << i<< "/" << totalTiles;
-	}
-//	for (int var = 0; var < total; ++var) {
 
-//	}
+//		boundy b(0, 0, imgmat.cols - 1, imgmat.rows - 1);
+//		b.addXoffset(tx);
+//		b.addYoffset(ty);
+
+//		b.z = 0;
+//		b.endZ = 50;
+//		bounds.push_back(b);
+		qDebug() << bounds.size();
+		delete bars;
+	}
 
 }

@@ -6,9 +6,13 @@ import Qt3D.Extras 2.15
 
 Entity {
     id: root
+
+    property double surffactor: 10.0
     property BasicCamera mainCamera: BasicCamera {
         id: mainCamera
     }
+    property var stdComps: [transform, mesh, light, heimat] //phongMat heimat
+    property var textureComps: [transform, mesh, light, material]
 
     function setSource(filePath) {
         if (mesh.source.toString() === filePath.toString()) {
@@ -27,9 +31,9 @@ Entity {
     }
     function setMaterial(isTexu) {
         if (isTexu) {
-            components = [transform, mesh, light, material]
+            components = textureComps
         } else {
-            components = [transform, mesh, light, phongMat]
+            components = stdComps
         }
     }
 
@@ -39,6 +43,7 @@ Entity {
     property real scale: 1.0
     property real theta: 0.0
     property real phi: 0.0
+
     PhongMaterial {
         id: phongMat
         ambient: Qt.rgba(0.5, 0.5, 0.5, 1.0)
@@ -46,20 +51,22 @@ Entity {
 
     SurfaceMaterial {
         id: material
+        factor: surffactor
     }
-    components: [transform, mesh, light, phongMat]
-    //    LevelOfDetail {
-    //        id: lod
-    //        camera: mainCamera.baseCamer
-    //        thresholds: [10000000000]
-    //        thresholdType: LevelOfDetail.DistanceToCameraThreshold
-    //    }
+    HeightMaterial {
+        id: heimat
+        factor: surffactor
+    }
+
+    components: stdComps
+
     Transform {
         id: transform
-        translation: Qt.vector3d(root.x, root.y, root.z)
-        rotation: fromEulerAngles(theta, phi, 0)
-        scale: root.scale
+        translation: Qt.vector3d(0, 0, 0)
+        //        rotation: fromEulerAngles(theta, phi, 0)
+        //        scale: root.scale
     }
+
     SpotLight {
         id: light
         localDirection: Qt.vector3d(1.0, 0.0, 1.0)
@@ -67,21 +74,6 @@ Entity {
         intensity: 0.9
     }
 
-    //    SphereMesh {
-    //        id: mesh
-    //        radius: 3
-    //    }
-    //    TextureImage {
-    //        id: texture
-    //    }
-    //    TextureLoader {
-    //                       source: "assets/cubemaps/default/default_irradiance.dds"
-    //                       wrapMode {
-    //                           x: WrapMode.ClampToEdge
-    //                           y: WrapMode.ClampToEdge
-    //                       }
-    //                       generateMipMaps: false
-    //                   }
     Mesh {
         id: mesh
         objectName: "terrain"

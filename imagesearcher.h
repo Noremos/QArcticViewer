@@ -17,6 +17,7 @@ typedef Img RetImg;
 struct boundy
 {
 	uint x, y, endX, endY;
+	float z, endZ;
 
 	boundy(uint x, uint y, uint endX, uint endY): x(x), y(y), endX(endX), endY(endY)
 	{
@@ -55,6 +56,10 @@ struct boundy
 	{
 		return endY - y;
 	}
+	uint zei()
+	{
+		return endZ - z;
+	}
 	void addXoffset(int off)
 	{
 		x += off;
@@ -65,17 +70,19 @@ struct boundy
 		y += off;
 		endY += off;
 	}
-	float localMax;
-	void setMax(float val) { localMax = val; }
-	float getMax() { return localMax; }
 	void divStep(float step)
 	{
 		x /= step;
 		y /= step;
+		z /= step;
 		endX /= step;
 		endY /= step;
-		localMax /= step;
+		endZ /= step;
 	}
+
+	int sizeWid;
+	int sizeHei;
+	int sizeTop;
 };
 enum class ProcessType
 {
@@ -130,6 +137,10 @@ struct Img
 		Img clo(new float[wid * hei], wid, hei);
 		clo.zeroing();
 		return clo;
+	}
+	void release()
+	{
+		delete[] data;
 	}
 };
 

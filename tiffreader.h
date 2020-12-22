@@ -118,6 +118,7 @@ enum class Tags {
 	TileWidth = 322,
 	TileLength = 323,
 	TileOffsets = 324,
+
 	TileByteCounts = 325
 };
 
@@ -168,7 +169,7 @@ struct TiffTags
 
 	//For each strip, the byte offset of that strip.
 	uint StripOffsets = 0;
-
+	char StripOffsetsType = 0;
 	//The orientation of the image with respect to the rows and columns.
 	uint Orientation = 0;
 
@@ -180,6 +181,7 @@ struct TiffTags
 
 	//For each strip, the number of bytes in the strip after compression.
 	uint StripByteCounts = 0;
+	char StripByteCountsType = 0;
 
 	//The minimum component value used.
 	uint MinSampleValue = 0;
@@ -237,8 +239,10 @@ struct TiffTags
 	uint TileLength = 0;
 
 	uint TileOffsets = 0;
+	char TileOffsetsType = 0;
 
 	uint TileByteCounts = 0;
+	char TileByteCountsType = 0;
 
 };
 
@@ -408,6 +412,7 @@ class TiffReader: public ImageReader
 	uchar imgByteOrder;
 	uchar sysByteOredr;
 	uint tilesCount = 0;
+	int compressType = 1;
 	Cache<uchar*> cachedTiles;
 
 	void convert(uchar *bytes, float &out) { out = toFloat(bytes); }

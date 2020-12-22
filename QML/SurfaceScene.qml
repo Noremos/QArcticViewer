@@ -12,6 +12,7 @@ Scene3D {
     focus: true
     aspects: ["input", "logic"]
     cameraAspectRatioMode: Scene3D.AutomaticAspectRatio
+    property double surfaceFactor: smesh.factor
 
     property alias spotZones: spotZones
     property alias markerZones: markerZones
@@ -62,6 +63,7 @@ Scene3D {
 
         SpotItems {
             id: spotZones
+            factor: scene3d.surfaceFactor
             objectName: "spotZones"
             //            enabled: false
             //            SpotsEffect {
@@ -78,6 +80,7 @@ Scene3D {
         SurfaceEntry {
             id: smesh
             objectName: "surface"
+            surffactor: surfaceFactor
         }
     }
 
@@ -104,66 +107,4 @@ Scene3D {
         console.log(spotZones.childNodes[5].components)
         scene3d.update()
     }
-
-    //    Entity {
-    //        id: root
-
-    //        // Render from the mainCamera
-    //        components: [
-    //            RenderSettings {
-    //                activeFrameGraph: ForwardRenderer {
-    //                    id: renderer
-    //                    camera: mainCamera
-    //                }
-    //            },
-    //            // Event Source will be set by the Qt3DQuickWindow
-    //            InputSettings {}
-    //        ]
-
-    //        Camera {
-    //            id: camera
-    //            projectionType: CameraLens.PerspectiveProjection
-    //            fieldOfView: 45
-    //            nearPlane: 0.1
-    //            farPlane: 1000.0
-    //            position: Qt.vector3d(0.0, 0.0, 40.0)
-    //            upVector: Qt.vector3d(0.0, 1.0, 0.0)
-    //            viewCenter: Qt.vector3d(0.0, 0.0, 0.0)
-    //        }
-
-    //        Entity {
-    //            id: mainEntry
-    //            components: [mainCamera, mesh]
-    //        }
-
-    //        SphereMesh {
-    //            id: mesh
-    //            radius: 3
-    //        }
-
-    //        BasicCamera {
-    //            id: mainCamera
-    //            position: Qt.vector3d(0.0, 0.0, 15.0)
-    //            viewCenter: Qt.vector3d(0.0, 0.0, 0.0)
-    //        }
-
-    //        //        FirstPersonCameraController {
-    //        //            camera: mainCamera
-    //        //        }
-    //        SurfaceMaterial {
-    //            id: wireframeMaterial
-    //            effect: SurfaceEffect {}
-    //            ambient: Qt.rgba(0.2, 0.0, 0.0, 1.0)
-    //            diffuse: Qt.rgba(0.8, 0.0, 0.0, 1.0)
-
-    //        }
-
-    //        SurfaceMesh {
-    //            id: smesh
-    //            material: wireframeMaterial
-    //            x: 0
-    //            y: 0
-    //            z: 0
-    //        }
-    //    }
 }

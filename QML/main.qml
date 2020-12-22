@@ -35,22 +35,25 @@ ApplicationWindow {
         height: 100
         Row {
             anchors.fill: parent
-            LoadButton {
-                id: fileDialog
-                onAccepted: {
-                    filePath = backend.loadImage(filePath.toString().substring(
-                                                     8), simpithithion.value,
-                                                 proiz.checked ? 0 : 1)
+            ColumnLayout {
+                LoadButton {
+                    id: fileDialog
+                    onAccepted: {
+                        filePath = backend.loadImage(filePath.toString(
+                                                         ).substring(8),
+                                                     simpithithion.value,
+                                                     proiz.checked ? 0 : 1)
 
-                    surf.setModelSource("file:///" + filePath)
+                        surf.setModelSource("file:///" + filePath)
+                    }
                 }
-            }
-            SpinBox {
-                id: simpithithion
-                from: 1
-                value: 10
-                to: 1000
-                editable: true
+                SpinBox {
+                    id: simpithithion
+                    from: 1
+                    value: 10
+                    to: 1000
+                    editable: true
+                }
             }
 
             ColumnLayout {
@@ -63,40 +66,65 @@ ApplicationWindow {
                     text: qsTr("Скорость")
                 }
             }
-            CheckBox {
-                id: useText
-                text: "Использовать текстуру"
-                checked: false
-                onCheckedChanged: surf.setDrawingMode(checked)
-            }
+            ColumnLayout {
+                CheckBox {
+                    id: useText
+                    text: "Использовать текстуру"
+                    checked: false
+                    onCheckedChanged: surf.setDrawingMode(checked)
+                }
 
-            LoadButton {
-                id: textureLoder
-                onAccepted: {
+                LoadButton {
+                    id: textureLoder
+                    text: "Загрузить текстуру"
 
-                    surf.setTextureSource(filePath)
+                    onAccepted: {
+
+                        surf.setTextureSource(filePath)
+                    }
                 }
             }
-            Button {
-                id: findZones
-                onClicked: {
+            ColumnLayout {
+                Button {
+                    id: findZones
+                    onClicked: {
 
-                    backend.findZones(simpithithion.value, sah.value)
-                    surf.update()
-                    surf.ude()
+                        backend.findZones(simpithithion.value, sah.value)
+                        surf.update()
+                        surf.ude()
+                    }
+                }
+                CheckBox {
+                    text: "Показать найденные"
+                    checked: true
+                    onCheckedChanged: surf.setFindingMode(checked)
                 }
             }
-            CheckBox {
-                text: "Показать найденные"
-                checked: true
-                onCheckedChanged: surf.setFindingMode(checked)
+            ColumnLayout {
+                Label {
+                    text: "Начать с"
+                }
+
+                SpinBox {
+                    id: sah
+                    from: 0
+                    value: 0
+                    to: 1000000
+                    editable: true
+                }
             }
-            SpinBox {
-                id: sah
-                from: 0
-                value: 10
-                to: 1000000
-                editable: true
+            ColumnLayout {
+                Label {
+                    text: "Множитель выосты"
+                }
+                SpinBox {
+                    id: heightSpin
+                    objectName: "factor"
+                    from: -10000
+                    value: 10
+                    to: 1000000
+                    editable: true
+                }
             }
         }
     }
@@ -137,6 +165,7 @@ ApplicationWindow {
             id: surf
             objectName: "surf"
             anchors.fill: parent
+            surfaceFactor: heightSpin.value
             onFocusChanged: {
                 if (focus === false) {
                     focusArea.enabled = true

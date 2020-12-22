@@ -6,12 +6,11 @@
         <file>QML/Hoverd.qml</file>
         <file>QML/LoadButton.qml</file>
         <file>QML/SurfaceScene.qml</file>
-        <file>QML/SurfaceEffect.qml</file>
+        <file>QML/HeightMaterial.qml</file>
         <file>QML/SurfaceMaterial.qml</file>
         <file>QML/SurfaceEntry.qml</file>
         <file>QML/BasicCamera.qml</file>
         <file>QML/SpotItems.qml</file>
-        <file>QML/SpotsEffect.qml</file>
     </qresource>
     <qresource prefix="/heightmaps">
         <file>layer_1.png</file>

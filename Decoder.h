@@ -19,7 +19,11 @@ inline long long st(long long st)
 
 class decorder
 {
+	int comprType;
 public:
+	decorder(int compressType) : comprType(compressType)
+	{
+	}
 	const int MIN_BITS = 9;
 	const int CLEAR_CODE = 256; // clear code
 	const int EOI_CODE = 257; // end of information
@@ -154,6 +158,11 @@ public:
 public:
 	void decompress(uchar* input, offu64 size, buffer& result, uint maxVal = UINT32_MAX)
 	{
+		if (comprType == 1)
+		{
+			result.insert(result.begin(), input, input + size);
+			return;
+		}
 		memset(&dictionaryIndex, 0, 4093 * 4);
 		memset(&dictionaryChar, 0, 4093  * 2);
 		arrLen = size;

@@ -9,6 +9,7 @@
 #include <QTechnique>
 #include <QGraphicsApiFilter>
 #include <QPhongMaterial>
+#include <QExtrudedTextMesh>
 
 using namespace cv;
 using namespace Qt3DCore;
@@ -40,6 +41,11 @@ QEntity *Backend::getSpotZone()
 void Backend::setStopItem(QEntity *area)
 {
 	spotZone = area;
+}
+
+void Backend::setFactorSpinBox(QQuickItem *spinBox)
+{
+
 }
 
 int Backend::getHei()
@@ -89,6 +95,7 @@ QMaterial *createSpotMaterial(QEntity *prnt)
 	eff->addParameter(new QParameter("color", QVector4D(1.0, 1.0, 0, 1.0)));
 	return mater;
 }
+using namespace Qt3DExtras;
 
 void Backend::findZones(int step, int str)
 {
@@ -110,7 +117,8 @@ float xScale = 10;
 float yScale = 10;
 
 	reader = new TiffReader();
-	QString st = "D:/Учеба/БАР/Москва/50_59_1_2_2m_v3.0/50_59_1_2_2m_v3.0_reg_dem.tif";
+//	QString st = "D:/Учеба/БАР/Москва/50_59_1_2_2m_v3.0/50_59_1_2_2m_v3.0_reg_dem.tif";
+	QString st = "D:/Учеба/БАР/bugr.tif";
 	reader->open(st.toStdWString().c_str());
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
@@ -133,6 +141,8 @@ float yScale = 10;
 	{
 		boundy &bb = objects[i];
 
+		if (bb.x == 0)
+			qDebug() << "X00";
 		Qt3DCore::QEntity *entry = new Qt3DCore::QEntity(spotZone);
 		entry->setObjectName("MEW " + QString::number(i));
 		entry->setEnabled(true);
@@ -140,26 +150,35 @@ float yScale = 10;
 		trans->setObjectName("size trans");
 
 		float mider = xScale;
-		float x = bb.x / mider;
-		float y = bb.y / mider;
-		float wid = bb.wid() / mider;
-		float hei = bb.hei() / mider;
+		bb.divStep(mider);
 
-		trans->setScale3D(QVector3D(wid, 10, hei));
-		trans->setTranslation(QVector3D(x + wid/2, bb.localMax/ mider, y + hei/2));
-//		trans->setTranslation(QVector3D(-50, 0, 0));
+		trans->setScale3D(QVector3D(bb.wid(), 1, bb.hei()));
+		trans->setTranslation(QVector3D(bb.x + bb.wid()/2, bb.z, bb.y + bb.hei()/2));
+
+
+//		QExtrudedTextMesh *text = new QExtrudedTextMesh(entry);
+//		QString nam;
+//		nam.append("Dimentions:\n");
+//		nam.append("X: ");
+//		nam.append(QString::number(bb.sizeWid));
+//		nam.append("Y: ");
+//		nam.append(QString::number(bb.sizeHei));
+//		nam.append("z: ");
+//		nam.append(QString::number(bb.sizeTop));
+//		text->setText(nam);
+		//		trans->setTranslation(QVector3D(-50, 0, 0));
 //		trans->setScale3D(QVector3D(1000, 1000, 1000));
 		//		trans->setTranslation(QVector3D(bb.x, bb.y, 0));
 		//		trans->setScale3D(QVector3D(bb.wid(), bb.hei(), 1000));
 		entry->addComponent(mesh);
 		entry->addComponent(trans);
 		entry->addComponent(mater);
+//		entry->addComponent(text);
 	}
 }
 
 void Backend::test(QString path)
-{
-}
+{}
 
 //cv::Mat Backend::imgread(QString path)
 //{

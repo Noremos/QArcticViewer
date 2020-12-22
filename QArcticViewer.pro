@@ -43,11 +43,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     QML/BasicCamera.qml \
+    QML/HeightMaterial.qml \
     QML/NewButton.qml \
     QML/SideMenu.qml \
     QML/SpotItems.qml \
-    QML/SpotsEffect.qml \
-    QML/SurfaceEffect.qml \
     QML/SurfaceEntry.qml \
     QML/SurfaceMaterial.qml \
     QML/SurfaceScene.qml \

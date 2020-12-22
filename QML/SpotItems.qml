@@ -6,10 +6,12 @@ import Qt3D.Extras 2.15
 
 Entity {
     id: root
+    property double factor: factor
+
     Mesh {
         id: mesh
         objectName: "mesh"
-        source: "qrc:/spot.obj"
+        source: "qrc:/3dspot.obj"
     }
 
     PhongMaterial {
@@ -27,6 +29,13 @@ Entity {
         //            }
         //        ]
         effect: Effect {
+            parameters: [
+                Parameter {
+                    name: "factor"
+                    value: root.factor
+                    //                    onValueChanged: console.log(root.factor)
+                }
+            ]
             techniques: [
                 Technique {
                     graphicsApiFilter {
@@ -73,9 +82,20 @@ Entity {
         //                id: test
         Transform {
             id: trans2
-            scale3D: Qt.vector3d(0.1, 300, 0.1)
+            scale3D: Qt.vector3d(1, 300, 1)
             translation: Qt.vector3d(0, 0, 0)
         }
         components: [phong, trans2, mesh]
+    }
+
+    Entity {
+        objectName: "test"
+        //                id: test
+        Transform {
+            id: trans3
+            scale3D: Qt.vector3d(100, 1, 100)
+            translation: Qt.vector3d(-50, 10, -50)
+        }
+        components: [mater, trans3, mesh]
     }
 }

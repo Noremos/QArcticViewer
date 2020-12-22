@@ -142,10 +142,12 @@ void TiffReader::printTag(uchar* buffer)
 		isTile = true;
 		tilesCount = count;
 		this->tiff.TileOffsets = value;
+		this->tiff.TileOffsetsType = type;
 		break;
 
 	case Tags::StripOffsets:
 		this->tiff.StripOffsets = value;
+		this->tiff.StripOffsetsType = type;
 //		compressedLen = count;
 //		this->tiff.ImageLength = count;
 		OUT << "StripOffsets";
@@ -153,11 +155,13 @@ void TiffReader::printTag(uchar* buffer)
 
 	case Tags::TileByteCounts:
 		this->tiff.TileByteCounts = value;
+		this->tiff.TileByteCountsType = type;
 		tilesCount = count;
 		break;
 
 	case Tags::StripByteCounts:
 		this->tiff.StripByteCounts = value;
+		this->tiff.StripByteCountsType = type;
 //		this->tiff.ImageLength = count;
 
 		OUT << "StripByteCounts";
@@ -171,12 +175,16 @@ void TiffReader::printTag(uchar* buffer)
 		this->tiff.SamplesPerPixel = getTagIntValue(value, count, type);
 		OUT << "SamplesPerPixel";
 		break;
+	case Tags::Compression:
+		this->tiff.Compression = getTagIntValue(value, count, type);
+		OUT << "Compression";
+		break;
 
 	default:
 		print = false;
 		break;
 	}
-	if (print)
+	if (print && false)
 	{
 
 		OUT << "Tag identifying code:" << (tag);
@@ -235,6 +243,18 @@ ImageType TiffReader::getType()
 //	int index = tileY * TilesAcross + tileX;
 //	return cachedTiles.getData(tileNum, nullptr);
 //}
+
+int getTypeSize(char type)
+{
+	// { nullptr,     "BYTE",  "ASCII",     "SHORT",  "LONG",
+	//		"RATIONAL",  "SBYTE", "UNDEFINED", "SSHORT", "SLONG",
+	//	"SRATIONAL", "FLOAT", "DOUBLE",    "IFD",    "LONG8",
+	//"SLONG8",    "IFD8" };
+	static const int sizes[]{0, 1, 1, 2, 4, 0, 1, 0, 2, 4, 0, 4, 8, 0, 1, 1, 0};
+	return sizes[type];
+//	return type == 4 ? 4 : 2;
+}
+
 uchar* TiffReader::getTile(int ind)
 {
 	uchar *n = nullptr;
@@ -246,19 +266,22 @@ uchar* TiffReader::getTile(int ind)
 	{
 		//offset tile
 		uchar buffer[4];
-		read(buffer, tiff.TileOffsets + (ind) * sizeof(uint), sizeof(uint));
+
+		char sie = getTypeSize(tiff.TileOffsetsType);
+		read(buffer, tiff.TileOffsets + (ind) * sie, sie);
 		uint off = toInt(buffer);
 		//************
 
 		//Count
-		read(buffer, tiff.TileByteCounts + (ind) * sizeof(uint), sizeof(uint));
+		sie = getTypeSize(tiff.TileOffsetsType);
+		read(buffer, tiff.TileByteCounts + (ind) * sie, sie);
 		uint count = toInt(buffer);
 		uchar *buff = new uchar[count];
 		//*****
 
 		//data
 		read(buff, off, count);
-		decorder decod;
+		decorder decod(tiff.Compression);
 
 		vector<uchar> temp;
 		decod.decompress(buff, count, temp); // (rowInTile + 1) * bytsInTileWid
@@ -290,8 +313,6 @@ void *TiffReader::getRowData(int y)
 	vector<uchar> ret;
 	ret.reserve(tiff.ImageWidth);
 
-
-
 	if (tiff.TileWidth != 0)
 	{
 		int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
@@ -315,17 +336,20 @@ void *TiffReader::getRowData(int y)
 	}else
 	{
 		uchar buffer[4];
-		read(buffer, tiff.StripOffsets + y * 4, 4);
-		uint off = toInt(buffer);
 
-		read(buffer, tiff.StripByteCounts + y * 4, 4);
-		uint count = toInt(buffer);
+		char sie = getTypeSize(tiff.StripOffsetsType);
+		read(buffer, tiff.StripOffsets + y * sie, sie);
+		uint off =  sie == 2 ? toShort(buffer) : toInt(buffer);
+
+		sie = getTypeSize(tiff.StripByteCountsType);
+		read(buffer, tiff.StripByteCounts + y * sie, sie);
+		uint count =  sie == 2 ? toShort(buffer) : toInt(buffer);
 		uchar *buff = new uchar[count];
 
 		read(buff, off, count);
 
 		string st = ""; // dectode(buff, count);
-		decorder decod;
+		decorder decod(tiff.Compression);
 		decod.decompress(buff, count, ret);
 		delete[] buff;
 	}
@@ -337,7 +361,7 @@ void *TiffReader::getRowData(int y)
 
 void TiffReader::printIFD(offu64 offset)
 {
-	OUT << "----IDF----";
+	//OUT << "----IDF----";
 	uchar* buffer;
 	uchar temp[2];
 
@@ -345,7 +369,7 @@ void TiffReader::printIFD(offu64 offset)
 	ushort tagNums = toShort(temp);
 
 
-	OUT << "Number of tags in IFD:" << tagNums << endl;
+	//OUT << "Number of tags in IFD:" << tagNums << endl;
 
 	buffer = new uchar[12 * tagNums + 6];
 	read(buffer, offset, 12 * tagNums + 6);
@@ -365,10 +389,10 @@ void TiffReader::printIFD(offu64 offset)
 void TiffReader::printValue(int x, int y)
 {
 	uchar buffer[4];
-	read(buffer, tiff.StripOffsets + y * 4, 4);
+	read(buffer, tiff.StripOffsets + y * 4, getTypeSize(tiff.StripOffsetsType));
 	int off = toInt(buffer);
 
-	read(buffer, tiff.StripByteCounts + y * 4, 4);
+	read(buffer, tiff.StripByteCounts + y * 4, getTypeSize(tiff.StripByteCountsType));
 	int count = toInt(buffer);
 
 	uchar* buff = new uchar[count];
@@ -377,7 +401,7 @@ void TiffReader::printValue(int x, int y)
 
 	string st = "";// dectode(buff, count);
 	vector<uchar> ret;
-	decorder decod;
+	decorder decod(tiff.Compression);
 	decod.decompress(buff, count, ret);
 
 		//tiff_lzw_decode(buff, count, st);

@@ -3,32 +3,14 @@ import Qt3D.Render 2.0
 import Qt3D.Extras 2.12
 
 Material {
-    property alias texuteSource: skyTextureImage.source
-
     id: root
     property double factor: 10.0
+    onFactorChanged: console.log("!")
     parameters: [
-        Parameter {
-            name: "terrain"
-            value: Texture2D {
-                id: skyTexture
-                minificationFilter: Texture.LinearMipMapLinear
-                magnificationFilter: Texture.Linear
-                wrapMode {
-                    x: WrapMode.Repeat
-                    y: WrapMode.Repeat
-                }
-                generateMipMaps: true
-                maximumAnisotropy: 16.0
-                TextureImage {
-                    id: skyTextureImage
-                    source: "file:///l.png"
-                }
-            }
-        },
         Parameter {
             name: "factor"
             value: factor
+            onValueChanged: console.log("!!")
         }
     ]
     effect: Effect {
@@ -51,12 +33,13 @@ Material {
                 renderPasses: [
                     RenderPass {
                         shaderProgram: ShaderProgram {
+                            id: shad
                             vertexShaderCode: loadSource(
                                                   Qt.resolvedUrl(
-                                                      "../shaders/simpleColor.vert"))
+                                                      "../shaders/HeightFactor.vert"))
                             fragmentShaderCode: loadSource(
                                                     Qt.resolvedUrl(
-                                                        "../shaders/simpleColor.frag"))
+                                                        "../shaders/HeightFactor.frag"))
                         }
                     }
                 ]

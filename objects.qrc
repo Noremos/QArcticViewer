@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>marker.obj</file>
         <file>spot.obj</file>
+        <file>3dspot.obj</file>
     </qresource>
 </RCC>

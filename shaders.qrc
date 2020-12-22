@@ -6,5 +6,7 @@
         <file>shaders/spotZone.vert</file>
         <file>shaders/marker.vert</file>
         <file>shaders/marker.frag</file>
+        <file>shaders/HeightFactor.vert</file>
+        <file>shaders/HeightFactor.frag</file>
     </qresource>
 </RCC>
