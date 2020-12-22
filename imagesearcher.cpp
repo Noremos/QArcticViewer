@@ -369,6 +369,20 @@ boundy getBounty(pmap &points)
 	{
 		ppair &val = points[i];
 
+		if (minT > val.second)
+			minT = val.second;
+
+		if (maxT < val.second)
+			maxT = val.second;
+
+	}
+// если поставить 10, то слипшийся покажется
+	float bottomLvl = minT + abs(maxT - minT) / 5;
+	for (int i = 0, total = points.size(); i < total; ++i)
+	{
+		ppair &val = points[i];
+		if(val.second<bottomLvl)
+			continue;
 //		if (maxT - val.second >= 2)
 //			continue;
 
@@ -383,22 +397,16 @@ boundy getBounty(pmap &points)
 
 		if (maxY < val.first.y)
 			maxY = val.first.y;
-
-		if (minT > val.second)
-			minT = val.second;
-
-		if (maxT < val.second)
-			maxT = val.second;
 	}
-
-
 
 	boundy b(minX, minY, maxX, maxY);
 	b.z = minT;
 	b.endZ = maxT;
 	b.sizeWid = (maxX - minX) * resol;
 	b.sizeHei = (maxY - minY) * resol;
-	b.sizeTop = (maxT - minT) * resol;
+	b.sizeTop = abs(maxT - minT);
+	if (b.sizeTop > 8)
+		qDebug() << maxT << " " << minT;
 	return b;
 }
 void check(void *ptr)
@@ -488,13 +496,13 @@ void ImageSearcher::findZones(vector<boundy> &bounds, int start)
 //				continue;
 
 			// diametr
-			if(dmin < 5 || dmin>400)
+			if(dmin < 20 || dmin > 100)
 				continue;
 
-//			if(b.sizeTop> 2)
-//				continue;
-//			if (b.sizeTop<2)
-//				continue;
+			if(b.sizeTop< 0.5)
+				continue;
+			if (b.sizeTop>3)
+				continue;
 			b.addXoffset(tx);
 			b.addYoffset(ty);
 			bounds.push_back(b);
