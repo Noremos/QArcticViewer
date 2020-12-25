@@ -32,9 +32,9 @@ ApplicationWindow {
 
         anchors.top: parent.top
         anchors.topMargin: 0
-        height: 100
+        height: 120
         Row {
-            anchors.fill: parent
+            //            anchors.fill: parent
             ColumnLayout {
                 LoadButton {
                     id: fileDialog
@@ -42,7 +42,9 @@ ApplicationWindow {
                         filePath = backend.loadImage(filePath.toString(
                                                          ).substring(8),
                                                      simpithithion.value,
-                                                     proiz.checked ? 0 : 1)
+                                                     proiz.checked ? 0 : 1,
+                                                     startProc.value,
+                                                     endProc.value)
 
                         surf.setModelSource("file:///" + filePath)
                     }
@@ -55,7 +57,22 @@ ApplicationWindow {
                     editable: true
                 }
             }
-
+            ColumnLayout {
+                SpinBox {
+                    id: startProc
+                    from: 0
+                    value: 0
+                    to: 25000
+                    editable: true
+                }
+                SpinBox {
+                    id: endProc
+                    from: 0
+                    value: 0
+                    to: 25000
+                    editable: true
+                }
+            }
             ColumnLayout {
                 RadioButton {
                     id: proiz
@@ -85,11 +102,12 @@ ApplicationWindow {
                 }
             }
             ColumnLayout {
-                Button {
+                LoadButton {
                     id: findZones
-                    onClicked: {
-
-                        backend.findZones(simpithithion.value, sah.value)
+                    text: "Поиск"
+                    onAccepted: {
+                        let ipath = filePath.toString().substring(8)
+                        backend.findZones(ipath, sah.value, procesLen.value)
                         surf.update()
                         surf.ude()
                     }
@@ -112,6 +130,13 @@ ApplicationWindow {
                     to: 1000000
                     editable: true
                 }
+                SpinBox {
+                    id: procesLen
+                    from: 0
+                    value: 5
+                    to: 1000000
+                    editable: true
+                }
             }
             ColumnLayout {
                 Label {
@@ -128,7 +153,7 @@ ApplicationWindow {
             }
         }
     }
-    Rectangle {
+    SideMenu {
         id: leftmenu
         color: "#d4d1d1"
 
@@ -142,13 +167,13 @@ ApplicationWindow {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 0
 
-        width: 50
-        Column {
-            anchors.fill: parent
-        }
+        width: 150
+        //        Column {
+        //            anchors.fill: parent
+        //        }
     }
-    Rectangle {
 
+    Rectangle {
         id: mainZone
 
         anchors.left: leftmenu.right

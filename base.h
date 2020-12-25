@@ -28,4 +28,5 @@ namespace
 #endif
 }
 
+
 #endif // BASE_H

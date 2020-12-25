@@ -11,6 +11,7 @@
         <file>QML/SurfaceEntry.qml</file>
         <file>QML/BasicCamera.qml</file>
         <file>QML/SpotItems.qml</file>
+        <file>QML/SpinFloat.qml</file>
     </qresource>
     <qresource prefix="/heightmaps">
         <file>layer_1.png</file>

@@ -82,7 +82,7 @@ struct boundy
 
 	int sizeWid;
 	int sizeHei;
-	int sizeTop;
+	float sizeTop;
 };
 enum class ProcessType
 {
@@ -144,6 +144,31 @@ struct Img
 	}
 };
 
+template<class T>
+struct TRange
+{
+	T start{};
+	T end{};
+	TRange(T start, T end) : start(start), end(end) {}
+	TRange()
+	{}
+};
+
+struct SeachingSettings
+{
+	float coof;
+	TRange<int> diamert;
+	TRange<float> height;
+	float bottomProc;
+	SeachingSettings()
+	{
+		coof = 0;
+		diamert = {0, 0};
+		height = {0, 0};
+		bottomProc = 0;
+	}
+};
+
 class ImageSearcher
 {
 	TiffReader *reader;
@@ -155,19 +180,15 @@ class ImageSearcher
 	// наложение одного тайла на другой
 	int diffset = 100;
 
-	void binFindObjects(const Img &img, vector<boundy> &objects);
+	Img getTile(int index);
 
 public:
 	ImageSearcher(TiffReader *reader);
 
-//	Img getTile(int tx, int ty);
-	Img getTile(int index);
 	int getMaxTiles();
+	void findZones(vector<boundy> &bounds, int start, int len);
 
-	void findZones(vector<boundy> &bounds, int start);
-	RetImg process(Img tile, AvgType avgType, ProcessType funType, uchar porog);
-	float findHistAVG(Img tile);
-	float findSumdivAVG(Img &tile);
+	SeachingSettings settings;
 };
 
 #endif // IMAGESEARCHER_H

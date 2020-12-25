@@ -10,8 +10,13 @@ vec3 secColor = vec3(1, 0.35, 0);
 
 //float minHei = -2.36199;
 //float maxHei = 10.919;
-float minHei = -1.09489;
-float maxHei = -0.085615;//9,93035
+//float minHei = -1.09489;
+//float maxHei = -0.085615;//9,93035
+
+float minHei = -2.1988;
+float maxHei = 3.18347;
+
+
 uniform float factor;
 
 void main(void)

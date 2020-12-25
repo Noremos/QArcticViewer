@@ -20,6 +20,7 @@ SOURCES += \
     imgproxy.cpp \
     main.cpp \
     obj3d.cpp \
+    project.cpp \
     tiffreader.cpp
 
 RESOURCES += qml.qrc \
@@ -50,6 +51,7 @@ DISTFILES += \
     QML/SurfaceEntry.qml \
     QML/SurfaceMaterial.qml \
     QML/SurfaceScene.qml \
+    QML/SpinFloat.qml \
     QML/main.qml \
     as.astylerc
 
@@ -79,6 +81,7 @@ HEADERS += \
     imagesearcher.h \
     imgproxy.h \
     obj3d.h \
+    project.h \
     tiffreader.h
 
 

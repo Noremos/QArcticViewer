@@ -47,17 +47,17 @@ Scene3D {
             },
             ScreenRayCaster {
                 id: screenRayCaster
-                onHitsChanged: printHits("Screen hits", hits)
+                onHitsChanged: printHits / ("Screen hits")
             },
             MouseHandler {
                 id: mouseHandler
                 sourceDevice: MouseDevice {}
-                onReleased: {
-                    onClicked: console.log(Qt.point(mouse.x, mouse.y))
+                //                onReleased: {
+                //                    onClicked: console.log(Qt.point(mouse.x, mouse.y))
 
-                    screenRayCaster.trigger(Qt.point(mouse.x, mouse.y))
-                    //                    printHits("Screen hits", screenRayCaster.hits)
-                }
+                //                    screenRayCaster.trigger(Qt.point(mouse.x, mouse.y))
+                //                    //                    printHits("Screen hits", screenRayCaster.hits)
+                //                }
             }
         ]
 

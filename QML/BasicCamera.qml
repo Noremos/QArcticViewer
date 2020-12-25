@@ -41,6 +41,6 @@ FirstPersonCameraController {
         direction: camera.upVector
         length: 5000
 
-        onHitsChanged: printHits("Model hits", hits)
+        //        onHitsChanged: printHits("Model hits", hits)
     }
 }

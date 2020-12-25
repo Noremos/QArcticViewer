@@ -16,6 +16,7 @@ Entity {
 
     PhongMaterial {
         id: phong
+        objectName: "phong"
         //        diffuse: Qt.vector3d(1.0, 1.0, 0)
         //        ambient: Qt.vector4d(1.0, 1.0, 0)
     }

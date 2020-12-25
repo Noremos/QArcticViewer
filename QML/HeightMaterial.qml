@@ -5,12 +5,10 @@ import Qt3D.Extras 2.12
 Material {
     id: root
     property double factor: 10.0
-    onFactorChanged: console.log("!")
     parameters: [
         Parameter {
             name: "factor"
             value: factor
-            onValueChanged: console.log("!!")
         }
     ]
     effect: Effect {

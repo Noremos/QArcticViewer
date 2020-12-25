@@ -1,7 +1,6 @@
 #include "backend.h"
 
 #include <QImage>
-#include <imagesearcher.h>
 #include <Qt3DRender/QMesh>
 #include <QEffect>
 #include <QMaterial>
@@ -11,13 +10,20 @@
 #include <QPhongMaterial>
 #include <QExtrudedTextMesh>
 
+
+#include <Qt3DExtras/Qt3DExtras>
+
 using namespace cv;
 using namespace Qt3DCore;
 Backend::Backend(QObject *parent) : QObject(parent)
 {
-//	reader = new TiffReader();
-//	reader->open(L"D:\\Учеба\\БАР\\Москва\\50_59_1_2_2m_v3.0\\50_59_1_2_2m_v3.0_reg_dem.tif");
+	//	reader = new TiffReader();
+	//	reader->open(L"D:\\Учеба\\БАР\\Москва\\50_59_1_2_2m_v3.0\\50_59_1_2_2m_v3.0_reg_dem.tif");
 	//	reader->getRowData(20020);
+	setts.bottomProc = 0.1f;
+	setts.coof = 1.7f;
+	setts.diamert = TRange<int>(10, 300);
+	setts.height = TRange<float>(2, 6);
 }
 
 Backend::~Backend()
@@ -51,6 +57,20 @@ void Backend::setFactorSpinBox(QQuickItem *spinBox)
 int Backend::getHei()
 {
 	return reader->height();
+}
+
+void Backend::setSearchingsettings(float coof, int minD, int maxD, float minHei, float maxHei, float bottomLineProc)
+{
+	setts.coof = coof;
+	setts.diamert = {minD, maxD};
+	setts.height = {minHei, maxHei};
+	setts.bottomProc = bottomLineProc;
+	qDebug() << coof;
+	qDebug() << minD;
+	qDebug() << maxD;
+	qDebug() << minHei;
+	qDebug() << maxHei;
+	qDebug() << bottomLineProc;
 }
 
 QEntity *Backend::getMarkerZone()
@@ -97,7 +117,7 @@ QMaterial *createSpotMaterial(QEntity *prnt)
 }
 using namespace Qt3DExtras;
 
-void Backend::findZones(int step, int str)
+void Backend::findZones(QString path, int start, int len)
 {
 //	QMesh *mesh1 = spotZone->findChild<QMesh *>("mesh");
 //	QMaterial *mater1 = spotZone->findChild<QMaterial *>("material");
@@ -113,67 +133,101 @@ void Backend::findZones(int step, int str)
 //	entry->addComponent(trans1);
 //	entry->addComponent(mater1);
 //	return;
-float xScale = 10;
-float yScale = 10;
+	float xScale = 10;
+	float yScale = 10;
 
+	qDebug() << path;
 	reader = new TiffReader();
 //	QString st = "D:/Учеба/БАР/Москва/50_59_1_2_2m_v3.0/50_59_1_2_2m_v3.0_reg_dem.tif";
 	QString st = "D:/Учеба/БАР/bugr.tif";
-	reader->open(st.toStdWString().c_str());
+	reader->open(path.toStdWString().c_str());
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
-
-	vector<boundy> objects;
-	imgsrch.findZones(objects, str);
-
-//	QEntity *stopZones = getSpotZone();
+	imgsrch.settings = setts;
 
 	QMesh *mesh = spotZone->findChild<QMesh *>("mesh");
-		// new QMesh(stopZones);
-//	mesh->setSource(QUrl("qrc:/spot.obj"));
-//	mesh->setMeshName("spot");
-	QMaterial *mater = spotZone->findChild<QMaterial*>("material");
+	QMaterial *mater = spotZone->findChild<QMaterial *>("material");
 
-	//new Qt3DExtras::QPhongMaterial(stopZones);
-//	createSpotMaterial(stopZones);
-//	mater->
-	step = 100;
+
+	auto *textMaterial = spotZone->findChild<QPhongMaterial *>("phong");
+	textMaterial->setDiffuse(QColor(0, 255, 255));
+
+	for (int ind = start; ind < start+ len; ++ind)
+	{
+
+	vector<boundy> objects;
+	imgsrch.findZones(objects, ind, 1);
+
+
+	Qt3DCore::QEntity *tileentry = spotZone->findChild<Qt3DCore::QEntity *>("tile" + QString::number(ind));
+	if (tileentry == nullptr)
+	{
+		tileentry = new Qt3DCore::QEntity(spotZone);
+		tileentry->setObjectName("tile" + QString::number(ind));
+		tileentry->setEnabled(true);
+	}
+	else
+	{
+		for (auto& v : tileentry->children())
+		{
+			v->setParent(nullptr);
+			v->deleteLater();
+		}
+	}
+
+	qDebug() << tileentry->childNodes().size();
+	qDebug() << tileentry->children().size();
+
 	for (int i = 0, total = objects.size(); i < total; ++i)
 	{
 		boundy &bb = objects[i];
+		Qt3DCore::QEntity *entry = new Qt3DCore::QEntity(tileentry);
 
-		if (bb.x == 0)
-			qDebug() << "X00";
-		Qt3DCore::QEntity *entry = new Qt3DCore::QEntity(spotZone);
-		entry->setObjectName("MEW " + QString::number(i));
+		entry->setObjectName("MEW " + QString::number(ind)+ " "+ QString::number(i));
 		entry->setEnabled(true);
 		Qt3DCore::QTransform *trans = new Qt3DCore::QTransform(entry);
-		trans->setObjectName("size trans");
+//		trans->setObjectName("size trans");
 
 		float mider = xScale;
 		bb.divStep(mider);
 
 		trans->setScale3D(QVector3D(bb.wid(), 1, bb.hei()));
-		trans->setTranslation(QVector3D(bb.x + bb.wid()/2, bb.z, bb.y + bb.hei()/2));
+		trans->setTranslation(QVector3D(bb.x + bb.wid() / 2, bb.z, bb.y + bb.hei() / 2));
 
-
-//		QExtrudedTextMesh *text = new QExtrudedTextMesh(entry);
-//		QString nam;
-//		nam.append("Dimentions:\n");
-//		nam.append("X: ");
-//		nam.append(QString::number(bb.sizeWid));
-//		nam.append("Y: ");
-//		nam.append(QString::number(bb.sizeHei));
-//		nam.append("z: ");
-//		nam.append(QString::number(bb.sizeTop));
-//		text->setText(nam);
-		//		trans->setTranslation(QVector3D(-50, 0, 0));
-//		trans->setScale3D(QVector3D(1000, 1000, 1000));
-		//		trans->setTranslation(QVector3D(bb.x, bb.y, 0));
-		//		trans->setScale3D(QVector3D(bb.wid(), bb.hei(), 1000));
 		entry->addComponent(mesh);
 		entry->addComponent(trans);
 		entry->addComponent(mater);
-//		entry->addComponent(text);
+
+		{
+			QFont font(QFontDatabase().families()[0], 32, -1, false);
+
+			Qt3DCore::QEntity *textEnty = new Qt3DCore::QEntity(tileentry);
+			QExtrudedTextMesh *text = new QExtrudedTextMesh(textEnty);
+			Qt3DCore::QTransform *testtrans = new Qt3DCore::QTransform(textEnty);
+
+			testtrans->setTranslation(QVector3D(bb.x, bb.endZ, bb.y));
+			testtrans->setRotationX(-90);
+			testtrans->setRotationY(180);
+//			testtrans->setScale(0.5);
+			testtrans->setScale3D(QVector3D(0.5,0.5,0.1));
+
+			QString nam;
+//			nam.append("Dimentions:\n");
+			nam.append(" L: "); nam.append(QString::number(bb.sizeHei));
+			nam.append(" W: "); nam.append(QString::number(bb.sizeWid));
+			nam.append(" H: ");	nam.append(QString::number(bb.sizeTop));
+
+			text->setText(nam);
+//			text->setFont(font);
+
+			textEnty->addComponent(text);
+			textEnty->addComponent(testtrans);
+			textEnty->addComponent(textMaterial);
+		}
+
+
+	} // for ind
+	objects.clear();
+
 	}
 }
 
@@ -192,7 +246,7 @@ void Backend::test(QString path)
 //	return cv::Mat();
 //}
 
-QString Backend::loadImage(QString path, int step, int type)
+QString Backend::loadImage(QString path, int step, int type, int startRow, int lastRow)
 {
 	if (reader)
 	{
@@ -216,7 +270,7 @@ QString Backend::loadImage(QString path, int step, int type)
 	Obj3d object(reader);
 	object.setMode((::ProcessMode) type);
 	object.setStep(step);
-	object.write("D:\\2.obj");
+	object.write("D:\\2.obj", startRow, lastRow);
 
 	return "D:/2.obj";
 }

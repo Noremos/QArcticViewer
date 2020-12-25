@@ -97,7 +97,7 @@ public:
 	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
-	void write(QString path, Point3f scale = Point3f(0.1f, 0.1f, 0.1f))
+	void write(QString path, int startRow, int lastRow, Point3f scale = Point3f(0.1f, 0.1f, 0.1f))
 	{
 		QFile out(path);
 		if (out.exists())
@@ -138,7 +138,8 @@ public:
 		memset(currNullRow, 0, sWidth * typeSize);
 #endif
 //		objoff offset = 0;
-		for (int h = 0; h < height; h += step)
+		qDebug() << startRow << " " << (lastRow==0?height: lastRow+1);
+		for (int h = (startRow==0?0:startRow-1); h < (lastRow==0?height:lastRow+1); h += step)
 		{
 			if (h != 0)
 			{
@@ -204,7 +205,6 @@ public:
 					objoff i_br = (sWidth * h + w - nulls[nulls.size() - 1].second);
 #else
 					objoff i_br = getIndex(w, 1, h);
-
 #endif
 					//*0
 					//00
