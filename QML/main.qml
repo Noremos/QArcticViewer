@@ -21,31 +21,7 @@ ApplicationWindow {
 
     property alias spotZones: surf.spotZones
     property alias markerZones: surf.markerZones
-    //    DataImage {
-    //        id: surfaceData
-    //    }
-    menuBar: MenuBar {
-        Menu {
-            title: qsTr("&Файл")
-            //            Action {
-            //                text: qsTr("Создать новый проект...")
-            //                //                onTriggered: createPrjID.open()
-            //            }
-            //            Action {
-            //                text: qsTr("Открыть проект...")
-            //                //                onTriggered: openProject()
-            //            }
-            //            Action {
-            //                text: qsTr("Открыть карту высот")
-            //                onTriggered: backend.startSearching()
-            //            }
-            Action {
-                id: ma_save
-                text: qsTr("Сохранить изменения")
-                onTriggered: backend.saveSettings()
-            }
-        }
-    }
+
     Rectangle {
         id: topmenu
         color: "#a4a4a4"
@@ -192,6 +168,10 @@ ApplicationWindow {
                     to: 1000000
                     editable: true
                 }
+            }
+            Button {
+                text: qsTr("Сохранить изменения")
+                onClicked: backend.saveSettings()
             }
         }
     }
