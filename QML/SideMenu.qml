@@ -6,7 +6,6 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 
 Rectangle {
-
     id: root
     //    color: "#d4d1d1"
     enum Side {
@@ -102,6 +101,10 @@ Rectangle {
             to: 100
             onValueChanged: updateBoxSetts()
         }
+        Button {
+            text: "Поиск"
+            onClicked: backend.findByParams()
+        }
 
         //                coof
         //                dmin
@@ -167,13 +170,32 @@ Rectangle {
         return sbox.value / sbox.factor
     }
 
-    function updateBoxSetts() {
+    function setBoxSetts() {
 
-        backend.setSearchingsettings(getVal(coofSB), dminSB.value,
-                                     dmaxDB.value, getVal(minSizeHeiSB),
-                                     getVal(maxSizeHeiSB), bottomLenSB.value)
-        console.log(coofSB.value)
-        console.log(getVal(coofSB))
+        coofSB.realValue = searchSettings.coof
+        dminSB.value = searchSettings.diamertMin
+        dmaxDB.value = searchSettings.diamertMax
+        minSizeHeiSB.realValue = searchSettings.heightMin
+        maxSizeHeiSB.realValue = searchSettings.heightMax
+        bottomLenSB.value = searchSettings.bottomProc
+    }
+
+    function updateBoxSetts() {
+        if (backend.block)
+            return
+
+        searchSettings.coof = getVal(coofSB)
+        searchSettings.diamertMin = dminSB.value
+        searchSettings.diamertMax = dmaxDB.value
+        searchSettings.heightMin = getVal(minSizeHeiSB)
+        searchSettings.heightMax = getVal(maxSizeHeiSB)
+        searchSettings.bottomProc = bottomLenSB.value
+        backend.setSearchingsettings()
+        //        getVal(coofSB), dminSB.value,
+        //                                     dmaxDB.value, getVal(minSizeHeiSB),
+        //                                     getVal(maxSizeHeiSB), bottomLenSB.value)
+        //        console.log(coofSB.value)
+        //        console.log(getVal(coofSB))
     }
 }
 

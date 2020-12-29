@@ -41,23 +41,31 @@ Scene3D {
                     camera: smesh.mainCamera.baseCamer
                     clearColor: "transparent"
                 }
+
+                pickingSettings.pickMethod: PickingSettings.BoundingVolumePicking
+                pickingSettings.faceOrientationPickingMode: PickingSettings.FrontAndBackFace
             },
             InputSettings {
                 id: inputs
             },
             ScreenRayCaster {
                 id: screenRayCaster
-                onHitsChanged: printHits / ("Screen hits")
             },
             MouseHandler {
                 id: mouseHandler
                 sourceDevice: MouseDevice {}
-                //                onReleased: {
-                //                    onClicked: console.log(Qt.point(mouse.x, mouse.y))
 
+                //                onReleased: {
+
+                //                    //                    console.log(Qt.point(mouse.x, mouse.y))
                 //                    screenRayCaster.trigger(Qt.point(mouse.x, mouse.y))
-                //                    //                    printHits("Screen hits", screenRayCaster.hits)
+                //                    printHits("Screen hits", screenRayCaster.hits)
                 //                }
+            },
+            ObjectPicker {
+                onPressed: {
+                    console.log(pick.entity.objectName)
+                }
             }
         ]
 
@@ -100,6 +108,7 @@ Scene3D {
     }
     function setFindingMode(useText) {
         spotZones.enabled = useText
+
     }
 
     function ude() {

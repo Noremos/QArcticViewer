@@ -22,7 +22,7 @@ Material {
                 maximumAnisotropy: 16.0
                 TextureImage {
                     id: skyTextureImage
-                    source: "file:///l.png"
+                    source: projectParams ? projectParams.texturePath : ""
                 }
             }
         },

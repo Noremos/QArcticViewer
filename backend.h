@@ -1,8 +1,8 @@
 #ifndef BACKEND_H
 #define BACKEND_H
 
-#include "imagesearcher.h"
 #include "obj3d.h"
+#include "project.h"
 
 #include <QObject>
 #include <QMetaObject>
@@ -27,17 +27,16 @@ class Backend: public QObject
 
 public:
 	QObject *root = nullptr;
-
+	QString projectPath = "D:\\";
 	explicit Backend(QObject *parent = nullptr);
-
-	SeachingSettings setts;
+	bool block = true;
 //	cv::Mat imgread(QString path);
 
 	~Backend();
-
+	ProjectParametrs proj;
 
 	Qt3DCore::QEntity* spotZone;
-	Q_INVOKABLE void findZones(QString path, int step, int str);
+	Q_INVOKABLE void findByParams();
 	Q_INVOKABLE void test(QString path);
 	Q_INVOKABLE QString loadImage(QString path, int step, int type, int startRow, int lastRow);
 
@@ -48,8 +47,20 @@ public:
 	Q_INVOKABLE void setFactorSpinBox(QQuickItem *spinBox);
 
 	Q_INVOKABLE int getHei();
-	Q_INVOKABLE void setSearchingsettings(float coof, int minD, int maxD, float minHei, float maxHei, float bottomLineProc);
+	Q_INVOKABLE void setSearchingsettings(/*float coof, int minD, int maxD, float minHei, float maxHei, float bottomLineProc*/);
+	Q_INVOKABLE void saveSettings();
 
+	void loadSettings();
+	Q_PROPERTY(bool block READ getBlock)
+	bool getBlock()
+	{
+		return block;
+	}
+	Q_INVOKABLE void processHiemap();
+
+	//	Q_PROPERTY(ProjectParametrs *projParams READ getProjSetts)
+//	ProjectParametrs *getProjSetts() { return &proj; }
+	bool checkBounty(boundy &bb);
 signals:
 
 };

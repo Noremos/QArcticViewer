@@ -56,14 +56,18 @@ int main(int argc, char *argv[])
 
 	Backend back;
 	engine.rootContext()->setContextProperty("backend", &back);
+	engine.rootContext()->setContextProperty("projectParams", &back.proj);
+	engine.rootContext()->setContextProperty("searchSettings", &back.proj.searchSetts);
 
 	engine.load(url);
 	back.root = engine.rootObjects().first();
+	back.loadSettings();
 //	back.loadImage("D:\\1.tif");
 //	back.loadImage("D:\\Учеба\\БАР\\Москва\\50_60_1_1_2m_v3.0_reg_dem-002.tif");
 //	TiffReader img;
 //	img.open("D:\\1.tif");
 //	img.close();
 //	return 0;
+	back.block = false;
 	return app.exec();
 }

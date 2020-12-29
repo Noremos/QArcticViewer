@@ -281,9 +281,7 @@ public:
 		maxElementsSize = number;
 		while( cachedData.size() > number)
 		{
-			int ol = cacheIndexs.front();
-			cacheIndexs.pop();
-			cachedData.erase(ol);
+			remove();
 		}
 	}
 	void remove()
@@ -366,8 +364,10 @@ public:
 	void free(int index) override
 	{
 		auto it = this->cachedData.find(index);
-		delete[] it->second;
+		// TODO Fix It
+		delete[] (float*)it->second;
 		it->second = nullptr;
+		qDebug() << "FREEE!";
 	}
 };
 
@@ -396,7 +396,7 @@ public:
 		else
 		{
 			data = getRowData(i);
-			cachedRows.storeData(i, data);
+			cachedRows.storeData(i, reinterpret_cast<float*>(data));
 			return data;
 		}
 	}
@@ -413,7 +413,7 @@ class TiffReader: public ImageReader
 	uchar sysByteOredr;
 	uint tilesCount = 0;
 	int compressType = 1;
-	Cache<uchar*> cachedTiles;
+	PointerArrayCache<uchar*> cachedTiles;
 
 	void convert(uchar *bytes, float &out) { out = toFloat(bytes); }
 	void convert(uchar *bytes, int &out) { out = toInt(bytes);}

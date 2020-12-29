@@ -8,17 +8,43 @@ import My 1.0
 import "."
 
 ApplicationWindow {
-    id: applicationWindow
+    id: window
     width: 1280
     height: 720
     visible: true
     title: qsTr("Hello World")
+    visibility: "Windowed"
+    onClosing: {
+        backend.saveSettings()
+    }
 
     property alias spotZones: surf.spotZones
     property alias markerZones: surf.markerZones
     //    DataImage {
     //        id: surfaceData
     //    }
+    menuBar: MenuBar {
+        Menu {
+            title: qsTr("&Файл")
+            //            Action {
+            //                text: qsTr("Создать новый проект...")
+            //                //                onTriggered: createPrjID.open()
+            //            }
+            //            Action {
+            //                text: qsTr("Открыть проект...")
+            //                //                onTriggered: openProject()
+            //            }
+            //            Action {
+            //                text: qsTr("Открыть карту высот")
+            //                onTriggered: backend.startSearching()
+            //            }
+            Action {
+                id: ma_save
+                text: qsTr("Сохранить изменения")
+                onTriggered: backend.saveSettings()
+            }
+        }
+    }
     Rectangle {
         id: topmenu
         color: "#a4a4a4"
@@ -87,7 +113,7 @@ ApplicationWindow {
                 CheckBox {
                     id: useText
                     text: "Использовать текстуру"
-                    checked: false
+                    checked: projectParams ? projectParams.materialType == 1 : true
                     onCheckedChanged: surf.setDrawingMode(checked)
                 }
 
@@ -102,14 +128,13 @@ ApplicationWindow {
                 }
             }
             ColumnLayout {
-                LoadButton {
+                Button {
                     id: findZones
-                    text: "Поиск"
-                    onAccepted: {
-                        let ipath = filePath.toString().substring(8)
-                        backend.findZones(ipath, sah.value, procesLen.value)
-                        surf.update()
-                        surf.ude()
+                    text: "Построить баркоды"
+                    onClicked: {
+                        backend.processHiemap()
+                        //                        surf.update()
+                        //                        surf.ude()
                     }
                 }
                 CheckBox {
@@ -155,6 +180,7 @@ ApplicationWindow {
     }
     SideMenu {
         id: leftmenu
+        objectName: "sideMenu"
         color: "#d4d1d1"
 
         //        side: SideMenu.Side.Left

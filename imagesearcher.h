@@ -23,6 +23,10 @@ struct boundy
 	{
 	}
 
+	boundy(uint x, uint y, float z, uint endX, uint endY, float endZ): x(x), y(y), endX(endX), endY(endY), z(z), endZ(endZ)
+	{
+	}
+
 	void setXifLess(uint ix)
 	{
 		if (ix < this->x)
@@ -56,7 +60,7 @@ struct boundy
 	{
 		return endY - y;
 	}
-	uint zei()
+	float zei()
 	{
 		return endZ - z;
 	}
@@ -79,10 +83,11 @@ struct boundy
 		endY /= step;
 		endZ /= step;
 	}
-
-	int sizeWid;
-	int sizeHei;
-	float sizeTop;
+	QString getStr()
+	{
+		return QString::number(x) + " "+  QString::number(y) + " " + QString::number(z) + " " +
+			QString::number(endX) + " "+  QString::number(endY) + " " + QString::number(endZ);
+	}
 };
 enum class ProcessType
 {
@@ -154,12 +159,23 @@ struct TRange
 	{}
 };
 
-struct SeachingSettings
+class SeachingSettings : public QObject
 {
+public:
+	Q_OBJECT
+	Q_PROPERTY(float coof MEMBER coof)
+	Q_PROPERTY(int diamertMin READ diametrMin WRITE setDiametrMin)
+	Q_PROPERTY(int diamertMax READ diametrMax WRITE setDiametrMax)
+	Q_PROPERTY(float heightMin READ heightMin WRITE setHeightMin)
+	Q_PROPERTY(float heightMax READ heightMax WRITE setHeightMax)
+	Q_PROPERTY(float bottomProc MEMBER bottomProc)
+
+public:
 	float coof;
 	TRange<int> diamert;
 	TRange<float> height;
 	float bottomProc;
+
 	SeachingSettings()
 	{
 		coof = 0;
@@ -167,6 +183,19 @@ struct SeachingSettings
 		height = {0, 0};
 		bottomProc = 0;
 	}
+// FOR PORPERTYs
+
+	int diametrMin() { return diamert.start; }
+	void setDiametrMin(int val) { diamert.start = val;}
+
+	int diametrMax() { return diamert.end; }
+	void setDiametrMax(int val) { diamert.end = val;}
+
+	float heightMin() { return height.start; }
+	void setHeightMin(float val)  { height.start = val;}
+
+	float heightMax() { return height.end; }
+	void setHeightMax(float val)  { height.end = val;}
 };
 
 class ImageSearcher
@@ -187,8 +216,6 @@ public:
 
 	int getMaxTiles();
 	void findZones(vector<boundy> &bounds, int start, int len);
-
-	SeachingSettings settings;
 };
 
 #endif // IMAGESEARCHER_H

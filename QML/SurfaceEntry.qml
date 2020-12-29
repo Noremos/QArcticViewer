@@ -27,6 +27,7 @@ Entity {
             return true
 
         material.texuteSource = filePath
+        projectParams.texturePath = filePath
         return false
     }
     function setMaterial(isTexu) {
@@ -35,6 +36,7 @@ Entity {
         } else {
             components = stdComps
         }
+        projectParams.materialType = (isTexu ? 1 : 0)
     }
 
     property real x: 0.0
@@ -53,6 +55,7 @@ Entity {
         id: material
         factor: surffactor
     }
+
     HeightMaterial {
         id: heimat
         factor: surffactor
@@ -77,6 +80,7 @@ Entity {
     Mesh {
         id: mesh
         objectName: "terrain"
-        source: "file:///2.obj" // "assets/obj/trefoil.obj"
+        source: (projectParams ? "file:///" + projectParams.modelPath : "")
+        //        "file:///2.obj" // "assets/obj/trefoil.obj"
     }
 }

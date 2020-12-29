@@ -29,10 +29,10 @@ ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
 	tilesInHei = reader->height() / tileHei;
 	qDebug() << tilesInWid * tilesInHei;
 
-	settings.bottomProc = 0.1f;
-	settings.coof= 1.7f;
-	settings.diamert = TRange<int>(10,300);
-	settings.height = TRange<float>(2,6);
+//	settings->bottomProc = 0.1f;
+//	settings->coof= 1.7f;
+//	settings->diamert = TRange<int>(10,300);
+//	settings->height = TRange<float>(2,6);
 }
 
 constexpr int getTid(int tx, int ty, int wid)
@@ -183,9 +183,9 @@ boundy getBounty(pmap &points)
 	boundy b(minX, minY, maxX, maxY);
 	b.z = minT;
 	b.endZ = maxT;
-	b.sizeWid = (maxX - minX) * resol;
-	b.sizeHei = (maxY - minY) * resol;
-	b.sizeTop = (maxT - minT);
+//	b.sizeWid = (maxX - minX) * resol;
+//	b.sizeHei = (maxY - minY) * resol;
+//	b.sizeTop = (maxT - minT);
 //	if (b.sizeTop > 8)
 //		qDebug() << maxT << " " << minT;
 	return b;
@@ -212,28 +212,15 @@ void ImageSearcher::findZones(vector<boundy> &bounds, int start, int len)
 //	start = 519;
 	for (int i = start, totalTiles = MIN(start + len, tilesInWid * tilesInHei); i < totalTiles; ++i)
 	{
-		qDebug() << i;
+//		qDebug() << i;
 		Img img = getTile(i);
 		int wid = img.wid, hei = img.hei;
-		Mat imgmat(hei, wid, CV_32FC1);
-
-		for (int j = 0; j < hei; ++j)
-		{
-			for (int i = 0; i < wid; ++i)
-			{
-				float val = img.get(i, j);
-				if (val == -9999)
-					continue;
-				imgmat.at<float>(j, i) = val;
-			}
-		}
-		img.release();
 
 		bc::barcodeCreator creator;
 
-		Barcontainer *bars = creator.searchHoles(imgmat);
+		Barcontainer *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem *item = bars->get(0);
-		imgmat.release();
+		img.release();
 
 		int tx = (i % tilesInWid) * tileWid;
 		int ty = (i / tilesInWid) * tileHei;
@@ -244,33 +231,7 @@ void ImageSearcher::findZones(vector<boundy> &bounds, int start, int len)
 //			check(line->matr);
 			boundy b = getBounty(*line->matr);
 
-			float coof;
-			int dmin, dmax;
-			if (b.sizeWid > b.sizeHei)
-			{
-				dmin = b.sizeHei;
-				dmax = b.sizeWid;
-			}
-			else
-			{
-				dmin = b.sizeWid;
-				dmax = b.sizeHei;
-			}
 
-			coof = float(dmax) / dmin;
-
-			// sootn
-			if(coof > settings.coof)
-				continue;
-
-			// diametr
-			if(dmin < settings.diamert.start || dmin > settings.diamert.end)
-				continue;
-
-			if (b.sizeTop < settings.height.start)
-				continue;
-			if (b.sizeTop > settings.height.end)
-				continue;
 			b.addXoffset(tx);
 			b.addYoffset(ty);
 			bounds.push_back(b);

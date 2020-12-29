@@ -84,4 +84,3 @@ HEADERS += \
     project.h \
     tiffreader.h
 
-

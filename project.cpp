@@ -4,12 +4,12 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-Project::Project()
+ProjectParametrs::ProjectParametrs()
 {
 
 }
 
-bool Project::saveProject(QString path)
+bool ProjectParametrs::saveProject(QString path)
 {
 	QFile saveFile(path);
 
@@ -26,7 +26,7 @@ bool Project::saveProject(QString path)
 	return true;
 }
 
-bool Project::loadProject(QString path)
+bool ProjectParametrs::loadProject(QString path)
 {
 	QFile loadFile(path);
 
@@ -44,24 +44,49 @@ bool Project::loadProject(QString path)
 	return true;
 }
 
-void Project::read(const QJsonObject &json)
+void ProjectParametrs::read(const QJsonObject &json)
 {
 	this->modelPath		= json["modelPath"].toString();
 	this->heimapPath	= json["heimapPath"].toString();
 	this->texturePath	= json["texturePath"].toString();
 	this->step			= json["step"].toInt();
+	this->imgMinVal		= json["imgMinVal"].toDouble();
 	this->imgMaxVal		= json["imgMaxVal"].toDouble();
-	this->imgMinVal		= json["imgMaxVal"].toDouble();
-	this->materialType	= json["imgMaxVal"].toInt();
+	this->materialType  = json["materialType"].toInt();
+
+	QJsonObject setts = json["searchingSettings"].toObject();
+	searchSetts.coof = setts["coof"].toDouble();
+	searchSetts.setDiametrMin(setts["diametrMin"].toInt());
+	searchSetts.setDiametrMax(setts["diametrMax"].toInt());
+	searchSetts.setHeightMin(setts["heightMin"].toDouble());
+	searchSetts.setHeightMax(setts["heightMax"].toDouble());
+	searchSetts.bottomProc = setts["bottom"].toDouble();
 }
 
-void Project::write(QJsonObject &json) const
+void ProjectParametrs::write(QJsonObject &json) const
 {
-	json["model"]		= this->modelPath;
+	json["modelPath"]		= this->modelPath;
 	json["heimapPath"]	= this->heimapPath;
 	json["texturePath"] = this->texturePath;
 	json["step"]		= this->step;
 	json["imgMaxVal"]	= this->imgMaxVal;
-	json["imgMaxVal"]	= this->imgMinVal;
-	json["imgMaxVal"]	= this->materialType;
+	json["imgMinVal"]	= this->imgMinVal;
+	json["materialType"] = this->materialType;
+
+	QJsonObject setts;
+	setts["coof"] = searchSetts.coof;
+	setts["diametrMin"] = searchSetts.diamert.start;
+	setts["diametrMax"] = searchSetts.diamert.end;
+	setts["heightMin"] = searchSetts.height.start;
+	setts["heightMax"] = searchSetts.height.end;
+	setts["bottom"] = searchSetts.bottomProc;
+	json["searchingSettings"] = setts;
+
+
+//	QJsonObject setts;
+//	setts["coof"] = coof;
+//		setts.coof = coof;
+//	setts.diamert = {minD, maxD};
+//	setts.height = {minHei, maxHei};
+//	setts.bottomProc = bottomLineProc;
 }
