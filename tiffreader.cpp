@@ -296,10 +296,10 @@ uchar* TiffReader::getTile(int ind)
 	return data;
 }
 
-void* TiffReader::processData(uchar* bytes)
+rowdta TiffReader::processData(uchar* bytes)
 {
 	int len = widght();
-	void *data;
+	rowdta data;
 	switch (getType())
 	{
 	case ImageType::float32:
@@ -308,7 +308,7 @@ void* TiffReader::processData(uchar* bytes)
 	return data;
 }
 
-void *TiffReader::getRowData(int y)
+rowdta TiffReader::getRowData(int y)
 {
 	vector<uchar> ret;
 	ret.reserve(tiff.ImageWidth);
@@ -354,7 +354,7 @@ void *TiffReader::getRowData(int y)
 		delete[] buff;
 	}
 
-	void *data = processData(ret.data());
+	rowdta data = processData(ret.data());
 	ret.clear();
 	return data;
 }

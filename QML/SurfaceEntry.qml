@@ -12,6 +12,7 @@ Entity {
         id: mainCamera
     }
     property var stdComps: [transform, mesh, light, heimat] //phongMat heimat
+    property var phongComps: [transform, mesh, light, phongMat] //phongMat heimat
     property var textureComps: [transform, mesh, light, material]
 
     function setSource(filePath) {
@@ -27,16 +28,23 @@ Entity {
             return true
 
         material.texuteSource = filePath
-        projectParams.texturePath = filePath
         return false
     }
-    function setMaterial(isTexu) {
-        if (isTexu) {
-            components = textureComps
-        } else {
+    function setMaterial() {
+        if (projectParams.materialType == 0) {
             components = stdComps
         }
-        projectParams.materialType = (isTexu ? 1 : 0)
+        if (projectParams.materialType == 1) {
+            components = phongComps
+        }
+        if (projectParams.materialType == 2) {
+            components = textureComps
+            material.texuteSource = projectParams.texturePath
+        }
+        if (projectParams.materialType == 3) {
+            components = textureComps
+            material.texuteSource = projectParams.texture2Path
+        }
     }
 
     property real x: 0.0

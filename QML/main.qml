@@ -15,6 +15,7 @@ ApplicationWindow {
     title: qsTr("Hello World")
     visibility: "Windowed"
     onClosing: {
+        backend.block = true
         backend.saveSettings()
     }
 
@@ -83,47 +84,63 @@ ApplicationWindow {
                     editable: true
                 }
             }
+
+            //            ColumnLayout {
+            //                RadioButton {
+            //                    id: proiz
+            //                    checked: true
+            //                    text: qsTr("Производительность")
+            //                }
+            //                RadioButton {
+            //                    text: qsTr("Скорость")
+            //                }
+            //            }
             ColumnLayout {
+                Label {
+                    text: "Что отображать на карте"
+                }
+
                 SpinBox {
-                    id: startProc
+                    id: mattype
                     from: 0
-                    value: 0
-                    to: 25000
-                    editable: true
-                }
-                SpinBox {
-                    id: endProc
-                    from: 0
-                    value: 0
-                    to: 25000
-                    editable: true
-                }
-            }
-            ColumnLayout {
-                RadioButton {
-                    id: proiz
-                    checked: true
-                    text: qsTr("Производительность")
-                }
-                RadioButton {
-                    text: qsTr("Скорость")
-                }
-            }
-            ColumnLayout {
-                CheckBox {
-                    id: useText
-                    text: "Использовать текстуру"
-                    checked: projectParams ? projectParams.materialType == 1 : true
-                    onCheckedChanged: surf.setDrawingMode(checked)
+                    to: items.length - 1
+                    value: projectParams ? projectParams.materialType : 0 // "Высота"
+
+                    property var items: ["Высота", "Свет", "Текстура 1", "Тексутра 2"]
+
+                    validator: RegExpValidator {
+                        regExp: new RegExp("(Высота|Текстура 1|Свет|Тексутра 2)",
+                                           "i")
+                    }
+
+                    textFromValue: function (value) {
+                        return items[value]
+                    }
+
+                    valueFromText: function (text) {
+                        for (var i = 0; i < items.length; ++i) {
+                            if (items[i].toLowerCase().indexOf(
+                                        text.toLowerCase()) === 0)
+                                return i
+                        }
+                        return sb.value
+                    }
+                    onValueChanged: {
+                        projectParams.materialType = mattype.value
+                        surf.setTexturetype()
+                    }
                 }
 
                 LoadButton {
                     id: textureLoder
                     text: "Загрузить текстуру"
-
+                    enabled: mattype.value > 1
                     onAccepted: {
-
-                        surf.setTextureSource(filePath)
+                        if (mattype.value == 2)
+                            projectParams.texturePath = filePath
+                        else if (mattype.value == 3)
+                            projectParams.texture2Path = filePath
+                        surf.setTexturetype()
                     }
                 }
             }
@@ -149,17 +166,17 @@ ApplicationWindow {
                 }
 
                 SpinBox {
-                    id: sah
+                    id: startProc
                     from: 0
                     value: 0
-                    to: 1000000
+                    to: 25000
                     editable: true
                 }
                 SpinBox {
-                    id: procesLen
+                    id: endProc
                     from: 0
-                    value: 5
-                    to: 1000000
+                    value: 25000
+                    to: 25000
                     editable: true
                 }
             }

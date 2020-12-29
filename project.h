@@ -13,6 +13,7 @@ public:
 	Q_PROPERTY(QString modelPath MEMBER modelPath NOTIFY modelChanged)
 	Q_PROPERTY(QString heimapPath MEMBER heimapPath NOTIFY heimapChanged)
 	Q_PROPERTY(QString texturePath MEMBER texturePath NOTIFY textureChanged)
+	Q_PROPERTY(QString texture2Path MEMBER texture2Path NOTIFY texture2Changed)
 	Q_PROPERTY(int step MEMBER step)
 	Q_PROPERTY(float imgMinVal MEMBER imgMinVal)
 	Q_PROPERTY(float imgMaxVal MEMBER imgMaxVal)
@@ -32,13 +33,14 @@ public:
 		emit meterialtypeChanged(materialType);
 		emit heimapChanged(heimapPath);
 		emit textureChanged(texturePath);
+		emit texture2Changed(texture2Path);
 		emit modelChanged(modelPath);
 	}
 
 
 	QString modelPath;
 	QString heimapPath;
-	QString texturePath;
+	QString texturePath, texture2Path;
 	int step;
 	float imgMaxVal;
 	float imgMinVal;
@@ -50,6 +52,7 @@ signals:
 	void meterialtypeChanged(int);
 	void heimapChanged(QString);
 	void textureChanged(QString);
+	void texture2Changed(QString);
 	void modelChanged(QString);
 private:
 	void write(QJsonObject &json) const;

@@ -103,12 +103,11 @@ Scene3D {
         //        if (needUpdateSRC)
         //            scene3d.update()
     }
-    function setDrawingMode(useText) {
-        smesh.setMaterial(useText)
+    function setTexturetype() {
+        smesh.setMaterial()
     }
     function setFindingMode(useText) {
         spotZones.enabled = useText
-
     }
 
     function ude() {

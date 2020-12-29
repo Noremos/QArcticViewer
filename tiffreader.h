@@ -367,30 +367,32 @@ public:
 		// TODO Fix It
 		delete[] (float*)it->second;
 		it->second = nullptr;
-		qDebug() << "FREEE!";
+//		qDebug() << "FREEE!";
 	}
 };
 
 
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rdb8, argb8 };
+typedef float *rowdta;
+
 class ImageReader
 {
 public:
-	virtual void* getRowData(int ri)=0;
+	virtual rowdta getRowData(int ri)=0;
 	virtual bool open(const wchar_t *path)=0;
 	virtual void close()=0;
 	virtual ImageType getType()=0;
 	virtual int widght()=0;
 	virtual int height()=0;
-	PointerArrayCache<void*> cachedRows;
+	PointerArrayCache<rowdta> cachedRows;
 	bool ready = false;
 	bool isTile = true;
 	float max, min;
 
 	void *getRow(int i)
 	{
-		void *d = nullptr;
-		void *data = cachedRows.getData(i, d);
+		rowdta d = nullptr;
+		rowdta data = cachedRows.getData(i, d);
 		if (data != nullptr)
 			return data;
 		else
@@ -454,7 +456,7 @@ public:
 	void setTitleCacheSize(size_t n);
 	void setRowsCacheSize(size_t n);
 	// ImageReader interface
-	void *getRowData(int ri) override;
+	rowdta getRowData(int ri) override;
 
 	int widght() override;
 	int height() override;
@@ -462,7 +464,7 @@ public:
 	ImageType getType() override;
 
 	uchar *getTile(int ind);
-	void *processData(uchar *bytes);
+	rowdta processData(uchar *bytes);
 
 };
 
