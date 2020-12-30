@@ -73,6 +73,7 @@ Scene3D {
             id: spotZones
             factor: scene3d.surfaceFactor
             objectName: "spotZones"
+            mainCamera: smesh.mainCamera.baseCamer
             //            enabled: false
             //            SpotsEffect {
 

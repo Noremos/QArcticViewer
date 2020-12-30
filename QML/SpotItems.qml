@@ -12,6 +12,7 @@ Entity {
     property double factor: factor
 
     property alias model: buffer
+    property var mainCamera
     Mesh {
         id: mesh
         objectName: "mesh"
@@ -25,6 +26,7 @@ Entity {
         //        diffuse: Qt.vector3d(1.0, 1.0, 0)
         //        ambient: Qt.vector4d(1.0, 1.0, 0)
     }
+
     Material {
         id: mater
         objectName: "material"
@@ -114,7 +116,7 @@ Entity {
         id: spots
 
         model: buffer
-
+//        asynchronous: true
         //        model: root.count
         delegate: Entity {
             required property var mtrans
@@ -130,10 +132,20 @@ Entity {
                 }
                 components: [mater, boxTrans, mesh]
             }
+//            LevelOfDetail {
+//                id: lod
+//                camera: root.mainCamera
+//                thresholds: [500, 1000]
+//                thresholdType: LevelOfDetail.DistanceToCameraThreshold
+////                    thresholdType: LevelOfDetail.ProjectedScreenPixelSizeThreshold
+//            }
             Entity {
+//                enabled: lod.currentIndex<=1
+
                 ExtrudedTextMesh {
                     id: textMesh
                     text: mttext
+
                 }
                 Transform {
                     id: textTrans
