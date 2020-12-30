@@ -43,10 +43,10 @@ public:
 	QString modelPath;
 	QString heimapPath;
 	QString texturePath, texture2Path;
-	int step;
+    int step=10;
 	float imgMaxVal;
 	float imgMinVal;
-	int materialType;
+    int materialType=0;
 public:
 	SeachingSettings searchSetts;
 

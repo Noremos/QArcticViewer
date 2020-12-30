@@ -132,15 +132,17 @@ Entity {
                 }
                 components: [mater, boxTrans, mesh]
             }
-//            LevelOfDetail {
-//                id: lod
-//                camera: root.mainCamera
-//                thresholds: [500, 1000]
-//                thresholdType: LevelOfDetail.DistanceToCameraThreshold
-////                    thresholdType: LevelOfDetail.ProjectedScreenPixelSizeThreshold
-//            }
             Entity {
-//                enabled: lod.currentIndex<=1
+//                LevelOfDetail {
+//                    id: lod
+//                    camera: root.mainCamera
+////                    thresholds: [500, 1000,1500]
+////                    thresholdType: LevelOfDetail.DistanceToCameraThreshold
+//                    thresholds: [500,100,0]
+//                        thresholdType: LevelOfDetail.ProjectedScreenPixelSizeThreshold
+
+//                    onCurrentIndexChanged: textMesh.enabled  =lod.currentIndex==0
+//                }
 
                 ExtrudedTextMesh {
                     id: textMesh
@@ -154,7 +156,7 @@ Entity {
                     rotationX: -90
                     rotationY: 180
                 }
-                components: [textMesh, textMater, textTrans]
+                components: [/*lod,*/ textMesh, textMater, textTrans]
             }
         }
     }

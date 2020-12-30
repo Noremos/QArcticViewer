@@ -46,8 +46,6 @@ ApplicationWindow {
                         filePath = backend.loadImage(filePath.toString(
                                                          ).substring(8),
                                                      simpithithion.value, 0)
-
-                        surf.setModelSource("file:///" + filePath)
                     }
                 }
                 SpinBox {
@@ -151,11 +149,14 @@ ApplicationWindow {
                     from: 0
                     value: 0
                     to: 25000
+                    stepSize: 1000
                     editable: true
                 }
                 SpinBox {
                     id: endProc
                     from: 0
+                    stepSize: 1000
+
                     value: 25000
                     to: 25000
                     editable: true

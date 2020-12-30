@@ -282,7 +282,7 @@ void Backend::test(QString path)
 	if (block)return;
 }
 
-QString Backend::loadImage(QString path, int step, int type, int startRow, int lastRow)
+QString Backend::loadImage(QString path, int step, int type)
 {
 	if (block)return "";
 
@@ -306,9 +306,9 @@ QString Backend::loadImage(QString path, int step, int type, int startRow, int l
 		return "";
 //	int hei = 500;
 	Obj3d object(reader);
- 	object.setMode((::ProcessMode) type);
+    object.setMode((ProcessMode) type);
 	object.setStep(step);
-	object.write("D:\\2.obj", startRow, lastRow);
+    object.write("D:\\2.obj", 0, 0);
 
 	this->proj.imgMinVal = reader->min;
 	this->proj.imgMaxVal = reader->max;
@@ -316,6 +316,7 @@ QString Backend::loadImage(QString path, int step, int type, int startRow, int l
 	this->proj.heimapPath = path;
 	this->proj.step = step;
 
+    proj.notifySettings();
 	this->saveSettings();
 
 	return "D:/2.obj";

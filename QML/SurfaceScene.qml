@@ -93,11 +93,7 @@ Scene3D {
         }
     }
 
-    function setModelSource(filePath) {
-        smesh.setSource(filePath)
-        //        if (needUpdateSRC)
-        //            scene3d.update()
-    }
+
 
     function setTextureSource(filePath) {
         let needUpdateSRC = smesh.setTextureSource(filePath)

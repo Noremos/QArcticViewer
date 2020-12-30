@@ -40,7 +40,7 @@ public:
 	Qt3DCore::QEntity* spotZone;
 	Q_INVOKABLE void findByParams();
 	Q_INVOKABLE void test(QString path);
-    Q_INVOKABLE QString loadImage(QString path, int step, int type, int startRow, int lastRow);
+    Q_INVOKABLE QString loadImage(QString path, int step, int type);
 
 	Qt3DCore::QEntity *getMarkerZone();
 	Qt3DCore::QEntity *getSpotZone();
