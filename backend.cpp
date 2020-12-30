@@ -253,6 +253,7 @@ void Backend::findByParams()
 		// tile
 		if (line.startsWith("t"))
 		{
+            qDebug() << l;
 			l = 0;
 			continue;
 		}
@@ -267,9 +268,21 @@ void Backend::findByParams()
 			continue;
 		++l;
 
-		model->boundydata.append(bb);
-		k++;
-QString Backend::loadImage(QString path, int step, int type)
+        bb->setFactor(xScale);
+        model->boundydata.append(bb);
+        k++;
+    }
+	model->updateAll();
+//	spotZone->setProperty("buffer", QVariant::fromValue(dataList));
+	saveSettings();
+}
+
+void Backend::test(QString path)
+{
+	if (block)return;
+}
+
+QString Backend::loadImage(QString path, int step, int type, int startRow, int lastRow)
 {
 	if (block)return "";
 
@@ -293,9 +306,9 @@ QString Backend::loadImage(QString path, int step, int type)
 		return "";
 //	int hei = 500;
 	Obj3d object(reader);
-    object.setMode((ProcessMode) type);
+ 	object.setMode((::ProcessMode) type);
 	object.setStep(step);
-    object.write("D:\\2.obj", 0, 0);
+	object.write("D:\\2.obj", startRow, lastRow);
 
 	this->proj.imgMinVal = reader->min;
 	this->proj.imgMaxVal = reader->max;

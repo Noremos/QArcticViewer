@@ -32,7 +32,7 @@ public:
 		factor = fact;
 	}
 
-	QVector3D getTrans() const { return QVector3D(bb.x + bb.wid() / 2, bb.endZ, bb.y + bb.hei() / 2); }
+	QVector3D getTrans() const { return QVector3D(bb.x + bb.wid() / 2, bb.endZ + bb.zei()/2 + 1, bb.y + bb.hei() / 2); }
 	QVector3D getTextTrans() const { return QVector3D(bb.x, bb.endZ, bb.y); }
 	QVector3D getSacle() const { return QVector3D(bb.wid(), 1, bb.hei()); }
 	inline QString getText() const
@@ -40,13 +40,13 @@ public:
 		QString nam;
 		//			nam.append("Dimentions:\n");
 		nam.append(" L: ");
-		nam.append(QString::number(factor*bb.hei()));
+        nam.append(QString::number(factor * bb.hei() * resol));
 		nam.append(" W: ");
-		nam.append(QString::number(factor*bb.wid()));
+        nam.append(QString::number(factor * bb.wid() * resol));
 		nam.append(" H: ");
-		nam.append(QString::number(bb.zei()));
+        nam.append(QString::number(factor * bb.zei()));
 
-		qDebug() << nam;
+//		qDebug() << nam;
 		return nam;
 	}
 };

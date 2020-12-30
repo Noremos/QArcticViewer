@@ -28,7 +28,7 @@ void InstanseModel::updateAll()
 {
 	beginInsertRows(QModelIndex(), 0, boundydata.size()-1);
 	endInsertRows();
-//	qDebug() << "updated" << boundydata.size();
+    qDebug() << "updated" << boundydata.size();
 }
 
 InstanseModel::InstanseModel(QObject *parent)
@@ -54,7 +54,7 @@ int InstanseModel::rowCount(const QModelIndex &parent) const
 
 QVariant InstanseModel::data(const QModelIndex &index, int role) const
 {
-	qDebug() << role << index.isValid();
+//	qDebug() << role << index.isValid();
 	if (!index.isValid())
 		return QVariant();
 
