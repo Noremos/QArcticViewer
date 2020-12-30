@@ -14,23 +14,10 @@ Entity {
     property var stdComps: [transform, mesh, light, heimat] //phongMat heimat
     property var phongComps: [transform, mesh, light, phongMat] //phongMat heimat
     property var textureComps: [transform, mesh, light, material]
+    property var texture2Comps: [transform, mesh, light, material2]
 
-    function setSource(filePath) {
-        if (mesh.source.toString() === filePath.toString()) {
-            mesh.source = ""
-            update()
-        }
-        mesh.source = filePath
-        return false
-    }
-    function setTextureSource(filePath) {
-        if (material.texuteSource === filePath)
-            return true
-
-        material.texuteSource = filePath
-        return false
-    }
     function setMaterial() {
+        console.log("settign path " +projectParams.texturePath)
         if (projectParams.materialType == 0) {
             components = stdComps
         }
@@ -39,11 +26,9 @@ Entity {
         }
         if (projectParams.materialType == 2) {
             components = textureComps
-            material.texuteSource = projectParams.texturePath
         }
         if (projectParams.materialType == 3) {
-            components = textureComps
-            material.texuteSource = projectParams.texture2Path
+            components = texture2Comps
         }
     }
 
@@ -62,8 +47,13 @@ Entity {
     SurfaceMaterial {
         id: material
         factor: surffactor
+        texuteSource: projectParams.texturePath
     }
-
+    SurfaceMaterial {
+        id: material2
+        factor: surffactor
+        texuteSource: projectParams.texture2Path
+    }
     HeightMaterial {
         id: heimat
         factor: surffactor

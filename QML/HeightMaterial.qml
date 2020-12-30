@@ -9,6 +9,14 @@ Material {
         Parameter {
             name: "factor"
             value: factor
+        },
+        Parameter {
+            name: "minHei"
+            value: projectParams?projectParams.imgMinVal/10.0:0
+        },
+        Parameter {
+            name: "maxHei"
+            value: projectParams?projectParams.imgMaxVal/10.0:0
         }
     ]
     effect: Effect {

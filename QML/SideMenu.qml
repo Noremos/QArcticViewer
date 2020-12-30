@@ -100,8 +100,11 @@ Rectangle {
             value: 10
             to: 100
             onValueChanged: updateBoxSetts()
+            visible: false
         }
         Button {
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
             text: "Поиск"
             onClicked: backend.findByParams()
         }

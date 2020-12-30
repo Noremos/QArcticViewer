@@ -38,7 +38,7 @@ public:
 	Qt3DCore::QEntity* spotZone;
 	Q_INVOKABLE void findByParams();
 	Q_INVOKABLE void test(QString path);
-	Q_INVOKABLE QString loadImage(QString path, int step, int type, int startRow, int lastRow);
+    Q_INVOKABLE QString loadImage(QString path, int step, int type);
 
 	Qt3DCore::QEntity *getMarkerZone();
 	Qt3DCore::QEntity *getSpotZone();
@@ -50,13 +50,14 @@ public:
 	Q_INVOKABLE void setSearchingsettings(/*float coof, int minD, int maxD, float minHei, float maxHei, float bottomLineProc*/);
 	Q_INVOKABLE void saveSettings();
 
-	void loadSettings();
-	Q_PROPERTY(bool block READ getBlock)
+    Q_PROPERTY(bool block READ getBlock)
+
+    void loadSettings();
 	bool getBlock()
 	{
 		return block;
 	}
-	Q_INVOKABLE void processHiemap();
+    Q_INVOKABLE void processHiemap(int start, int end);
 
 	//	Q_PROPERTY(ProjectParametrs *projParams READ getProjSetts)
 //	ProjectParametrs *getProjSetts() { return &proj; }

@@ -96,7 +96,7 @@ void Backend::loadSettings()
 	proj.notifySettings();
 }
 
-void Backend::processHiemap()
+void Backend::processHiemap(int start, int end)
 {
 	if (block)
 		return;
@@ -118,13 +118,18 @@ void Backend::processHiemap()
 	reader->open(proj.heimapPath.toStdWString().c_str());
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
-	for (int ind = 0; ind < imgsrch.getMaxTiles(); ++ind)
+    start = imgsrch.getTilesInHei() * (start / 1000);
+    end = imgsrch.getTilesInHei() * (end / 1000);
+    end = min(end, imgsrch.getMaxTiles());
+    qDebug() << start << end;
+    //1000
+    for (int ind = start; ind < end; ++ind)
 	{
 		vector<boundy> objects;
 		imgsrch.findZones(objects, ind, 1);
 
 		sw = "t " + QString::number(ind) + nl;
-		for (int io = 0, totobjs = objects.size(); io < totobjs; ++io)
+        for (size_t io = 0, totobjs = objects.size(); io < totobjs; ++io)
 		{
 			sw += objects[io].getStr() + nl;
 		}
@@ -188,7 +193,7 @@ void createTextEnty(QEntity* parent, boundy& bb, int wid, int hei, float zei, QM
 	QExtrudedTextMesh *text = new QExtrudedTextMesh(textEnty);
 	Qt3DCore::QTransform *testtrans = new Qt3DCore::QTransform(textEnty);
 
-	testtrans->setTranslation(QVector3D(bb.x, bb.endZ, bb.y));
+    testtrans->setTranslation(QVector3D(bb.x, bb.endZ + zei/2 + 1, bb.y));
 	testtrans->setRotationX(-90);
 	testtrans->setRotationY(180);
 	//			testtrans->setScale(0.5);
@@ -196,8 +201,8 @@ void createTextEnty(QEntity* parent, boundy& bb, int wid, int hei, float zei, QM
 
 	QString nam;
 	//			nam.append("Dimentions:\n");
-	nam.append(" L: "); nam.append(QString::number(hei));
-	nam.append(" W: "); nam.append(QString::number(wid));
+    nam.append(" L: "); nam.append(QString::number(wid * resol));
+    nam.append(" W: "); nam.append(QString::number(hei * resol));
 	nam.append(" H: ");	nam.append(QString::number(zei));
 
 	text->setText(nam);
@@ -212,7 +217,7 @@ void createTextEnty(QEntity* parent, boundy& bb, int wid, int hei, float zei, QM
 bool Backend::checkBounty(boundy& bb)
 {
 	float coof;
-	int dmin, dmax;
+    uint dmin, dmax;
 	if (bb.wid() > bb.hei())
 	{
 		dmin = bb.hei();
@@ -224,7 +229,7 @@ bool Backend::checkBounty(boundy& bb)
 		dmax = bb.hei();
 	}
 
-	coof = float(dmax) / dmin;
+    coof = float(dmax) / float(dmin);
 
 	// sootn
 	if (coof > proj.searchSetts.coof)
@@ -241,8 +246,6 @@ bool Backend::checkBounty(boundy& bb)
 	if (bb.zei() > proj.searchSetts.height.end)
 		return false;
 
-	qDebug() << proj.searchSetts.diamert.start << proj.searchSetts.diamert.end;
-	qDebug() << proj.searchSetts.height.start << proj.searchSetts.height.end;
 	return true;
 }
 
@@ -253,11 +256,7 @@ void Backend::findByParams()
 	float xScale = 10;
 //	float yScale = 10;
 
-	qDebug() << proj.heimapPath;
-	reader = new TiffReader();
-
-	reader->open(proj.heimapPath.toStdWString().c_str());
-	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
+    qDebug() << proj.heimapPath;
 
 	QMesh *mesh = spotZone->findChild<QMesh *>("mesh");
 	QMaterial *mater = spotZone->findChild<QMaterial *>("material");
@@ -304,9 +303,6 @@ void Backend::findByParams()
 					v->deleteLater();
 				}
 			}
-			qDebug() << tileentry->childNodes().size() << l;
-			//			qDebug() << tileentry->children().size();
-
 			l = 0;
 			continue;
 		}
@@ -322,7 +318,6 @@ void Backend::findByParams()
 		int wid = bb.wid();
 		int hei = bb.hei();
 		float zei = bb.zei();
-		qDebug() << bb.wid() << bb.hei() << bb.zei();
 
 
 		Qt3DCore::QEntity *entry = new Qt3DCore::QEntity(tileentry);
@@ -350,8 +345,10 @@ void Backend::findByParams()
 
 void Backend::test(QString path)
 {
-	if (block)return;
+    if (block)return;
 }
+
+
 
 //cv::Mat Backend::imgread(QString path)
 //{
@@ -365,7 +362,7 @@ void Backend::test(QString path)
 //	return cv::Mat();
 //}
 
-QString Backend::loadImage(QString path, int step, int type, int startRow, int lastRow)
+QString Backend::loadImage(QString path, int step, int type)
 {
 	if (block)return "";
 
@@ -389,9 +386,9 @@ QString Backend::loadImage(QString path, int step, int type, int startRow, int l
 		return "";
 //	int hei = 500;
 	Obj3d object(reader);
-	object.setMode((::ProcessMode) type);
+    object.setMode((ProcessMode) type);
 	object.setStep(step);
-	object.write("D:\\2.obj", startRow, lastRow);
+    object.write("D:\\2.obj", 0, 0);
 
 	this->proj.imgMinVal = reader->min;
 	this->proj.imgMaxVal = reader->max;

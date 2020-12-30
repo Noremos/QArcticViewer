@@ -15,8 +15,8 @@ public:
 	Q_PROPERTY(QString texturePath MEMBER texturePath NOTIFY textureChanged)
 	Q_PROPERTY(QString texture2Path MEMBER texture2Path NOTIFY texture2Changed)
 	Q_PROPERTY(int step MEMBER step)
-	Q_PROPERTY(float imgMinVal MEMBER imgMinVal)
-	Q_PROPERTY(float imgMaxVal MEMBER imgMaxVal)
+    Q_PROPERTY(float imgMinVal MEMBER imgMinVal NOTIFY imgMinValChanged)
+    Q_PROPERTY(float imgMaxVal MEMBER imgMaxVal NOTIFY imgMaxValChanged)
 	Q_PROPERTY(int materialType MEMBER materialType NOTIFY meterialtypeChanged)
 //	Q_PROPERTY(SeachingSettings* searchSetts READ getSerchSetts)
 //	Q_PROPERTY(SeachingSettings searchSetts MEMBER searchSetts)
@@ -30,12 +30,14 @@ public:
 	bool saveProject(QString path);
 	void notifySettings()
 	{
-		emit meterialtypeChanged(materialType);
 		emit heimapChanged(heimapPath);
 		emit textureChanged(texturePath);
 		emit texture2Changed(texture2Path);
-		emit modelChanged(modelPath);
-	}
+        emit modelChanged(modelPath);
+        emit imgMinValChanged(imgMinVal);
+        emit imgMaxValChanged(imgMaxVal);
+        emit meterialtypeChanged(materialType);
+    }
 
 
 	QString modelPath;
@@ -54,6 +56,8 @@ signals:
 	void textureChanged(QString);
 	void texture2Changed(QString);
 	void modelChanged(QString);
+    void imgMinValChanged(float);
+    void imgMaxValChanged(float);
 private:
 	void write(QJsonObject &json) const;
 	void read(const QJsonObject &json);
