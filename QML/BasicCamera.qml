@@ -28,19 +28,19 @@ FirstPersonCameraController {
         nearPlane: 0.1
         farPlane: 100000.0
         position: Qt.vector3d(0.0, 500.0, 0.0)
-        upVector: Qt.vector3d(0.0, 0.0, 1.0)
+//        upVector: Qt.vector3d(0.0, 1.0, 0.0)
 
         //        viewCenter: Qt.vector3d(10.0, 0.0, 10.0)
         //    acceleration: 0.1
         //    deceleration: 1.0
     }
 
-    RayCaster {
-        id: raycaster
-        origin: camera.position
-        direction: camera.upVector
-        length: 5000
+//    RayCaster {
+//        id: raycaster
+//        origin: camera.position
+//        direction: camera.upVector
+//        length: 5000
 
-        //        onHitsChanged: printHits("Model hits", hits)
-    }
+//        //        onHitsChanged: printHits("Model hits", hits)
+//    }
 }

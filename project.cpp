@@ -49,7 +49,7 @@ void ProjectParametrs::read(const QJsonObject &json)
 	this->modelPath		= json["modelPath"].toString();
 	this->heimapPath	= json["heimapPath"].toString();
 	this->texturePath	= json["texturePath"].toString();
-	this->texture2Path	= json["texture2Path"].toString("");
+    this->texture2Path	= json["texture2Path"].toString();
 	this->step			= json["step"].toInt();
 	this->imgMinVal		= json["imgMinVal"].toDouble();
 	this->imgMaxVal		= json["imgMaxVal"].toDouble();

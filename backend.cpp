@@ -96,7 +96,7 @@ void Backend::loadSettings()
 	proj.notifySettings();
 }
 
-void Backend::processHiemap()
+void Backend::processHiemap(int start, int end)
 {
 	if (block)
 		return;
@@ -118,13 +118,18 @@ void Backend::processHiemap()
 	reader->open(proj.heimapPath.toStdWString().c_str());
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
-	for (int ind = 0; ind < imgsrch.getMaxTiles(); ++ind)
+    start = imgsrch.getTilesInHei() * (start / 1000);
+    end = imgsrch.getTilesInHei() * (end / 1000);
+    end = min(end, imgsrch.getMaxTiles());
+    qDebug() << start << end;
+    //1000
+    for (int ind = start; ind < end; ++ind)
 	{
 		vector<boundy> objects;
 		imgsrch.findZones(objects, ind, 1);
 
 		sw = "t " + QString::number(ind) + nl;
-		for (int io = 0, totobjs = objects.size(); io < totobjs; ++io)
+        for (size_t io = 0, totobjs = objects.size(); io < totobjs; ++io)
 		{
 			sw += objects[io].getStr() + nl;
 		}
@@ -183,7 +188,7 @@ using namespace Qt3DExtras;
 bool Backend::checkBounty(boundy& bb)
 {
 	float coof;
-	int dmin, dmax;
+    uint dmin, dmax;
 	if (bb.wid() > bb.hei())
 	{
 		dmin = bb.hei();
@@ -195,7 +200,7 @@ bool Backend::checkBounty(boundy& bb)
 		dmax = bb.hei();
 	}
 
-	coof = float(dmax) / dmin;
+    coof = float(dmax) / float(dmin);
 
 	// sootn
 	if (coof > proj.searchSetts.coof)
@@ -262,33 +267,9 @@ void Backend::findByParams()
 			continue;
 		++l;
 
-		bb->setFactor(xScale);
 		model->boundydata.append(bb);
 		k++;
-	}
-	model->updateAll();
-//	spotZone->setProperty("buffer", QVariant::fromValue(dataList));
-	saveSettings();
-}
-
-void Backend::test(QString path)
-{
-	if (block)return;
-}
-
-//cv::Mat Backend::imgread(QString path)
-//{
-//	QFile file(path);
-//	if (!file.open(QIODevice::ReadOnly))
-//		return cv::Mat();
-
-//	QByteArray blob = file.readAll();
-//	std::vector<unsigned char> data(blob.begin(), blob.end());
-////	return imdecode(cv::Mat(data), 1);
-//	return cv::Mat();
-//}
-
-QString Backend::loadImage(QString path, int step, int type, int startRow, int lastRow)
+QString Backend::loadImage(QString path, int step, int type)
 {
 	if (block)return "";
 
@@ -312,9 +293,9 @@ QString Backend::loadImage(QString path, int step, int type, int startRow, int l
 		return "";
 //	int hei = 500;
 	Obj3d object(reader);
-	object.setMode((::ProcessMode) type);
+    object.setMode((ProcessMode) type);
 	object.setStep(step);
-	object.write("D:\\2.obj", startRow, lastRow);
+    object.write("D:\\2.obj", 0, 0);
 
 	this->proj.imgMinVal = reader->min;
 	this->proj.imgMaxVal = reader->max;

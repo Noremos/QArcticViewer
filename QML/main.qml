@@ -13,9 +13,9 @@ ApplicationWindow {
     height: 720
     visible: true
     title: qsTr("Hello World")
-    visibility: "Windowed"
+    visibility: "Maximized"
     onClosing: {
-        backend.block = true
+        console.log(projectParams.texturePath)
         backend.saveSettings()
     }
 
@@ -37,6 +37,7 @@ ApplicationWindow {
         anchors.topMargin: 0
         height: 120
         Row {
+            spacing: 5
             //            anchors.fill: parent
             ColumnLayout {
                 LoadButton {
@@ -44,10 +45,7 @@ ApplicationWindow {
                     onAccepted: {
                         filePath = backend.loadImage(filePath.toString(
                                                          ).substring(8),
-                                                     simpithithion.value,
-                                                     proiz.checked ? 0 : 1,
-                                                     startProc.value,
-                                                     endProc.value)
+                                                     simpithithion.value, 0)
 
                         surf.setModelSource("file:///" + filePath)
                     }
@@ -102,8 +100,12 @@ ApplicationWindow {
                         return sb.value
                     }
                     onValueChanged: {
-                        projectParams.materialType = mattype.value
-                        surf.setTexturetype()
+                        if (projectParams)
+                        {
+                                  console.log("check")
+                            projectParams.materialType = mattype.value
+                            surf.setTexturetype()
+                        }
                     }
                 }
 
@@ -112,6 +114,9 @@ ApplicationWindow {
                     text: "Загрузить текстуру"
                     enabled: mattype.value > 1
                     onAccepted: {
+                        if (!projectParams)
+                            return
+
                         if (mattype.value == 2)
                             projectParams.texturePath = filePath
                         else if (mattype.value == 3)
@@ -125,7 +130,7 @@ ApplicationWindow {
                     id: findZones
                     text: "Построить баркоды"
                     onClicked: {
-                        backend.processHiemap()
+                        backend.processHiemap(startProc.value, endProc.value)
                         //                        surf.update()
                         //                        surf.ude()
                     }

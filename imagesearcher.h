@@ -201,10 +201,10 @@ public:
 class ImageSearcher
 {
 	TiffReader *reader;
-	int tileWid;
-	int tileHei;
-	int tilesInWid;
-	int tilesInHei;
+    int tileWid;
+    int tileHei;
+    int tilesInWid;
+    int tilesInHei;
 	float *image;
 	// наложение одного тайла на другой
 	int diffset = 100;
@@ -214,6 +214,14 @@ class ImageSearcher
 public:
 	ImageSearcher(TiffReader *reader);
 
+    uint getTilesInWid()
+    {
+        return tilesInWid;
+    }
+    uint getTilesInHei()
+    {
+        return tilesInHei;
+    }
 	int getMaxTiles();
 	void findZones(vector<boundy> &bounds, int start, int len);
 };

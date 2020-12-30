@@ -25,8 +25,8 @@ ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
 		reader->setRowsCacheSize(tileHei);
 	}
 
-	tilesInWid = reader->widght() / tileWid;
-	tilesInHei = reader->height() / tileHei;
+    tilesInWid = (uint)reader->widght() / tileWid;
+    tilesInHei = (uint)reader->height() / tileHei;
 	qDebug() << tilesInWid * tilesInHei;
 
 //	settings->bottomProc = 0.1f;
@@ -244,7 +244,7 @@ void ImageSearcher::findZones(vector<boundy> &bounds, int start, int len)
 		b.z = 0;
 		b.endZ = 50;
 //		bounds.push_back(b);
-		qDebug() <<"size:" <<bounds.size();
+        qDebug() <<"size:" <<bounds.size();
 		delete bars;
 	}
 

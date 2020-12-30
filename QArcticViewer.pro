@@ -57,14 +57,14 @@ DISTFILES += \
     as.astylerc
 
 
-INCLUDEPATH += D:/MyA/Libraries/Include
-INCLUDEPATH += ../../../C++/Barcode/include
-DEPENDPATH += D:/MyA/Libraries/Include
+INCLUDEPATH += D:/Progs/C++/Barcode/include
+DEPENDPATH += D:/Progs/C++/Barcode/include
 
 
-win32:CONFIG(release, debug|release): LIBS += -LD:/MyA/Libraries/Libs/ -lopencv_world411
-else:win32:CONFIG(debug, debug|release): LIBS += -LD:/MyA/Libraries/Libs/ -lopencv_world411d
-else:unix: LIBS += -LD:/MyA/Libraries/Libs/ -lopencv_world411
+
+win32:CONFIG(release, debug|release): LIBS += -LD:/Progs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
+else:win32:CONFIG(debug, debug|release): LIBS += -LD:/Progs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411d
+else:unix: LIBS += -LD:/Progs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
 
 HEADERS += \
     ../../../C++/Barcode/include/barcode.h \
