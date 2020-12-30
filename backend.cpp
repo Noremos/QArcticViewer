@@ -180,35 +180,6 @@ QMaterial *createSpotMaterial(QEntity *prnt)
 }
 using namespace Qt3DExtras;
 
-void createTextEnty(QEntity* parent, boundy& bb, int wid, int hei, float zei, QMaterial* textMaterial)
-{
-	QFont font(QFontDatabase().families()[0], 32, -1, false);
-
-	Qt3DCore::QEntity *textEnty = new Qt3DCore::QEntity(parent);
-	QExtrudedTextMesh *text = new QExtrudedTextMesh(textEnty);
-	Qt3DCore::QTransform *testtrans = new Qt3DCore::QTransform(textEnty);
-
-	testtrans->setTranslation(QVector3D(bb.x, bb.endZ, bb.y));
-	testtrans->setRotationX(-90);
-	testtrans->setRotationY(180);
-	//			testtrans->setScale(0.5);
-	testtrans->setScale3D(QVector3D(0.5,0.5,0.1));
-
-	QString nam;
-	//			nam.append("Dimentions:\n");
-	nam.append(" L: "); nam.append(QString::number(hei));
-	nam.append(" W: "); nam.append(QString::number(wid));
-	nam.append(" H: ");	nam.append(QString::number(zei));
-
-	text->setText(nam);
-	//			text->setFont(font);
-
-	textEnty->addComponent(text);
-	textEnty->addComponent(testtrans);
-	textEnty->addComponent(textMaterial);
-}
-
-
 bool Backend::checkBounty(boundy& bb)
 {
 	float coof;
@@ -241,30 +212,18 @@ bool Backend::checkBounty(boundy& bb)
 	if (bb.zei() > proj.searchSetts.height.end)
 		return false;
 
-	qDebug() << proj.searchSetts.diamert.start << proj.searchSetts.diamert.end;
-	qDebug() << proj.searchSetts.height.start << proj.searchSetts.height.end;
 	return true;
 }
+
 
 void Backend::findByParams()
 {
 	if (block)return;
 
 	float xScale = 10;
-//	float yScale = 10;
 
-	qDebug() << proj.heimapPath;
-	reader = new TiffReader();
-
-	reader->open(proj.heimapPath.toStdWString().c_str());
-	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
-
-	QMesh *mesh = spotZone->findChild<QMesh *>("mesh");
-	QMaterial *mater = spotZone->findChild<QMaterial *>("material");
-
-
-	auto *textMaterial = spotZone->findChild<QPhongMaterial *>("phong");
-	textMaterial->setDiffuse(QColor(0, 255, 255));
+	InstanseModel *model = spotZone->findChild<InstanseModel *>("buffer");
+	model->clearAll();
 
 	QString bpath = projectPath + "bds.lst";
 	QFile out(bpath);
@@ -274,77 +233,41 @@ void Backend::findByParams()
 		qDebug() << "FILE NOT EXISTS";
 		return;
 	}
+
 	if (!out.open(QFile::ReadOnly | QFile::Text))
 	{
 		qDebug() << "FILE NOT OPENED";
 		return;
 	}
+
 	QTextStream stream(&out);
 	QString line;
-	Qt3DCore::QEntity *tileentry;
-	int ind, k = 0, l = 0;
+	int k = 0, l = 0;
 	while (stream.readLineInto(&line))
 	{
 		// tile
 		if (line.startsWith("t"))
 		{
-			ind = line.split(" ")[1].toInt();
-			tileentry = spotZone->findChild<Qt3DCore::QEntity *>("tile" + QString::number(ind));
-			if (tileentry == nullptr)
-			{
-				tileentry = new Qt3DCore::QEntity(spotZone);
-				tileentry->setObjectName("tile" + QString::number(ind));
-				tileentry->setEnabled(true);
-			}
-			else
-			{
-				for (auto &v : tileentry->children())
-				{
-					v->setParent(nullptr);
-					v->deleteLater();
-				}
-			}
-			qDebug() << tileentry->childNodes().size() << l;
-			//			qDebug() << tileentry->children().size();
-
 			l = 0;
 			continue;
 		}
 
 		// data
 		QStringList list = line.split(" ");
-		boundy bb(list[0].toInt(), list[1].toInt(), list[2].toFloat(), list[3].toInt(), list[4].toInt(), list[5].toFloat());
+		InstInfo* bb = new InstInfo(
+			list[0].toInt(), list[1].toInt(), list[2].toFloat(),
+			list[3].toInt(), list[4].toInt(), list[5].toFloat());
 
-		if (!checkBounty(bb))
+		if (!checkBounty(bb->bb))
 			continue;
 		++l;
 
-		int wid = bb.wid();
-		int hei = bb.hei();
-		float zei = bb.zei();
-		qDebug() << bb.wid() << bb.hei() << bb.zei();
-
-
-		Qt3DCore::QEntity *entry = new Qt3DCore::QEntity(tileentry);
-		entry->setObjectName("MEW " + QString::number(ind)+ " "+ QString::number(k));
-		entry->setEnabled(true);
-
-		Qt3DCore::QTransform *trans = new Qt3DCore::QTransform(entry);
-
-
-		bb.divStep(xScale);
-
-		trans->setScale3D(QVector3D(bb.wid(), 1, bb.hei()));
-		trans->setTranslation(QVector3D(bb.x + bb.wid() / 2, bb.endZ, bb.y + bb.hei() / 2));
-
-		entry->addComponent(mesh);
-		entry->addComponent(trans);
-		entry->addComponent(mater);
-
-		createTextEnty(tileentry, bb, wid, hei, zei, textMaterial);
-
+		bb->setFactor(xScale);
+		model->boundydata.append(bb);
 		k++;
-	} // for ind
+	}
+	model->updateAll();
+//	spotZone->setProperty("buffer", QVariant::fromValue(dataList));
 	saveSettings();
 }
 

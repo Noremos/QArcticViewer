@@ -4,10 +4,14 @@ import Qt3D.Render 2.15
 import Qt3D.Input 2.15
 import Qt3D.Extras 2.15
 
+import QtQml.Models 2.15
+import My 1.0
+
 Entity {
     id: root
     property double factor: factor
 
+    property alias model: buffer
     Mesh {
         id: mesh
         objectName: "mesh"
@@ -15,8 +19,9 @@ Entity {
     }
 
     PhongMaterial {
-        id: phong
+        id: textMater
         objectName: "phong"
+        diffuse: Qt.rgba(0, 1.0, 1.0, 1.0)
         //        diffuse: Qt.vector3d(1.0, 1.0, 0)
         //        ambient: Qt.vector4d(1.0, 1.0, 0)
     }
@@ -86,7 +91,7 @@ Entity {
             scale3D: Qt.vector3d(1, 300, 1)
             translation: Qt.vector3d(0, 0, 0)
         }
-        components: [phong, trans2, mesh]
+        components: [textMater, trans2, mesh]
     }
 
     Entity {
@@ -98,5 +103,47 @@ Entity {
             translation: Qt.vector3d(-50, 10, -50)
         }
         components: [mater, trans3, mesh]
+    }
+
+    InstanseModel {
+        id: buffer
+        objectName: "buffer"
+    }
+
+    NodeInstantiator {
+        id: spots
+
+        model: buffer
+
+        //        model: root.count
+        delegate: Entity {
+            required property var mtrans
+            required property var mscale
+            required property var mtextTrans
+            required property string mttext
+            Entity {
+                //                pbejctName:"MEW " + index+ " " k;
+                Transform {
+                    id: boxTrans
+                    scale3D: mscale
+                    translation: mtrans
+                }
+                components: [mater, boxTrans, mesh]
+            }
+            Entity {
+                ExtrudedTextMesh {
+                    id: textMesh
+                    text: mttext
+                }
+                Transform {
+                    id: textTrans
+                    scale3D: Qt.vector3d(0.5, 0.5, 0.1)
+                    translation: mtextTrans
+                    rotationX: -90
+                    rotationY: 180
+                }
+                components: [textMesh, textMater, textTrans]
+            }
+        }
     }
 }

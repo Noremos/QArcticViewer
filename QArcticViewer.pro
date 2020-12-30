@@ -18,6 +18,7 @@ SOURCES += \
     heimapmodel.cpp \
     imagesearcher.cpp \
     imgproxy.cpp \
+    instansemodel.cpp \
     main.cpp \
     obj3d.cpp \
     project.cpp \
@@ -80,6 +81,7 @@ HEADERS += \
     heimapmodel.h \
     imagesearcher.h \
     imgproxy.h \
+    instansemodel.h \
     obj3d.h \
     project.h \
     tiffreader.h

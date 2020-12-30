@@ -16,51 +16,51 @@ typedef Img RetImg;
 
 struct boundy
 {
+public:
 	uint x, y, endX, endY;
 	float z, endZ;
-
-	boundy(uint x, uint y, uint endX, uint endY): x(x), y(y), endX(endX), endY(endY)
+	inline boundy(uint x, uint y, uint endX, uint endY): x(x), y(y), endX(endX), endY(endY)
 	{
 	}
 
-	boundy(uint x, uint y, float z, uint endX, uint endY, float endZ): x(x), y(y), endX(endX), endY(endY), z(z), endZ(endZ)
+	inline boundy(uint x, uint y, float z, uint endX, uint endY, float endZ): x(x), y(y), endX(endX), endY(endY), z(z), endZ(endZ)
 	{
 	}
 
-	void setXifLess(uint ix)
+	inline void setXifLess(uint ix)
 	{
 		if (ix < this->x)
 			this->x = ix;
 	}
 
-	void setYifLess(uint iy)
+	inline void setYifLess(uint iy)
 	{
 		if (iy < this->y)
 			this->y = iy;
 	}
 
-	void setEndXifMore(uint ix)
+	inline void setEndXifMore(uint ix)
 	{
 		if (ix >endX)
 			endX = ix;
 	}
 
-	void setEndYifMore(uint iy)
+	inline void setEndYifMore(uint iy)
 	{
 		if (iy > endY)
 			endY = iy;
 	}
 
-	uint wid()
+	inline uint wid() const
 	{
 		return endX - x;
 	}
 
-	uint hei()
+	inline uint hei() const
 	{
 		return endY - y;
 	}
-	float zei()
+	inline float zei() const
 	{
 		return endZ - z;
 	}
@@ -69,12 +69,12 @@ struct boundy
 		x += off;
 		endX += off;
 	}
-	void addYoffset(int off)
+	inline void addYoffset(int off)
 	{
 		y += off;
 		endY += off;
 	}
-	void divStep(float step)
+	inline void divStep(float step)
 	{
 		x /= step;
 		y /= step;
@@ -83,7 +83,7 @@ struct boundy
 		endY /= step;
 		endZ /= step;
 	}
-	QString getStr()
+	inline QString getStr()
 	{
 		return QString::number(x) + " "+  QString::number(y) + " " + QString::number(z) + " " +
 			QString::number(endX) + " "+  QString::number(endY) + " " + QString::number(endZ);
@@ -121,13 +121,13 @@ struct Img
 	float get(int x, int y) const { return data[y * wid + x]; }
 	void set(int x, int y, float val) { data[y * wid + x] = val; }
 	void relese() { delete[] data; }
-	Img clone() const
+	inline Img clone() const
 	{
 		Img clo(new float[wid * hei], wid, hei);
 		memcpy(clo.data, data, wid * hei * sizeof(float));
 		return clo;
 	}
-	uint getTotal()
+	inline uint getTotal()
 	{
 		return wid*hei;
 	}
@@ -137,13 +137,13 @@ struct Img
 	{
 		memcpy(data + wid*y +offsetInDest, inputData, len* sizeof(float));
 	}
-	Img zeroClone() const
+	inline Img zeroClone() const
 	{
 		Img clo(new float[wid * hei], wid, hei);
 		clo.zeroing();
 		return clo;
 	}
-	void release()
+	inline void release()
 	{
 		delete[] data;
 	}

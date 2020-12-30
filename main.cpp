@@ -12,7 +12,6 @@
 #include <Qt3DQuickExtras/qt3dquickwindow.h>
 #include <Qt3DQuick/QQmlAspectEngine>
 
-
 void setSurfaceFormat()
 {
 	QSurfaceFormat format;
@@ -53,6 +52,8 @@ int main(int argc, char *argv[])
 				QCoreApplication::exit(-1);
 		}, Qt::QueuedConnection);
 
+
+	qmlRegisterType<InstanseModel>("My", 1, 0, "InstanseModel");
 
 	Backend back;
 	engine.rootContext()->setContextProperty("backend", &back);

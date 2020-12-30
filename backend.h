@@ -1,6 +1,7 @@
 #ifndef BACKEND_H
 #define BACKEND_H
 
+#include "instansemodel.h"
 #include "obj3d.h"
 #include "project.h"
 
@@ -11,6 +12,7 @@
 #include <QEntity>
 #include <QTransform>
 #include <Qt3DCore>
+
 
 //#include <opencv2/opencv.hpp>
 //namespace cv
