@@ -1,15 +1,5 @@
 #include "imagesearcher.h"
 
-#include <opencv2/opencv.hpp>
-#include "opencv2/core/core.hpp"
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#ifdef USE_OPENCV
-using namespace cv;
-#endif
-
-
 ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
 {
 	if (reader->tiff.TileWidth != 0)

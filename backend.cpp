@@ -13,7 +13,6 @@
 
 #include <Qt3DExtras/Qt3DExtras>
 
-using namespace cv;
 using namespace Qt3DCore;
 Backend::Backend(QObject *parent) : QObject(parent)
 {

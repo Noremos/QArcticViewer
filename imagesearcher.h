@@ -3,17 +3,6 @@
 #include "base.h"
 #include "tiffreader.h"
 
-#ifdef USE_OPENCV
-namespace cv
-{
-class Mat;
-}
-typedef cv::Mat RetImg;
-#else
-typedef Img RetImg;
-#endif
-
-
 struct boundy
 {
 public:
