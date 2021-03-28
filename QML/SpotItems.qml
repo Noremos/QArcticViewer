@@ -116,7 +116,7 @@ Entity {
         id: spots
 
         model: buffer
-//        asynchronous: true
+        //        asynchronous: true
         //        model: root.count
         delegate: Entity {
             required property var mtrans
@@ -133,30 +133,41 @@ Entity {
                 components: [mater, boxTrans, mesh]
             }
             Entity {
-//                LevelOfDetail {
-//                    id: lod
-//                    camera: root.mainCamera
-////                    thresholds: [500, 1000,1500]
-////                    thresholdType: LevelOfDetail.DistanceToCameraThreshold
-//                    thresholds: [500,100,0]
-//                        thresholdType: LevelOfDetail.ProjectedScreenPixelSizeThreshold
+                Text2DEntity {
 
-//                    onCurrentIndexChanged: textMesh.enabled  =lod.currentIndex==0
-//                }
-
-                ExtrudedTextMesh {
+                    //                LevelOfDetail {
+                    //                    id: lod
+                    //                    camera: root.mainCamera
+                    //                    //                    thresholds: [500, 1000,1500]
+                    //                    //                    thresholdType: LevelOfDetail.DistanceToCameraThreshold
+                    //                    thresholds: [1000, 600, 300, 180]
+                    //                    thresholdType: LevelOfDetail.ProjectedScreenPixelSizeThreshold
+                    //                    volumeOverride: lod.createBoundingSphere(Qt.vector3d(0, 0,
+                    //                                                                         0),
+                    //                                                             2.0)
+                    //                    //                    onCurrentIndexChanged: textMesh.enabled = lod.currentIndex == 0
+                    //                }
                     id: textMesh
                     text: mttext
 
+                    font.family: "Helvetica"
+                    font.pointSize: 2
+                    font.bold: true
+                    color: "#ff7f50"
+
+                    width: text.length * font.pointSize
+                    height: font.pointSize * 2
                 }
                 Transform {
                     id: textTrans
-                    scale3D: Qt.vector3d(0.5, 0.5, 0.1)
+                    //                    scale3D: Qt.vector3d(0.5, 0.5, 0.1)
+                    //                    scale: Qt.vector2d(0.5, 0.5)
                     translation: mtextTrans
+                    //                    rotation: fromEulerAngles(root.mainCamera.upVector)
                     rotationX: -90
                     rotationY: 180
                 }
-                components: [/*lod,*/ textMesh, textMater, textTrans]
+                components: [/*lod,*/ mttext, textTrans]
             }
         }
     }

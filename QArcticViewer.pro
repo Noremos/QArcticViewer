@@ -7,12 +7,12 @@ CONFIG += c++20
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ../../../C++/Barcode/source/barcode.cpp \
-    ../../../C++/Barcode/source/barcodeCreator.cpp \
-    ../../../C++/Barcode/source/barcontainer.cpp \
-    ../../../C++/Barcode/source/component.cpp \
-    ../../../C++/Barcode/source/hole.cpp \
-    ../../../C++/Barcode/source/point.cpp \
+    ../../../C++/Barcode/PrjBarlib/source/Barpy.cpp \
+    ../../../C++/Barcode/PrjBarlib/source/barImg.cpp \
+    ../../../C++/Barcode/PrjBarlib/source/barclasses.cpp \
+    ../../../C++/Barcode/PrjBarlib/source/barcodeCreator.cpp \
+    ../../../C++/Barcode/PrjBarlib/source/component.cpp \
+    ../../../C++/Barcode/PrjBarlib/source/hole.cpp \
     backend.cpp \
     face3d.cpp \
     heimapmodel.cpp \
@@ -57,23 +57,26 @@ DISTFILES += \
     as.astylerc
 
 
-INCLUDEPATH += D:/Progs/C++/Barcode/include
-DEPENDPATH += D:/Progs/C++/Barcode/include
+INCLUDEPATH += D:/Progs/C++/Barcode/PrjBarlib/include
+DEPENDPATH += D:/Progs/C++/Barcode/PrjBarlib/include
+INCLUDEPATH += D:\Programs\C++\Barcode\PrjBarlib\include
+DEPENDPATH += D:\Programs\C++\Barcode\PrjBarlib\include
 
-
-
-win32:CONFIG(release, debug|release): LIBS += -LD:/Progs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
-else:win32:CONFIG(debug, debug|release): LIBS += -LD:/Progs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411d
-else:unix: LIBS += -LD:/Progs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
+win32:CONFIG(release, debug|release): LIBS += -LD:/Programs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
+else:win32:CONFIG(debug, debug|release): LIBS += -LD:/Programs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411d
+else:unix: LIBS += -LD:/Programs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
 
 HEADERS += \
-    ../../../C++/Barcode/include/barcode.h \
-    ../../../C++/Barcode/include/barcodeCreator.h \
-    ../../../C++/Barcode/include/barcontainer.h \
-    ../../../C++/Barcode/include/component.h \
-    ../../../C++/Barcode/include/detectKnolls.h \
-    ../../../C++/Barcode/include/hole.h \
-    ../../../C++/Barcode/include/point.h \
+    ../../../C++/Barcode/PrjBarlib/include/barImg.h \
+    ../../../C++/Barcode/PrjBarlib/include/barclasses.h \
+    ../../../C++/Barcode/PrjBarlib/include/barcodeCreator.h \
+    ../../../C++/Barcode/PrjBarlib/include/barline.h \
+    ../../../C++/Barcode/PrjBarlib/include/barstrucs.h \
+    ../../../C++/Barcode/PrjBarlib/include/component.h \
+    ../../../C++/Barcode/PrjBarlib/include/hole.h \
+    ../../../C++/Barcode/PrjBarlib/include/include_cv.h \
+    ../../../C++/Barcode/PrjBarlib/include/include_py.h \
+    ../../../C++/Barcode/PrjBarlib/include/presets.h \
     Decoder.h \
     backend.h \
     base.h \

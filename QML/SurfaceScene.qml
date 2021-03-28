@@ -37,9 +37,16 @@ Scene3D {
         components: [
             RenderSettings {
                 id: render
-                activeFrameGraph: ForwardRenderer {
-                    camera: smesh.mainCamera.baseCamer
-                    clearColor: "transparent"
+                activeFrameGraph: RenderStateSet {
+                    renderStates: [
+                        CullFace {
+                            mode: CullFace.NoCulling
+                        }
+                    ]
+                    ForwardRenderer {
+                        camera: smesh.mainCamera.baseCamer
+                        clearColor: "transparent"
+                    }
                 }
 
                 pickingSettings.pickMethod: PickingSettings.BoundingVolumePicking
@@ -92,8 +99,6 @@ Scene3D {
             surffactor: surfaceFactor
         }
     }
-
-
 
     function setTextureSource(filePath) {
         let needUpdateSRC = smesh.setTextureSource(filePath)

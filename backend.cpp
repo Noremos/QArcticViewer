@@ -148,41 +148,6 @@ QEntity *Backend::getMarkerZone()
 	return item2;
 }
 
-QMaterial *createSpotMaterial(QEntity *prnt)
-{
-	QMaterial *mater = new QMaterial(prnt);
-	QTechnique *tech = new QTechnique(prnt);
-	QEffect *eff = new QEffect(mater);
-	QRenderPass *pass = new QRenderPass(eff);
-	QShaderProgram *shad = new QShaderProgram(pass);
-
-	QFilterKey *key = new QFilterKey(eff);
-	key->setName("renderingStyle");
-	key->setValue("forward");
-
-	shad->setVertexShaderCode(QShaderProgram::loadSource(QUrl("qrc:/shaders/spotZone.vert")));
-	qDebug() << shad->log();
-	qDebug() << shad->status();
-
-	shad->setFragmentShaderCode(QShaderProgram::loadSource(QUrl("qrc:/shaders/spotZone.frag")));
-	qDebug() << shad->log();
-	qDebug() << shad->status();
-	pass->setShaderProgram(shad);
-
-	tech->graphicsApiFilter()->setApi(QGraphicsApiFilter::OpenGL);
-	tech->graphicsApiFilter()->setProfile(QGraphicsApiFilter::CoreProfile);
-	tech->graphicsApiFilter()->setMajorVersion(3);
-	tech->graphicsApiFilter()->setMinorVersion(1);
-	tech->addFilterKey(key);
-	tech->addRenderPass(pass);
-
-//	mater->parameters().append(new QParameter("color", QVector4D(1.0, 1.0, 0, 1.0)));
-	mater->setEffect(eff);
-
-	eff->addTechnique(tech);
-	eff->addParameter(new QParameter("color", QVector4D(1.0, 1.0, 0, 1.0)));
-	return mater;
-}
 using namespace Qt3DExtras;
 
 bool Backend::checkBounty(boundy& bb)
@@ -253,7 +218,7 @@ void Backend::findByParams()
 		// tile
 		if (line.startsWith("t"))
 		{
-            qDebug() << l;
+//            qDebug() << l;
 			l = 0;
 			continue;
 		}

@@ -136,20 +136,20 @@ using namespace bc;
 
 void findBootm()
 {}
-boundy getBounty(pmap &points)
+boundy getBounty(barvector<float> &points)
 {
-	int minX = points[0].first.x, maxX = points[0].first.x;
-	int minY = points[0].first.y, maxY = points[0].first.y;
-	float minT = points[0].second, maxT = points[0].second;
+	int minX = points[0].getX(), maxX = points[0].getX();
+	int minY = points[0].getY(), maxY = points[0].getY();
+	float minT = points[0].value, maxT = points[0].value;
 	for (size_t i = 1, total = points.size(); i < total; ++i)
 	{
-		ppair &val = points[i];
+		bc::barvalue<float> &val = points[i];
 
-		if (minT > val.second)
-			minT = val.second;
+		if (minT > val.value)
+			minT = val.value;
 
-		if (maxT < val.second)
-			maxT = val.second;
+		if (maxT < val.value)
+			maxT = val.value;
 
 	}
 // если поставить 10, то слипшийся покажется
@@ -158,26 +158,26 @@ boundy getBounty(pmap &points)
 	minT = maxT;
 	for (size_t i = 0, total = points.size(); i < total; ++i)
 	{
-		ppair &val = points[i];
-		if(val.second<bottomLvl)
+		barvalue<float> &val = points[i];
+		if(val.value<bottomLvl)
 			continue;
 //		if (maxT - val.second >= 2)
 //			continue;
 
-		if (minX > val.first.x)
-			minX = val.first.x;
+		if (minX > val.getX())
+			minX = val.getX();
 
-		if (maxX < val.first.x)
-			maxX = val.first.x;
+		if (maxX < val.getX())
+			maxX = val.getX();
 
-		if (minY > val.first.y)
-			minY = val.first.y;
+		if (minY > val.getY())
+			minY = val.getY();
 
-		if (maxY < val.first.y)
-			maxY = val.first.y;
+		if (maxY < val.getY())
+			maxY = val.getY();
 
-		if (minT > val.second)
-			minT = val.second;
+		if (minT > val.value)
+			minT = val.value;
 	}
 
 	boundy b(minX, minY, maxX, maxY);
@@ -216,20 +216,20 @@ void ImageSearcher::findZones(vector<boundy> &bounds, int start, int len)
 		Img img = getTile(i);
 		int wid = img.wid, hei = img.hei;
 
-		bc::barcodeCreator creator;
+		bc::BarcodeCreator<float> creator;
 
-		Barcontainer *bars = creator.searchHoles(img.data, wid, hei);
-		Baritem *item = bars->get(0);
+		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
+		Baritem<float> *item = bars->getItem(0);
 		img.release();
 
 		int tx = (i % tilesInWid) * tileWid;
 		int ty = (i / tilesInWid) * tileHei;
 
-		for (size_t i = 0, total = item->bar.size(); i < total; ++i)
+		for (size_t i = 0, total = item->barlines.size(); i < total; ++i)
 		{
-			bline *line = item->bar[i];
+			bc::barline<float> *line = item->barlines[i];
 //			check(line->matr);
-			boundy b = getBounty(*line->matr);
+			boundy b = getBounty(line->matr);
 
 
 			b.addXoffset(tx);
