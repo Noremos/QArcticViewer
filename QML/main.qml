@@ -148,17 +148,17 @@ ApplicationWindow {
                     id: startProc
                     from: 0
                     value: 0
-                    to: 25000
-                    stepSize: 1000
+                    to: 1000
+                    stepSize: 1
                     editable: true
                 }
                 SpinBox {
                     id: endProc
                     from: 0
-                    stepSize: 1000
+                    stepSize: 1
 
-                    value: 25000
-                    to: 25000
+                    value: 1000
+                    to: 1000
                     editable: true
                 }
             }

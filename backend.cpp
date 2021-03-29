@@ -27,14 +27,6 @@ Backend::Backend(QObject *parent) : QObject(parent)
 
 }
 
-Backend::~Backend()
-{
-	if (reader!= nullptr)
-	{
-		reader->close();
-		delete reader;
-	}
-}
 using namespace Qt3DRender;
 
 QEntity *Backend::getSpotZone()
@@ -83,17 +75,38 @@ void Backend::setSearchingsettings(/*float coof, int minD, int maxD, float minHe
 
 void Backend::saveSettings()
 {
-	proj.saveProject("D:\\proj.qwr");
+	proj.saveProject(projectPath+ "proj.qwr");
 }
 
 void Backend::loadSettings()
 {
-	proj.loadProject("D:\\proj.qwr");
+	proj.loadProject(projectPath+ "proj.qwr");
 	qDebug() << proj.searchSetts.height.start;
 	qDebug() << proj.searchSetts.heightMin();
 	QMetaObject::invokeMethod(root->findChild<QObject*>("sideMenu"), "setBoxSetts");
 	proj.notifySettings();
 }
+
+// void check()
+// {
+// 	  if (sw.length()>10000)
+//             {
+//                 boundSteam << sw;
+//                 sw.clear();
+//             }
+
+
+//             auto* tem = ret->at(io);
+//             tem->getStr(linesTemp);
+//             linesTemp+=nl;
+
+//             if (linesTemp.length()>10000)
+//             {
+//                 barsStream << linesTemp;
+//                 linesTemp.clear();
+//             }
+//             delete tem;
+// }
 
 void Backend::processHiemap(int start, int end)
 {
@@ -101,43 +114,39 @@ void Backend::processHiemap(int start, int end)
 		return;
 
 	reader = new TiffReader();
-	QDir dir(projectPath);
-	QString bpath = dir.path() + "bds.lst";
+
+
+	QString bpath = projectPath + "bds.lst";
 	qDebug() << bpath;
 	QFile out(bpath);
-	if (out.exists())
-		out.remove();
+	if (out.exists())out.remove();
+	if (!out.open(QFile::WriteOnly | QFile::Truncate))return;
+	QTextStream boundSteam(&out);
 
-	if (!out.open(QFile::WriteOnly | QFile::Truncate))
-		return;
-
-	QTextStream stream(&out);
-
-	QString sw;
+    QString sw;
 	reader->open(proj.heimapPath.toStdWString().c_str());
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
-    start = imgsrch.getTilesInHei() * (start / 1000);
-    end = imgsrch.getTilesInHei() * (end / 1000);
-    end = min(end, imgsrch.getMaxTiles());
+    start = min(start, imgsrch.getMaxTiles()-1);
+    end = min(end, imgsrch.getMaxTiles()-1);
     qDebug() << start << end;
-    //1000
-    for (int ind = start; ind < end; ++ind)
+    //1000/18
+    for (int ind = start; ind <= end; ++ind)
 	{
 		vector<boundy> objects;
-		imgsrch.findZones(objects, ind, 1);
+        imgsrch.findZones(objects, ind, 1);
 
 		sw = "t " + QString::number(ind) + nl;
         for (size_t io = 0, totobjs = objects.size(); io < totobjs; ++io)
 		{
 			sw += objects[io].getStr() + nl;
 		}
-		stream << sw;
-		qDebug() << ind << "/" << imgsrch.getMaxTiles() << ": " << objects.size();
-	}
 
-	out.close();
-	sw.clear();
+		qDebug() << ind << "/" << imgsrch.getMaxTiles() << ": " << objects.size();
+
+		out.close();
+        sw.clear();
+	}
 }
 
 QEntity *Backend::getMarkerZone()
@@ -272,16 +281,16 @@ QString Backend::loadImage(QString path, int step, int type)
 	Obj3d object(reader);
     object.setMode((ProcessMode) type);
 	object.setStep(step);
-    object.write("D:\\2.obj", 0, 0);
+    object.write(projectPath+ "2.obj", 0, 0);
 
 	this->proj.imgMinVal = reader->min;
 	this->proj.imgMaxVal = reader->max;
-	this->proj.modelPath = "D:\\2.obj";
+	this->proj.modelPath = projectPath+ "2.obj";
 	this->proj.heimapPath = path;
 	this->proj.step = step;
 
     proj.notifySettings();
 	this->saveSettings();
 
-	return "D:/2.obj";
+	return this->proj.modelPath;
 }

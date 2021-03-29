@@ -9,7 +9,10 @@ class Face3d
 {
 	QVector<objoff> nums;
 public:
-	Face3d();
+    Face3d()
+    {
+
+    }
 	Face3d(objoff *faces, int len) { add(faces, len); }
 	void add(objoff* faces, int len)
 	{

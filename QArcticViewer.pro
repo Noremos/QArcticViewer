@@ -1,6 +1,6 @@
 QT += qml quick 3dcore 3drender 3dinput 3dquick 3dquickextras
 
-CONFIG += c++20
+CONFIG += c++14
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -14,10 +14,8 @@ SOURCES += \
     ../../../C++/Barcode/PrjBarlib/source/component.cpp \
     ../../../C++/Barcode/PrjBarlib/source/hole.cpp \
     backend.cpp \
-    face3d.cpp \
     heimapmodel.cpp \
     imagesearcher.cpp \
-    imgproxy.cpp \
     instansemodel.cpp \
     main.cpp \
     obj3d.cpp \
@@ -62,10 +60,6 @@ DEPENDPATH += D:/Progs/C++/Barcode/PrjBarlib/include
 INCLUDEPATH += D:\Programs\C++\Barcode\PrjBarlib\include
 DEPENDPATH += D:\Programs\C++\Barcode\PrjBarlib\include
 
-win32:CONFIG(release, debug|release): LIBS += -LD:/Programs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
-else:win32:CONFIG(debug, debug|release): LIBS += -LD:/Programs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411d
-else:unix: LIBS += -LD:/Programs/QT/QArcticViewer/QArcticViewer/ -lopencv_world411
-
 HEADERS += \
     ../../../C++/Barcode/PrjBarlib/include/barImg.h \
     ../../../C++/Barcode/PrjBarlib/include/barclasses.h \
@@ -73,6 +67,7 @@ HEADERS += \
     ../../../C++/Barcode/PrjBarlib/include/barline.h \
     ../../../C++/Barcode/PrjBarlib/include/barstrucs.h \
     ../../../C++/Barcode/PrjBarlib/include/component.h \
+    ../../../C++/Barcode/PrjBarlib/include/detectKnolls.h \
     ../../../C++/Barcode/PrjBarlib/include/hole.h \
     ../../../C++/Barcode/PrjBarlib/include/include_cv.h \
     ../../../C++/Barcode/PrjBarlib/include/include_py.h \
@@ -83,7 +78,6 @@ HEADERS += \
     face3d.h \
     heimapmodel.h \
     imagesearcher.h \
-    imgproxy.h \
     instansemodel.h \
     obj3d.h \
     project.h \

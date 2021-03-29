@@ -120,9 +120,6 @@ int ImageSearcher::getMaxTiles()
 {
 	return reader->widght() * reader->height() / (tileWid * tileHei);
 }
-#include "barcodeCreator.h"
-using namespace bc;
-
 
 void findBootm()
 {}

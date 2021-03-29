@@ -29,12 +29,19 @@ class Backend: public QObject
 
 public:
 	QObject *root = nullptr;
-    QString projectPath = "D:\\Progs\\temp\\bar";
+    QString projectPath = "D:\\Progs\\temp\\bar\\";
 	explicit Backend(QObject *parent = nullptr);
 	bool block = true;
 //	cv::Mat imgread(QString path);
 
-    ~Backend();
+    virtual ~Backend() override
+    {
+        if (reader!= nullptr)
+        {
+            reader->close();
+            delete reader;
+        }
+    }
 	ProjectParametrs proj;
 
 	Qt3DCore::QEntity* spotZone;

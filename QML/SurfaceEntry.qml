@@ -17,7 +17,7 @@ Entity {
     property var texture2Comps: [transform, mesh, light, material2]
 
     function setMaterial() {
-        console.log("settign path " +projectParams.texturePath)
+        console.log("texture path " +projectParams.texturePath)
         if (projectParams.materialType == 0) {
             components = stdComps
         }

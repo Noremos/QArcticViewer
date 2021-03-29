@@ -2,6 +2,9 @@
 #define IMAGESEARCHER_H
 #include "base.h"
 #include "tiffreader.h"
+#include "barcodeCreator.h"
+using namespace bc;
+
 
 struct boundy
 {
@@ -147,6 +150,49 @@ struct TRange
 	TRange()
 	{}
 };
+
+struct lowline
+{
+    lowline()
+    {
+        start = 0;
+        len = 0;
+        bar3d = nullptr;
+    }
+    bool isEmpty()
+    {
+        return bar3d==nullptr;
+    }
+    lowline(barline<float>* org)
+    {
+        this->start = org->start;
+        this->len = org->len;
+        this->bar3d = org->bar3d;
+        org->bar3d = nullptr;
+    }
+    float start;
+    float len;
+    bc::barcounter<float>* bar3d;
+    float end()
+    {
+        return start+len;
+    }
+    void getStr(QString & str)
+    {
+        if (isEmpty())
+            return;
+
+       str+= QString::number(start) + " " +  QString::number(len);
+       qDebug() << bar3d->size();
+       for(auto& l:(*bar3d))
+       {
+           str+= " " + QString::number(l.value)+ " " + QString::number(l.count);
+       }
+    }
+
+
+};
+typedef vector<lowline*> veclines;
 
 class SeachingSettings : public QObject
 {
