@@ -145,8 +145,11 @@ void GeometryEngine::initCubeGeometry()
     arrayBuf.allocate(vertices, 24 * sizeof(VertexData));
 
     // Transfer index data to VBO 1
-    indexBuf.bind();
-    indexBuf.allocate(indices, 34 * sizeof(GLushort));
+	indexBuf.bind();
+	indexBuf.allocate(indices, 34 * sizeof(GLushort));
+
+	arrayBuf.release();
+	indexBuf.release();
 //! [1]
 }
 
@@ -176,5 +179,8 @@ void GeometryEngine::drawCubeGeometry(QOpenGLShaderProgram *program)
 
     // Draw cube geometry using indices from VBO 1
     glDrawElements(GL_TRIANGLE_STRIP, 34, GL_UNSIGNED_SHORT, nullptr);
+	program->disableAttributeArray(texcoordLocation);
+	arrayBuf.release();
+	indexBuf.release();
 }
 //! [2]

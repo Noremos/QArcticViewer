@@ -67,18 +67,17 @@ MainWidget::~MainWidget()
 //! [0]
 void MainWidget::mousePressEvent(QMouseEvent *e)
 {
-//	sky->mousePressEvent(e);
+	sky->mousePressEvent(e);
 
 // Save mouse press position
-this->timer.start(10, this);
+
     mousePressPosition = QVector2D(e->localPos());
 }
 
 void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-//	sky->mouseReleaseEvent();
+	sky->mouseReleaseEvent();
 
-//this->timer.stop();
 
     // Mouse release position - mouse press position
     QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
@@ -143,9 +142,9 @@ void MainWidget::initializeGL()
 						"D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/left.jpg",
 						"D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/right.jpg");
 
-//	sky->initializeGL();
+	sky->initializeGL();
     // Use QBasicTimer because its faster than QTimer
-//    timer.start(12, this);
+	timer.start(12, this);
 }
 
 //! [3]
@@ -164,8 +163,6 @@ void MainWidget::initShaders()
 		return;;
 
     // Bind shader pipeline for use
-    if (!program.bind())
-		return;;
 }
 //! [3]
 
@@ -188,12 +185,12 @@ void MainWidget::initTextures()
 
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
-//	sky->mouseMoveEvent(event);
+	sky->mouseMoveEvent(event);
 }
 
 void MainWidget::wheelEvent(QWheelEvent *event)
 {
-//	sky->wheelEvent(event);
+	sky->wheelEvent(event);
 }
 
 void MainWidget::keyPressEvent(QKeyEvent *event)
@@ -228,6 +225,7 @@ void MainWidget::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     texture->bind();
+	program.bind();
 
 //! [6]
     // Calculate model view transformation
@@ -243,7 +241,10 @@ void MainWidget::paintGL()
     program.setUniformValue("texture", 0);
 
     // Draw cube geometry
-    geometries->drawCubeGeometry(&program);
+	geometries->drawCubeGeometry(&program);
+	texture->release();
+	program.release();
+
 }
 
 
