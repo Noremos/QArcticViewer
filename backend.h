@@ -29,7 +29,7 @@ class Backend: public QObject
 
 public:
 	QObject *root = nullptr;
-    QString projectPath = "D:\\Progs\\temp\\bar\\";
+	QString projectPath = "D:\\";
 	explicit Backend(QObject *parent = nullptr);
 	bool block = true;
 //	cv::Mat imgread(QString path);

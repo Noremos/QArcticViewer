@@ -218,6 +218,22 @@ void Backend::findByParams()
 		return;
 	}
 
+//	QImage image("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
+	QPixmap image("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
+
+	float xfactor = image.width() / 2500.f;
+	float yfactor = image.height() / 2500.f;
+
+	qDebug() << image.width();
+	QPainter painter(&image);
+	QPen pen;
+	pen.setWidth(3);
+	pen.setColor(Qt::red);
+	painter.setPen(pen);
+
+//	painter.drawRect(0,0,50,50);
+
+
 	QTextStream stream(&out);
 	QString line;
 	int k = 0, l = 0;
@@ -241,10 +257,20 @@ void Backend::findByParams()
 			continue;
 		++l;
 
-        bb->setFactor(xScale);
+		//sd
+
+		bb->setFactor(xScale);
+
+		painter.drawRect(bb->bb.x*xfactor,bb->bb.y*yfactor, bb->bb.wid()*xfactor, bb->bb.hei()*yfactor);
+
         model->boundydata.append(bb);
-        k++;
-    }
+		k++;
+	}
+
+	painter.save();
+	painter.end();
+	image.save("D:\\rest.jpg");
+	//
 	model->updateAll();
 //	spotZone->setProperty("buffer", QVariant::fromValue(dataList));
 	saveSettings();
