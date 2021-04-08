@@ -113,6 +113,14 @@ struct Img
 	float get(int x, int y) const { return data[y * wid + x]; }
 	void set(int x, int y, float val) { data[y * wid + x] = val; }
 	void relese() { delete[] data; }
+
+	float getSafe(int x, int y) const
+	{
+		x = MAX(0, MIN(x, wid-1));
+		y = MAX(0, MIN(y, hei-1));
+		return data[y * wid + x];
+	}
+
 	inline Img clone() const
 	{
 		Img clo(new float[wid * hei], wid, hei);
@@ -244,6 +252,7 @@ class ImageSearcher
 	// наложение одного тайла на другой
 	int diffset = 100;
 
+	PointerCache<Img *> cachedTiles;
 	Img getTile(int index);
 
 public:
@@ -259,6 +268,10 @@ public:
     }
 	int getMaxTiles();
 	void findZones(vector<boundy> &bounds, int start, int len);
+
+	bool checkCircle(boundy &bb);
+
+	Img getTile(int tx, int ty);
 };
 
 #endif // IMAGESEARCHER_H

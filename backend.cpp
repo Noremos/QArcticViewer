@@ -234,6 +234,10 @@ void Backend::findByParams()
 //	painter.drawRect(0,0,50,50);
 
 
+	reader = new TiffReader();
+	reader->open(proj.heimapPath.toStdWString().c_str());
+	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
+
 	QTextStream stream(&out);
 	QString line;
 	int k = 0, l = 0;
@@ -257,9 +261,11 @@ void Backend::findByParams()
 			continue;
 		++l;
 
-		//sd
-
 		bb->setFactor(xScale);
+		//sd
+		if (!imgsrch.checkCircle(bb->bb))
+			continue;
+
 
 		painter.drawRect(bb->bb.x*xfactor,bb->bb.y*yfactor, bb->bb.wid()*xfactor, bb->bb.hei()*yfactor);
 
@@ -274,6 +280,9 @@ void Backend::findByParams()
 	model->updateAll();
 //	spotZone->setProperty("buffer", QVariant::fromValue(dataList));
 	saveSettings();
+
+	reader->close();
+	delete reader;
 }
 
 void Backend::test(QString path)
