@@ -82,6 +82,8 @@ void Project::processHiemap(int start, int end)
 		out.close();
 		sw.clear();
 	}
+
+	closeReader();
 }
 
 void Project::findByParams()
@@ -145,8 +147,6 @@ void Project::findByParams()
 
 void Project::loadImage(QString path, int step, int type)
 {
-	openReader();
-
 	int imgtype = 0;
 //	switch (imgtype)
 //	{
@@ -173,6 +173,8 @@ void Project::loadImage(QString path, int step, int type)
 
 	notifySettings();
 	saveProject();
+	
+	closeReader();
 }
 
 bool Project::loadProject(QString path)

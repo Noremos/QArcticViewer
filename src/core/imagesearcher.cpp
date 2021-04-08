@@ -18,7 +18,7 @@ ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
     tilesInWid = (uint)reader->widght() / tileWid;
     tilesInHei = (uint)reader->height() / tileHei;
 	qDebug() << tilesInWid * tilesInHei;
-
+	cachedTiles.setMaxSize(10);
 //	settings->bottomProc = 0.1f;
 //	settings->coof= 1.7f;
 //	settings->diamert = TRange<int>(10,300);
@@ -30,13 +30,15 @@ constexpr int getTid(int tx, int ty, int wid)
 	return ty* wid + tx;
 }
 
-//Img ImageSearcher::getTile(int tx, int ty)
-
-
 Img ImageSearcher::getTile(int index)
 {
 	int tx = index % tilesInWid;
 	int ty = index / tilesInWid;
+	return getTile(tx,ty);
+}
+
+Img ImageSearcher::getTile(int tx, int ty)
+{
 
 	if (tx<0 || tx>=tilesInWid || ty<0 || ty>= tilesInHei)
 		return nullptr;
@@ -235,4 +237,77 @@ void ImageSearcher::findZones(std::vector<boundy> &bounds, int start, int len)
 		delete bars;
 	}
 
+}
+
+bool ImageSearcher::checkCircle(boundy &bb)
+{
+	int startX = bb.x / tileWid;
+	int endX = bb.endX / tileWid;
+	int startY = bb.x / tileWid;
+	int endY = bb.endY / tileWid;
+
+	if (startX != endX || startY != endY)
+		return false;
+
+
+	int index = getTid(startX, startY, tilesInWid);
+
+	Img *null = nullptr;
+	Img *g = this->cachedTiles.getData(index, null);
+	if (g == null)
+	{
+		Img tg = getTile(startX, startY);
+		g = new Img(tg.data, tg.wid, tg.hei);
+		tg.data = new float[1];
+		cachedTiles.storeData(index, g);
+	}
+
+	Img ret(bb.wid(), bb.hei());
+
+	float maxval = -9999;
+	int xc = 0, yc = 0;
+	for (uint i = 0; i < bb.wid(); ++i)
+	{
+		for (uint j = 0; j < bb.hei(); ++j)
+		{
+			float d = g->getSafe(bb.x + i, bb.y + j);
+			ret.set(i, j, d);
+			if (d > maxval)
+			{
+				xc = i;
+				yc = j;
+				maxval = d;
+			}
+		}
+	}
+	float sum = 0;
+	int radius = 20;
+	int total = 0;
+	for (int var = 0; var < 40; ++var)
+	{
+		int xst = xc - radius + var;
+		int yreal = sqrt(radius * radius - (xst - xc) * (xst - xc));
+
+		xst = MAX(0, MIN(xst, ret.wid));
+		yreal = MAX(0, MIN(yreal, ret.hei));
+
+		float val1 = ret.getSafe(xst, yreal), val2;
+		if (yreal > yc)
+			val2 = ret.getSafe(xst, yreal - (yreal - yc) * 2);
+		else //(yreal < yc)
+			val2 = ret.getSafe(xst, yreal + (yc - yreal) * 2);
+
+		sum += val1 + val2;
+		total += 2;
+	}
+
+	sum /= total;
+
+	float t1 = abs(sum - ret.getSafe(xc - radius, yc));
+	float t2 = abs(sum - ret.getSafe(xc, yc - radius));
+	float t3 = abs(sum - ret.getSafe(xc - radius, yc - radius));
+	float t4 = abs(sum - ret.getSafe(xc + radius, yc + radius));
+
+	float eps = 5;
+	return (t1 <= eps && t2 <= eps && t3 <= eps && t4 <= eps);
 }

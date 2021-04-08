@@ -66,7 +66,7 @@ public:
 
 	TiffReader *reader;
 
-	void openReader()
+	void closeReader()
 	{
 		if (reader)
 		{
@@ -74,7 +74,11 @@ public:
 			delete reader;
 			reader = nullptr;
 		}
+	}
 
+	void openReader()
+	{
+		closeReader();
 		reader = new TiffReader();
 	}
 

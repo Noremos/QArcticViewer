@@ -12,6 +12,14 @@ struct Img
 	Img(int widgth, int height) : wid(widgth), hei(height) { data = new float[wid * hei]; }
 
 	float get(int x, int y) const { return data[y * wid + x]; }
+
+	float getSafe(int x, int y) const
+	{
+		x = MAX(0, MIN(x, wid-1));
+		y = MAX(0, MIN(y, hei-1));
+		return data[y * wid + x];
+	}
+	
 	void set(int x, int y, float val) { data[y * wid + x] = val; }
 	void relese() { delete[] data; }
 	inline Img clone() const

@@ -74,6 +74,7 @@ class ImageSearcher
 
 	Img getTile(int index);
 
+	PointerCache<Img *> cachedTiles;
 public:
 	ImageSearcher(TiffReader *reader);
 
@@ -88,6 +89,9 @@ public:
 	int getMaxTiles();
 	void findZones(std::vector<boundy> &bounds, int start, int len);
 
+	bool checkCircle(boundy &bb);
+
+	Img getTile(int tx, int ty);
 };
 
 #endif // IMAGESEARCHER_H
