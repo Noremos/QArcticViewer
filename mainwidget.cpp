@@ -60,61 +60,28 @@ MainWidget::~MainWidget()
     // Make sure the context is current when deleting the texture
     // and the buffers.
 	makeCurrent();
-    delete texture;
-    delete geometries;
+//    delete texture;
+//    delete geometries;
 	doneCurrent();
 }
-
-//! [0]
-void MainWidget::mousePressEvent(QMouseEvent *e)
-{
-	sky->mousePressEvent(e);
-
-// Save mouse press position
-
-    mousePressPosition = QVector2D(e->localPos());
-}
-
-void MainWidget::mouseReleaseEvent(QMouseEvent *e)
-{
-	sky->mouseReleaseEvent(e);
-
-
-    // Mouse release position - mouse press position
-    QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
-
-    // Rotation axis is perpendicular to the mouse position difference
-    // vector
-    QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-
-    // Accelerate angular speed relative to the length of the mouse sweep
-    qreal acc = diff.length() / 100.0;
-
-    // Calculate new rotation axis as weighted sum
-    rotationAxis = (rotationAxis * angularSpeed + n * acc).normalized();
-
-    // Increase angular speed
-    angularSpeed += acc;
-}
-//! [0]
 
 //! [1]
 void MainWidget::timerEvent(QTimerEvent * ev)
 {
-    // Decrease angular speed (friction)
 	sky->timerEvent(ev);
-    angularSpeed *= 0.99;
+    // Decrease angular speed (friction)
+	angularSpeed *= 0.99;
 
-    // Stop rotation when speed goes below threshold
-    if (angularSpeed < 0.01) {
-        angularSpeed = 0.0;
-    } else {
-        // Update rotation
-        rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
+	// Stop rotation when speed goes below threshold
+	if (angularSpeed < 0.01) {
+		angularSpeed = 0.0;
+	} else {
+		// Update rotation
+		rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
 
-        // Request an update
-        update();
-    }
+		// Request an update
+		update();
+	}
 }
 //! [1]
 
@@ -122,25 +89,19 @@ void MainWidget::initializeGL()
 {
     initializeOpenGLFunctions();
 
-    glClearColor(0, 0, 0, 1);
+//    glClearColor(0, 0, 0, 1);
 
 	initShaders();
 	initTextures();
 
 	// Enable depth buffer
-	glEnable(GL_DEPTH_TEST);
+//	glEnable(GL_DEPTH_TEST);
 
 	// Enable back face culling
 	glEnable(GL_CULL_FACE);
 
 	geometries = new GeometryEngine();
 
-//	sky = new SkyBoxGUI(":/skybox/front.jpg",
-//						":/skybox/back.jpg",
-//						":/skybox/top.jpg",
-//						":/skybox/bottom.jpg",
-//						":/skybox/left.jpg",
-//						":/skybox/right.jpg");
 
 	sky = new QOpenGLSkyboxWidget();
 	sky->initializeGL();
@@ -180,19 +141,53 @@ void MainWidget::initShaders()
 //! [4]
 void MainWidget::initTextures()
 {
-    // Load cube.png image
-    texture = new QOpenGLTexture(QImage(":/cube.png").mirrored());
+//    // Load cube.png image
+	texture = new QOpenGLTexture(QImage(":/cube.png").mirrored());
 
-    // Set nearest filtering mode for texture minification
-    texture->setMinificationFilter(QOpenGLTexture::Nearest);
+//    // Set nearest filtering mode for texture minification
+	texture->setMinificationFilter(QOpenGLTexture::Nearest);
 
-    // Set bilinear filtering mode for texture magnification
-    texture->setMagnificationFilter(QOpenGLTexture::Linear);
+//    // Set bilinear filtering mode for texture magnification
+	texture->setMagnificationFilter(QOpenGLTexture::Linear);
 
-    // Wrap texture coordinates by repeating
-	// f.ex. texture coordinate (1.1, 1.2) is same as (0.1, 0.2)
+//    // Wrap texture coordinates by repeating
+//	// f.ex. texture coordinate (1.1, 1.2) is same as (0.1, 0.2)
 	texture->setWrapMode(QOpenGLTexture::Repeat);
 }
+
+
+//! [0]
+void MainWidget::mousePressEvent(QMouseEvent *e)
+{
+	sky->mousePressEvent(e);
+
+	// Save mouse press position
+
+	mousePressPosition = QVector2D(e->localPos());
+}
+
+void MainWidget::mouseReleaseEvent(QMouseEvent *e)
+{
+	sky->mouseReleaseEvent(e);
+
+
+	 //Mouse release position - mouse press position
+		QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
+
+		// Rotation axis is perpendicular to the mouse position difference
+		// vector
+		QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
+
+		// Accelerate angular speed relative to the length of the mouse sweep
+		qreal acc = diff.length() / 100.0;
+
+		// Calculate new rotation axis as weighted sum
+		rotationAxis = (rotationAxis * angularSpeed + n * acc).normalized();
+
+		// Increase angular speed
+		angularSpeed += acc;
+}
+//! [0]
 
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
@@ -208,21 +203,24 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 {
 }
 //! [4]
+void MainWidget::keyReleaseEvent(QKeyEvent *event)
+{
+}
 
 //! [5]
 void MainWidget::resizeGL(int w, int h)
 {
 	sky->resizeGL(w, h);
     // Calculate aspect ratio
-    qreal aspect = qreal(w) / qreal(h ? h : 1);
+	qreal aspect = qreal(w) / qreal(h ? h : 1);
 
-    // Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
-    const qreal zNear = 3.0, zFar = 7.0, fov = 45.0;
+	// Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
+	const qreal zNear = 3.0, zFar = 7.0, fov = 45.0;
 
-    // Reset projection
-    projection.setToIdentity();
+	// Reset projection
+	projection.setToIdentity();
 
-    // Set perspective projection
+	// Set perspective projection
 	projection.perspective(fov, aspect, zNear, zFar);
 
 }
@@ -230,12 +228,14 @@ void MainWidget::resizeGL(int w, int h)
 
 void MainWidget::paintGL()
 {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	sky->paintGL(); //projection * matrix
+//	sky->update();
 	// makeCurrent();
 	// doneCurrent();
 
 
 	// Clear color and depth buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	QMatrix4x4 matrix;
 	matrix.translate(0.0, 0.0, -5.0);
 	matrix.rotate(rotation);
@@ -244,11 +244,12 @@ void MainWidget::paintGL()
 	program.bind();
 	program.setUniformValue("mvp_matrix", projection * matrix);
 	program.setUniformValue("texture", 0);
-//	geometries->drawCubeGeometry(&program);
+	geometries->drawCubeGeometry(&program);
 	texture->release();
-	program.release();
 
-	sky->paintGL();//projection * matrix
+//	update();
+
+
 
 
 //	const QList<QOpenGLDebugMessage> messages = logger->loggedMessages();
@@ -257,7 +258,4 @@ void MainWidget::paintGL()
 }
 
 
-void MainWidget::keyReleaseEvent(QKeyEvent *event)
-{
-}
 

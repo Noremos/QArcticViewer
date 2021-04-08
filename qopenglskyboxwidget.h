@@ -21,22 +21,21 @@
 
 
 
-class QOpenGLSkyboxWidget : public QOpenGLWidget, protected QOpenGLFunctions
+class QOpenGLSkyboxWidget : protected QOpenGLFunctions
 {
-	Q_OBJECT
 public:
-	explicit QOpenGLSkyboxWidget(QWidget *parent = Q_NULLPTR);
+	QOpenGLSkyboxWidget(QWidget *parent = Q_NULLPTR);
 
-	void initializeGL() override;
-	void resizeGL(int w, int h) override;
-	void paintGL() override;
+	void initializeGL() ;
+	void resizeGL(int w, int h) ;
+	void paintGL() ;
 
-	void mousePressEvent(QMouseEvent *e) override;
-	void mouseReleaseEvent(QMouseEvent *) override;
-	void mouseMoveEvent(QMouseEvent *event) override;
-	void wheelEvent(QWheelEvent *event) override;
+	void mousePressEvent(QMouseEvent *e) ;
+	void mouseReleaseEvent(QMouseEvent *) ;
+	void mouseMoveEvent(QMouseEvent *event) ;
+	void wheelEvent(QWheelEvent *event) ;
 
-	void timerEvent(QTimerEvent *) override;
+	void timerEvent(QTimerEvent *) ;
 
 private:
 	void loadImages();

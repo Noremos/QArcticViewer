@@ -156,7 +156,6 @@ void GeometryEngine::initCubeGeometry()
 //! [2]
 void GeometryEngine::drawCubeGeometry(QOpenGLShaderProgram *program)
 {
-
     // Tell OpenGL which VBOs to use
     arrayBuf.bind();
     indexBuf.bind();
@@ -165,22 +164,24 @@ void GeometryEngine::drawCubeGeometry(QOpenGLShaderProgram *program)
     quintptr offset = 0;
 
     // Tell OpenGL programmable pipeline how to locate vertex position data
-    int vertexLocation = program->attributeLocation("a_position");
-    program->enableAttributeArray(vertexLocation);
-    program->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
+	int vertexLocation = program->attributeLocation("a_position");
+	program->enableAttributeArray(vertexLocation);
+	program->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
 
     // Offset for texture coordinate
-    offset += sizeof(QVector3D);
+	offset += sizeof(QVector3D);
 
-    // Tell OpenGL programmable pipeline how to locate vertex texture coordinate data
-    int texcoordLocation = program->attributeLocation("a_texcoord");
-    program->enableAttributeArray(texcoordLocation);
-    program->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
+	//	 Tell OpenGL programmable pipeline how to locate vertex texture coordinate data
+	int texcoordLocation = program->attributeLocation("a_texcoord");
+	program->enableAttributeArray(texcoordLocation);
+	program->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
 
-    // Draw cube geometry using indices from VBO 1
-    glDrawElements(GL_TRIANGLE_STRIP, 34, GL_UNSIGNED_SHORT, nullptr);
+	// Draw cube geometry using indices from VBO 1
+	glDrawElements(GL_TRIANGLE_STRIP, 34, GL_UNSIGNED_SHORT, nullptr);
 	program->disableAttributeArray(texcoordLocation);
+	program->disableAttributeArray(vertexLocation);
 	arrayBuf.release();
 	indexBuf.release();
+	program->release();
 }
 //! [2]

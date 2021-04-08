@@ -3,7 +3,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLTexture>
 #include <QVector3D>
-QOpenGLSkyboxWidget::QOpenGLSkyboxWidget(QWidget *parent) : mTexture(QOpenGLTexture::TargetCubeMap), mVertexBuf(QOpenGLBuffer::VertexBuffer), mSpeed(0.0f), QOpenGLWidget(parent)
+QOpenGLSkyboxWidget::QOpenGLSkyboxWidget(QWidget *parent) : mTexture(QOpenGLTexture::TargetCubeMap), mVertexBuf(QOpenGLBuffer::VertexBuffer), mSpeed(0.0f)
 {
 	mFrontImagePath = ":/skybox/front.jpg";
 	mBackImagePath = ":/skybox/back.jpg";
@@ -125,12 +125,18 @@ void QOpenGLSkyboxWidget::paintGL()
 	mProjectionMat.setToIdentity();
 	mProjectionMat.perspective(mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane);
 
+	mProgram.enableAttributeArray("aPosition");
+	mProgram.setAttributeBuffer("aPosition", GL_FLOAT, 0, 3, sizeof(QVector3D));
+
+	mProgram.setUniformValue("uTexture", 0);
 	mProgram.setUniformValue("mvpMatrix", mProjectionMat * mViewMat * mModelMat);
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
+	mProgram.disableAttributeArray("aPosition");
 	mVertexBuf.release();
 	mTexture.release();
+	mProgram.release();
 }
 
 void QOpenGLSkyboxWidget::resizeGL(int w, int h)
@@ -157,12 +163,12 @@ void QOpenGLSkyboxWidget::mouseMoveEvent(QMouseEvent *event)
 void QOpenGLSkyboxWidget::mousePressEvent(QMouseEvent *event)
 {
 	mMousePressPosition = QVector2D(event->localPos());
-	mTimer.start(10, this);
+//	mTimer.start(10, this);
 }
 
 void QOpenGLSkyboxWidget::mouseReleaseEvent(QMouseEvent*)
 {
-	mTimer.stop();
+//	mTimer.stop();
 }
 
 void QOpenGLSkyboxWidget::timerEvent(QTimerEvent *)
@@ -176,7 +182,7 @@ void QOpenGLSkyboxWidget::timerEvent(QTimerEvent *)
 	mLookAt.center = {+0.0f, +0.0f, -1.0f};
 	mLookAt.center = mLookAt.center * mat;
 
-	update();
+//	update();
 }
 
 void QOpenGLSkyboxWidget::wheelEvent(QWheelEvent *event)
@@ -188,5 +194,5 @@ void QOpenGLSkyboxWidget::wheelEvent(QWheelEvent *event)
 	else if(mPerspective.verticalAngle > 120.0f)
 		mPerspective.verticalAngle = 120.0f;
 
-	update();
+//	update();
 }
