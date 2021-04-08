@@ -33,7 +33,9 @@ const GLfloat ZOOM = 45.0f;
 // An abstract camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL
 class CameraGui
 {
+	bool enableTraking = true;
 public:
+
 	// Camera Attributes
 	QVector3D Position;
 	QVector3D Front;
@@ -56,6 +58,7 @@ public:
 		this->Yaw = yaw;
 		this->Pitch = pitch;
 		this->updateCameraVectors();
+		firstMouse = true;
 	}
 	// Constructor with scalar values
 	CameraGui(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat upX, GLfloat upY, GLfloat upZ, GLfloat yaw, GLfloat pitch) : Front(QVector3D(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
@@ -65,6 +68,7 @@ public:
 		this->Yaw = yaw;
 		this->Pitch = pitch;
 		this->updateCameraVectors();
+		firstMouse = true;
 	}
 
 	// Returns the view matrix calculated using Eular Angles and the LookAt Matrix
@@ -79,7 +83,7 @@ public:
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
 	{
-		GLfloat velocity = this->MovementSpeed * deltaTime;
+		GLfloat velocity = -this->MovementSpeed * deltaTime;
 		if (direction == FORWARD)
 			this->Position += this->Front * velocity;
 		if (direction == BACKWARD)
@@ -96,15 +100,27 @@ public:
 	GLfloat deltaTime = 0.0f;
 	GLfloat lastFrame = 0.0f;
 
+	bool invertX = false, invertY = false;
+	void setEnableTraking(bool val)
+	{
+		enableTraking = val;
+		if (val == false)
+		{
+			firstMouse = true;
+		}
+	}
 	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 	void ProcessMouseMovement(GLfloat xpos, GLfloat ypos, GLboolean constrainPitch = true)
 	{
+		if (!enableTraking)
+			return;
 		if(firstMouse)
 		{
 			lastX = xpos;
 			lastY = ypos;
 			firstMouse = false;
 		}
+
 
 		GLfloat xoffset = xpos - lastX;
 		GLfloat yoffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to left
@@ -116,8 +132,9 @@ public:
 		xoffset *= this->MouseSensitivity;
 		yoffset *= this->MouseSensitivity;
 
-		this->Yaw   += xoffset;
-		this->Pitch += yoffset;
+
+		this->Yaw   += invertX ? -xoffset : xoffset;
+		this->Pitch += invertY ? -yoffset : yoffset;
 
 		// Make sure that when pitch is out of bounds, screen doesn't get flipped
 		if (constrainPitch)

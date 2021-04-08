@@ -62,24 +62,28 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
+#include <QLabel>
 
 #include "Skyboxgui.h"
 
 #include "terrarian/cameragui.h"
 
+#include <chrono>
+
 class CubeGL;
+typedef std::chrono::time_point<std::chrono::steady_clock> timeType;
 
 class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
 public:
-	MainWidget(QWidget* parent = nullptr)
+	MainWidget(QWidget *parent = nullptr)
 	{
-
 	}
     ~MainWidget();
 
+	QLabel *fpsLabel;
 	void Do_Movement();
 protected:
 
@@ -99,17 +103,19 @@ protected:
 	void paintGL() override;
 
     void initShaders();
-    void initTextures();
+	void initTextures();
 
 private:
 	bool keys[1024];
 	qreal aspect;
 
-	GLfloat deltaTime = 0.0f;
-	GLfloat lastFrame = 0.0f;
+
+	double deltaTime = 0;
+	timeType lastFrame;
+	timeType timeStart;
 
 	CameraGui *camera;
-//	SkyBoxGUI *sky;
+
 	SkyBoxGUI *sky;
 	QBasicTimer timer;
     QOpenGLShaderProgram program;

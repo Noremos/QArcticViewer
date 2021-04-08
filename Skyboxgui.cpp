@@ -58,11 +58,15 @@ void SkyBoxGUI::initializeGL()
 									 R"(
 				attribute vec3 aPosition;
 				varying vec3 vTexCoord;
-				uniform mat4 mvpMatrix;
+
+
+				uniform mat4 projection;
+				uniform mat4 view;
 
 				void main()
 				{
-					gl_Position = mvpMatrix * vec4(aPosition, 1.0);
+					vec4 pos = projection * view * vec4(aPosition, 1.0);
+					gl_Position = pos.xyww;
 					vTexCoord = aPosition;
 				}
 				)");
@@ -117,13 +121,10 @@ void SkyBoxGUI::paintGL(QMatrix4x4 view, QMatrix4x4 projection)
 	mVertexBuf.bind();
 	mTexture.bind();
 
-	mModelMat.setToIdentity();
-
-//	view.setToIdentity();
 //	view.lookAt(mLookAt.eye, mLookAt.center, mLookAt.up);
 
-	projection.setToIdentity();
-	projection.perspective(mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane);
+//	projection.setToIdentity();
+//	projection.perspective(mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane);
 
 
 	mProgram.enableAttributeArray("aPosition");
@@ -131,7 +132,8 @@ void SkyBoxGUI::paintGL(QMatrix4x4 view, QMatrix4x4 projection)
 
 	//projection * view * model * vec4(position, 1.0f);
 	mProgram.setUniformValue("uTexture", 0);
-	mProgram.setUniformValue("mvpMatrix", projection * view);
+	mProgram.setUniformValue("projection", projection);
+	mProgram.setUniformValue("view", view);
 
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 

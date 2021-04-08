@@ -84,6 +84,24 @@ background-color: &quot;#a4a4a4&quot;;
         <string>PushButton</string>
        </property>
       </widget>
+      <widget class="QLabel" name="fpsLabel">
+       <property name="geometry">
+        <rect>
+         <x>910</x>
+         <y>0</y>
+         <width>91</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">#fpsLabel{
+color:red;
+}</string>
+       </property>
+       <property name="text">
+        <string>fps</string>
+       </property>
+      </widget>
      </widget>
     </item>
     <item>
@@ -145,9 +163,12 @@ background-color: &quot;#d4d1d1&quot;;
        </widget>
       </item>
       <item>
-       <widget class="MainWidget" name="openGLWidget">
+       <widget class="MainWidget" name="glWidget">
         <property name="mouseTracking">
          <bool>true</bool>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
         </property>
         <property name="styleSheet">
          <string notr="true">border.color:black;
