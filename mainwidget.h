@@ -63,8 +63,9 @@
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
 
-#include "qopenglskyboxwidget.h"
-#include "skyboxgui.h"
+#include "Skyboxgui.h"
+
+#include "terrarian/cameragui.h"
 
 class CubeGL;
 
@@ -79,6 +80,7 @@ public:
 	}
     ~MainWidget();
 
+	void Do_Movement();
 protected:
 
 	void mouseMoveEvent(QMouseEvent *event) override;
@@ -100,8 +102,15 @@ protected:
     void initTextures();
 
 private:
+	bool keys[1024];
+	qreal aspect;
+
+	GLfloat deltaTime = 0.0f;
+	GLfloat lastFrame = 0.0f;
+
+	CameraGui *camera;
 //	SkyBoxGUI *sky;
-	QOpenGLSkyboxWidget *sky;
+	SkyBoxGUI *sky;
 	QBasicTimer timer;
     QOpenGLShaderProgram program;
 	GeometryEngine *geometries = nullptr;

@@ -2,6 +2,9 @@
 #define SKYBOXGUI_H
 
 #include <QOpenGLFunctions>
+#include <QOpenGLWidget>
+
+#include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 #include <QWheelEvent>
@@ -16,28 +19,23 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
-class SkyBoxGUI : public QObject, protected QOpenGLFunctions
+
+
+class SkyBoxGUI : protected QOpenGLFunctions
 {
-	Q_OBJECT
 public:
-	explicit SkyBoxGUI(const QString& frontImagePath,
-								 const QString& backImagePath,
-								 const QString& topImagePath,
-								 const QString& bottomImagePath,
-								 const QString& leftImagePath,
-								 const QString& rightImagePath);
+	SkyBoxGUI(QWidget *parent = Q_NULLPTR);
 
-	void initializeGL();
-	void resizeGL(int w, int h);
-	void paintGL(QMatrix4x4 view);
+	void initializeGL() ;
+	void resizeGL(int w, int h) ;
+	void paintGL(QMatrix4x4 view, QMatrix4x4 projection);
 
-	void mouseReleaseEvent();
-	void mouseMoveEvent(QMouseEvent*);
-	void wheelEvent(QWheelEvent *event);
+	void mousePressEvent(QMouseEvent *e) ;
+	void mouseReleaseEvent(QMouseEvent *) ;
+	void mouseMoveEvent(QMouseEvent *event) ;
+	void wheelEvent(QWheelEvent *event) ;
 
-	void mousePressEvent(QMouseEvent*);
-	void timerEvent(QTimerEvent *) override;
-protected:
+	void timerEvent(QTimerEvent *) ;
 
 private:
 	void loadImages();
