@@ -52,6 +52,7 @@
 
 #include <QMouseEvent>
 
+#include <QOpenGLDebugLogger>
 #include <cmath>
 
 MainWidget::~MainWidget()
@@ -76,7 +77,7 @@ void MainWidget::mousePressEvent(QMouseEvent *e)
 
 void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-	sky->mouseReleaseEvent();
+	sky->mouseReleaseEvent(e);
 
 
     // Mouse release position - mouse press position
@@ -98,9 +99,10 @@ void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 //! [0]
 
 //! [1]
-void MainWidget::timerEvent(QTimerEvent *)
+void MainWidget::timerEvent(QTimerEvent * ev)
 {
     // Decrease angular speed (friction)
+	sky->timerEvent(ev);
     angularSpeed *= 0.99;
 
     // Stop rotation when speed goes below threshold
@@ -122,27 +124,36 @@ void MainWidget::initializeGL()
 
     glClearColor(0, 0, 0, 1);
 
-    initShaders();
-    initTextures();
+	initShaders();
+	initTextures();
 
-//! [2]
-    // Enable depth buffer
-    glEnable(GL_DEPTH_TEST);
+	// Enable depth buffer
+	glEnable(GL_DEPTH_TEST);
 
-    // Enable back face culling
-    glEnable(GL_CULL_FACE);
-//! [2]
+	// Enable back face culling
+	glEnable(GL_CULL_FACE);
 
 	geometries = new GeometryEngine();
 
-	sky = new SkyBoxGUI("D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/front.jpg",
-						"D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/back.jpg",
-						"D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/top.jpg",
-						"D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/bottom.jpg",
-						"D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/left.jpg",
-						"D:/Programs/QT/QArcticViewer/QArcticViewer/skybox/right.jpg");
+//	sky = new SkyBoxGUI(":/skybox/front.jpg",
+//						":/skybox/back.jpg",
+//						":/skybox/top.jpg",
+//						":/skybox/bottom.jpg",
+//						":/skybox/left.jpg",
+//						":/skybox/right.jpg");
 
+	sky = new QOpenGLSkyboxWidget();
 	sky->initializeGL();
+
+//	QOpenGLContext *ctx = QOpenGLContext::currentContext();
+//	logger = new QOpenGLDebugLogger(this);
+//	ctx->hasExtension(QByteArrayLiteral("GL_KHR_debug"));
+
+//	logger->initialize(); // initializes in the current context, i.e. ctx
+
+//	logger->startLogging();
+
+
     // Use QBasicTimer because its faster than QTimer
 	timer.start(12, this);
 }
@@ -201,6 +212,7 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 //! [5]
 void MainWidget::resizeGL(int w, int h)
 {
+	sky->resizeGL(w, h);
     // Calculate aspect ratio
     qreal aspect = qreal(w) / qreal(h ? h : 1);
 
@@ -211,45 +223,41 @@ void MainWidget::resizeGL(int w, int h)
     projection.setToIdentity();
 
     // Set perspective projection
-    projection.perspective(fov, aspect, zNear, zFar);
+	projection.perspective(fov, aspect, zNear, zFar);
+
 }
 //! [5]
 
 void MainWidget::paintGL()
 {
-	//    makeCurrent();
+	// makeCurrent();
 	// doneCurrent();
 
 
 	// Clear color and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	QMatrix4x4 matrix;
+	matrix.translate(0.0, 0.0, -5.0);
+	matrix.rotate(rotation);
 
-    texture->bind();
+	texture->bind();
 	program.bind();
-
-//! [6]
-    // Calculate model view transformation
-    QMatrix4x4 matrix;
-    matrix.translate(0.0, 0.0, -5.0);
-    matrix.rotate(rotation);
-
-    // Set modelview-projection matrix
-    program.setUniformValue("mvp_matrix", projection * matrix);
-//! [6]
-
-    // Use texture unit 0 which contains cube.png
-    program.setUniformValue("texture", 0);
-
-    // Draw cube geometry
-	geometries->drawCubeGeometry(&program);
+	program.setUniformValue("mvp_matrix", projection * matrix);
+	program.setUniformValue("texture", 0);
+//	geometries->drawCubeGeometry(&program);
 	texture->release();
 	program.release();
 
+	sky->paintGL();//projection * matrix
+
+
+//	const QList<QOpenGLDebugMessage> messages = logger->loggedMessages();
+//	for (const QOpenGLDebugMessage &message : messages)
+//		qDebug() << message;
 }
 
 
 void MainWidget::keyReleaseEvent(QKeyEvent *event)
 {
-
 }
 

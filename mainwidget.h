@@ -61,8 +61,9 @@
 #include <QBasicTimer>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QOpenGLDebugLogger>
 
-
+#include "qopenglskyboxwidget.h"
 #include "skyboxgui.h"
 
 class CubeGL;
@@ -99,12 +100,15 @@ protected:
     void initTextures();
 
 private:
-	SkyBoxGUI *sky;
-    QBasicTimer timer;
+//	SkyBoxGUI *sky;
+	QOpenGLSkyboxWidget *sky;
+	QBasicTimer timer;
     QOpenGLShaderProgram program;
 	GeometryEngine *geometries = nullptr;
 
     QOpenGLTexture *texture = nullptr;
+
+	QOpenGLDebugLogger *logger;
 
     QMatrix4x4 projection;
 

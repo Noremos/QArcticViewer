@@ -13,12 +13,14 @@ SOURCES += \
     main.cpp \
     mainwidget.cpp \
     mainwindow.cpp \
+    qopenglskyboxwidget.cpp \
     skyboxgui.cpp
 
 HEADERS += \
     geometryengine.h \
     mainwidget.h \
     mainwindow.h \
+    qopenglskyboxwidget.h \
     skyboxgui.h
 
 FORMS += \
