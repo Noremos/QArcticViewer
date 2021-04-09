@@ -53,6 +53,7 @@
 #include <QMouseEvent>
 
 #include <QOpenGLDebugLogger>
+#include <QPainter>
 #include <cmath>
 
 MainWidget::~MainWidget()
@@ -125,6 +126,16 @@ void MainWidget::initializeGL()
 	timeStart = std::chrono::steady_clock::now();
 	lastFrame = std::chrono::steady_clock::now();
 
+	terra = new Terrain();
+	//	terra->readfile("D:\\1.obj");
+	terra->readfile("D:\\2_.OBJ");
+	terra->initGL();
+	terra->addTexture("file:///D:/2.png");
+	terra->addTexture("file:///D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
+	terra->addTexture("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/50_60_1_2_2m_v3.0_reg_dem_browse.tif");
+	terra->displayTexture(0);
+
+
 //	QOpenGLContext *ctx = QOpenGLContext::currentContext();
 //	logger = new QOpenGLDebugLogger(this);
 //	ctx->hasExtension(QByteArrayLiteral("GL_KHR_debug"));
@@ -143,15 +154,15 @@ void MainWidget::initShaders()
 {
     // Compile vertex shader
     if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vshader.glsl"))
-		return;;
+		return;
 
     // Compile fragment shader
     if (!program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fshader.glsl"))
-		return;;
+		return;
 
     // Link shader pipeline
     if (!program.link())
-		return;;
+		return;
 
     // Bind shader pipeline for use
 }
@@ -292,20 +303,26 @@ void MainWidget::paintGL()
 
 	QMatrix4x4 model;
 	model.setToIdentity();
-	//	model.translate(3, 3);
 	model.translate(0.0, 0.0, -5.0);
-//	rotation = QQuaternion::fromAxisAndAngle(rotationAxis, 0.3) * rotation;
 	model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
-	//	model.scale(QVector3D(100,100,100));
-	//	GLfloat angle = 20.0f;
-	//	model.rotate(angle, QVector3D(1.0f, 0.3f, 0.5f));
+
 	program.setUniformValue("projection", projection);
 	program.setUniformValue("view", view);
 	program.setUniformValue("model", model);
-	program.setUniformValue("texture", texture->textureId() - 1);
+	program.setUniformValue("texture", 0);
 	geometries->drawCubeGeometry(&program);
 	texture->release();
 
+	terra->drawFull(view, projection);
+
+
+//	QPainter painter(this);
+//	painter.setPen(Qt::black);
+//	painter.setFont(QFont("Arial", 56));
+//	painter.drawText(0, 0, width(), height(), Qt::AlignCenter, "Hello World!");
+//	painter.end();
+
+	///skybox
 	glDepthFunc(GL_LEQUAL);
 	sky->paintGL(skyboxview, projection); //projection * matrix
 	glDepthFunc(GL_LESS);

@@ -2,5 +2,13 @@
     <qresource prefix="/">
         <file>vshader.glsl</file>
         <file>fshader.glsl</file>
+        <file>shaders/HeightFactor.frag</file>
+        <file>shaders/HeightFactor.vert</file>
+        <file>shaders/marker.frag</file>
+        <file>shaders/marker.vert</file>
+        <file>shaders/simpleColor.frag</file>
+        <file>shaders/simpleColor.vert</file>
+        <file>shaders/spotZone.frag</file>
+        <file>shaders/spotZone.vert</file>
     </qresource>
 </RCC>

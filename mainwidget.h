@@ -67,6 +67,7 @@
 #include "Skyboxgui.h"
 
 #include "terrarian/cameragui.h"
+#include "terrarian/terrariangui.h"
 
 #include <chrono>
 
@@ -115,7 +116,7 @@ private:
 	timeType timeStart;
 
 	CameraGui *camera;
-
+	Terrain *terra = nullptr;
 	SkyBoxGUI *sky;
 	QBasicTimer timer;
     QOpenGLShaderProgram program;

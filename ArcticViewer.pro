@@ -13,14 +13,18 @@ SOURCES += \
     geometryengine.cpp \
     main.cpp \
     mainwidget.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    terrarian/terrariangui.cpp \
+    terrarian/textgui.cpp
 
 HEADERS += \
     Skyboxgui.h \
     geometryengine.h \
     mainwidget.h \
     mainwindow.h \
-    terrarian/cameragui.h
+    terrarian/cameragui.h \
+    terrarian/terrariangui.h \
+    terrarian/textgui.h
 
 FORMS += \
     mainwindow.ui
@@ -33,3 +37,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     shaders.qrc \
     textures.qrc
+

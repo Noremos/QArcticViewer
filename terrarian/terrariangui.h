@@ -15,7 +15,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
-#include "cubegl.h"
+//#include "cubegl.h"
 
 struct MaterialInfo
 {
@@ -48,12 +48,6 @@ struct Node
 	QVector<Node> nodes;
 };
 
-class MaterialGui
-{
-public:
-	MaterialGui();
-};
-
 
 enum class DisplayMode {
 	Heimap,
@@ -61,11 +55,18 @@ enum class DisplayMode {
 	texture
 
 };
-class Terrain
+struct ObjBuffers
+{
+	QOpenGLBuffer arrayBuf;
+	QOpenGLBuffer indexBuf;
+};
+
+class Terrain :protected QOpenGLFunctions
 {
 	// OpenGL data
 	QOpenGLBuffer arrayBuf;
 	QOpenGLBuffer indexBuf;
+//	QVector<ObjBuffers*> buffers;
 	QOpenGLShaderProgram heimapShader, objectShader, textureShader;
 
 
@@ -80,18 +81,27 @@ class Terrain
 
 	struct vertex
 	{
-		float x, y, z, texX, texY;
+		vertex(float _x=0, float _y=0, float _z=0) : x(_x),y(_y),z(_z),texX(_x),texY(_y)
+		{}
+
+		float x, y, z;
+		float texX, texY;
 	};
 	struct face
 	{
 		unsigned int v1, v2, v3;
+		face(unsigned int _v1=0, int _v2=0, int _v3=0) : v1(_v1),v2(_v2),v3(_v3)
+		{
+
+		}
 	};
 	QVector<vertex> vetexes;
 	QVector<face> faces;
 	QVector<QVector2D> textureCoords;
 
 public:
-
+	Terrain();
+	void initGL();
 	void displayHeimap(float minH, float maxH)
 	{
 		displayMode = DisplayMode::Heimap;
@@ -107,6 +117,9 @@ public:
 
 	void displayObject() { displayMode = DisplayMode::object; }
 
+	void addTexture(QString path);
+
+private:
 	static void initShader(QOpenGLShaderProgram& prog, QString vert, QString frag)
 	{
 		// Compile vertex shader
@@ -122,18 +135,19 @@ public:
 			return;
 
 		// Bind shader pipeline for use
-		if (!prog.bind())
-			return;
+//		if (!prog.bind())
+//			return;
 	}
 
 	void initShaders();
 
-	void addTexture(QString path);
+
 
 	void initArrays();
-	void readfile(const char* filename);
 	void draw();
-	void drawFull(QMatrix4x4 &view);
+public:
+	void readfile(const char* filename);
+	void drawFull(QMatrix4x4 &view, QMatrix4x4 &projection);
 };
 #include <fstream>
 #include <string>

@@ -60,8 +60,7 @@ struct VertexData
 };
 
 //! [0]
-GeometryEngine::GeometryEngine()
-    : indexBuf(QOpenGLBuffer::IndexBuffer)
+GeometryEngine::GeometryEngine(): indexBuf(QOpenGLBuffer::IndexBuffer)
 {
     initializeOpenGLFunctions();
 
@@ -156,19 +155,19 @@ void GeometryEngine::initCubeGeometry()
 //! [2]
 void GeometryEngine::drawCubeGeometry(QOpenGLShaderProgram *program)
 {
-    // Tell OpenGL which VBOs to use
-    arrayBuf.bind();
-    indexBuf.bind();
+	// Tell OpenGL which VBOs to use
+	arrayBuf.bind();
+	indexBuf.bind();
 
-    // Offset for position
-    quintptr offset = 0;
+	// Offset for position
+	quintptr offset = 0;
 
-    // Tell OpenGL programmable pipeline how to locate vertex position data
+	// Tell OpenGL programmable pipeline how to locate vertex position data
 	int vertexLocation = program->attributeLocation("a_position");
 	program->enableAttributeArray(vertexLocation);
 	program->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
 
-    // Offset for texture coordinate
+	// Offset for texture coordinate
 	offset += sizeof(QVector3D);
 
 	//	 Tell OpenGL programmable pipeline how to locate vertex texture coordinate data
