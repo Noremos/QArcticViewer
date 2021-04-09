@@ -88,7 +88,7 @@ void Terrain::initArrays()
 
 	arrayBuf.release();
 	indexBuf.release();
-	faceSize = faces.size();
+	faceSize = faces.size() * 3;
 	vertSize = vetexes.size();
 	faces.clear();
 	vetexes.clear();
@@ -133,7 +133,7 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 
 	// Draw cube geometry using indices from VBO 1
 	vao.bind();
-	glDrawElements(GL_TRIANGLES, faceSize * 3, GL_UNSIGNED_INT, nullptr);
+	glDrawElements(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, nullptr);
 	vao.release();
 
 	curshader->release();
@@ -282,7 +282,10 @@ void Terrain::readfile(const char *filename)
 	std::string s;
 	std::ifstream fin(filename);
 	if (!fin)
+	{
+		qDebug() << "File " << filename << " not found!";
 		return;
+	}
 	size_t lines = 0;
 
 	faces.clear();
@@ -332,9 +335,13 @@ void Terrain::readfile(const char *filename)
 			len = getWord(token);
 
 			fast_float::from_chars(token, token + len, v.texX);
-
-			int end = curline.length() - len - 4;
+			int end = curline.length() - 3;
 			fast_float::from_chars(token + len + 1, token + end, v.texY);
+
+
+			// token += len + 1;
+			// int end = curline.length() - len - 4;
+			// fast_float::from_chars(token, token + end, v.texY);
 
 			this->vetexes.push_back(v);
 
@@ -343,6 +350,7 @@ void Terrain::readfile(const char *filename)
 		if (token[0] == 'f')
 		{
 			face fc;
+
 			token += 2;
 			len = getWord(token);
 			parceFace(token, fc.v1);
@@ -363,8 +371,13 @@ void Terrain::readfile(const char *filename)
 	qDebug() << "Readed " << lines << " lines";
 	qDebug() << "Vs: " << vetexes.size();
 	qDebug() << "Fs: " << faces.size();
-	qDebug() << vetexes[1000].x << vetexes[1000].y << vetexes[1000].z;
-	qDebug() << faces[1000].v1 << faces[1000].v2 << faces[1000].v3;
+
+	for (int i = 0; i < 50; ++i)
+	{
+		qDebug() << vetexes[i].x << vetexes[i].y << vetexes[i].z << vetexes[i].texX << vetexes[i].texY;
+		qDebug() << faces[i].v1 << faces[i].v2 << faces[i].v3;
+
+	}
 	//	const unsigned char *ssda = glGetString(GL_VERSION);
 
 	//	QString sds = QString::fromLocal8Bit((const char*)ssda);

@@ -140,8 +140,8 @@ void MainWidget::initializeGL()
 
 	terra = new Terrain();
 	terra->initGL();
-	//	terra->readfile("D:\\1.obj");
-	terra->readfile("D:\\2_.OBJ");
+//		terra->readfile("D:\2.obj");
+		terra->readfile("D:\\2_.OBJ");
 	terra->addTexture("file:///D:/2.png");
 	terra->addTexture("file:///D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
 	terra->addTexture("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/50_60_1_2_2m_v3.0_reg_dem_browse.tif");
