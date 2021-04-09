@@ -1,15 +1,14 @@
-#version 150 core
+#version 330 core
+
+layout(location = 0) in vec4 a_position;
+layout(location = 1) in vec2 a_texcoord;
 
 uniform mat4 model;
 uniform mat4 projection;
 uniform mat4 view;
 
 
-attribute vec4 a_position;
-attribute vec2 a_texcoord;
-
-
-varying vec2 v_texcoord;
+out vec2 v_texcoord;
 
 //! [0]
 void main()

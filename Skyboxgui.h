@@ -9,6 +9,7 @@
 #include <QOpenGLBuffer>
 #include <QWheelEvent>
 
+#include <QOpenGLVertexArrayObject>
 #include <QVector2D>
 #include <QVector3D>
 
@@ -19,7 +20,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
-
+#include <QOpenGLExtraFunctions>
 
 class SkyBoxGUI : protected QOpenGLFunctions
 {
@@ -38,9 +39,11 @@ public:
 	void timerEvent(QTimerEvent *) ;
 
 private:
+	QOpenGLExtraFunctions *f;
 	void loadImages();
 
 	QOpenGLShaderProgram mProgram;
+	QOpenGLVertexArrayObject vao;
 	QOpenGLTexture mTexture;
 	QOpenGLBuffer mVertexBuf;
 	QBasicTimer mTimer;

@@ -51,7 +51,7 @@
 #ifndef MAINWIDGET_H
 #define MAINWIDGET_H
 
-#include "geometryengine.h"
+#include "cubeg.h"
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
@@ -70,6 +70,7 @@
 #include "terrarian/terrariangui.h"
 
 #include <chrono>
+#include <QOpenGLExtraFunctions>
 
 class CubeGL;
 typedef std::chrono::time_point<std::chrono::steady_clock> timeType;
@@ -86,6 +87,7 @@ public:
 
 	QLabel *fpsLabel;
 	void Do_Movement();
+
 protected:
 
 	void mouseMoveEvent(QMouseEvent *event) override;
@@ -119,10 +121,8 @@ private:
 	Terrain *terra = nullptr;
 	SkyBoxGUI *sky;
 	QBasicTimer timer;
-    QOpenGLShaderProgram program;
-	GeometryEngine *geometries = nullptr;
+	CubeGui *geometries = nullptr;
 
-    QOpenGLTexture *texture = nullptr;
 
 	QOpenGLDebugLogger *logger;
 
@@ -131,8 +131,9 @@ private:
     QVector2D mousePressPosition;
     QVector3D rotationAxis;
     qreal angularSpeed = 0;
-    QQuaternion rotation;
+	QQuaternion rotation;
 
+	QOpenGLExtraFunctions *f;
 	// QPaintDevice interface
 	// QWidget interface
 protected:

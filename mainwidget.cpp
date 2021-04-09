@@ -86,105 +86,71 @@ void MainWidget::timerEvent(QTimerEvent * ev)
 }
 //! [1]
 
-void MainWidget::initializeGL()
+void MessageCallback( GLenum source,
+					 GLenum type,
+					 GLuint id,
+					 GLenum severity,
+					 GLsizei length,
+					 const GLchar* message,
+					 const void* userParam )
 {
-    initializeOpenGLFunctions();
+	fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+			( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
+			type, severity, message );
+}
 
-//    glClearColor(0, 0, 0, 1);
 
-	initShaders();
-	initTextures();
 
-	// Enable depth buffer
+void MainWidget::initializeGL()
+
+{
+	memset(keys, 0, 1024);
+
+	timeStart = std::chrono::steady_clock::now();
+	lastFrame = std::chrono::steady_clock::now();
+
+	initializeOpenGLFunctions();
+	f = QOpenGLContext::currentContext()->extraFunctions();
+	//	QOpenGLContext *ctx = QOpenGLContext::currentContext();
+
+
 	glEnable(GL_DEPTH_TEST);
-
 	// Enable back face culling
 	glEnable(GL_CULL_FACE);
 
-	geometries = new GeometryEngine();
+	glClearColor(0.3, 0.3, 0, 1);
 
+	// During init, enable debug output
+	glEnable( GL_DEBUG_OUTPUT );
+	f->glDebugMessageCallback( MessageCallback, 0 );
+
+
+	geometries = new CubeGui();
 
 	sky = new SkyBoxGUI();
 	sky->initializeGL();
 
 	camera = new CameraGui();
-	memset(keys, 0, 1024);
 
 	camera->setEnableTraking(false);
-
-
 	camera->invertX = true;
 	camera->invertY = true;
-
 //	camera->invertX = false;
 //	camera->invertY = false;
 
-
-	/* You can call it like this : start = time(NULL);
-	 in both the way start contain total time in seconds
-	 since the Epoch. */
-	timeStart = std::chrono::steady_clock::now();
-	lastFrame = std::chrono::steady_clock::now();
-
 	terra = new Terrain();
+	terra->initGL();
 	//	terra->readfile("D:\\1.obj");
 	terra->readfile("D:\\2_.OBJ");
-	terra->initGL();
 	terra->addTexture("file:///D:/2.png");
 	terra->addTexture("file:///D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
 	terra->addTexture("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/50_60_1_2_2m_v3.0_reg_dem_browse.tif");
 	terra->displayTexture(0);
 
 
-//	QOpenGLContext *ctx = QOpenGLContext::currentContext();
-//	logger = new QOpenGLDebugLogger(this);
-//	ctx->hasExtension(QByteArrayLiteral("GL_KHR_debug"));
 
-//	logger->initialize(); // initializes in the current context, i.e. ctx
-
-//	logger->startLogging();
-
-
-    // Use QBasicTimer because its faster than QTimer
 	timer.start(12, this);
 }
-
-//! [3]
-void MainWidget::initShaders()
-{
-    // Compile vertex shader
-    if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vshader.glsl"))
-		return;
-
-    // Compile fragment shader
-    if (!program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fshader.glsl"))
-		return;
-
-    // Link shader pipeline
-    if (!program.link())
-		return;
-
-    // Bind shader pipeline for use
-}
-//! [3]
-
-//! [4]
-void MainWidget::initTextures()
-{
-//    // Load cube.png image
-	texture = new QOpenGLTexture(QImage(":/cube.png").mirrored());
-
-//    // Set nearest filtering mode for texture minification
-	texture->setMinificationFilter(QOpenGLTexture::Nearest);
-
-//    // Set bilinear filtering mode for texture magnification
-	texture->setMagnificationFilter(QOpenGLTexture::Linear);
-
-//    // Wrap texture coordinates by repeating
-//	// f.ex. texture coordinate (1.1, 1.2) is same as (0.1, 0.2)
-	texture->setWrapMode(QOpenGLTexture::Repeat);
-}
-
 
 //! [0]
 void MainWidget::mousePressEvent(QMouseEvent *e)
@@ -246,7 +212,7 @@ void MainWidget::keyReleaseEvent(QKeyEvent *event)
 //! [5]
 void MainWidget::resizeGL(int w, int h)
 {
-	sky->resizeGL(w, h);
+//	sky->resizeGL(w, h);
 
     // Calculate aspect ratio
 	aspect = qreal(w) / qreal(h ? h : 1);
@@ -282,36 +248,29 @@ void MainWidget::paintGL()
 
 	Do_Movement();
 	QMatrix4x4 view = camera->GetViewMatrix();
-	QMatrix4x4 skyboxview = QMatrix4x4(view.normalMatrix());
+	QMatrix4x4 skyboxview(view.normalMatrix());
 	QMatrix4x4 projection;
 	projection.setToIdentity();
 	projection.perspective(fov, aspect, zNear, zFar);
 //	 sky->mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane
 //	 Set perspective projection
 
-
+//	makeCurrent();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-//	sky->update();
 	// makeCurrent();
 	// doneCurrent();
 
 
-	texture->bind();
-	program.bind();
+//	texture->bind();
 
-	QMatrix4x4 model;
-	model.setToIdentity();
-	model.translate(0.0, 0.0, -5.0);
-	model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
+	geometries->model.setToIdentity();
+	geometries->model.translate(0.0, 0.0, -5.0);
+	geometries->model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
 
-	program.setUniformValue("projection", projection);
-	program.setUniformValue("view", view);
-	program.setUniformValue("model", model);
-	program.setUniformValue("texture", 0);
-	geometries->drawCubeGeometry(&program);
-	texture->release();
+//	program.bind();
+	geometries->drawCubeGeometry(view, projection);
 
 	terra->drawFull(view, projection);
 
@@ -326,6 +285,40 @@ void MainWidget::paintGL()
 	glDepthFunc(GL_LEQUAL);
 	sky->paintGL(skyboxview, projection); //projection * matrix
 	glDepthFunc(GL_LESS);
+
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR)
+	{
+		switch (err)
+		{
+		case GL_INVALID_ENUM:
+			qDebug() << "GL_INVALID_ENUM";
+			break;
+		case GL_INVALID_VALUE:
+			qDebug() << "GL_INVALID_VALUE";
+			break;
+		case GL_INVALID_OPERATION:
+			qDebug() << "GL_INVALID_OPERATION";
+			break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			qDebug() << "GL_INVALID_FRAMEBUFFER_OPERATION";
+			break;
+		case GL_OUT_OF_MEMORY:
+			qDebug() << "GL_OUT_OF_MEMORY";
+			break;
+		case GL_STACK_UNDERFLOW:
+			qDebug() << "GL_STACK_UNDERFLOW";
+			break;
+		case GL_STACK_OVERFLOW:
+			qDebug() << "GL_STACK_OVERFLOW";
+			break;
+		default:
+			break;
+		}
+		qDebug() << err;
+		// Process/log the error.
+	}
+//	doneCurrent();
 //	update();
 
 

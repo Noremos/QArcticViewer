@@ -48,26 +48,37 @@
 **
 ****************************************************************************/
 
-#ifndef GEOMETRYENGINE_H
-#define GEOMETRYENGINE_H
+#ifndef CUBEG_H
+#define CUBEG_H
 
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <QOpenGLExtraFunctions>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLTexture>
 
-class GeometryEngine : protected QOpenGLFunctions
+class CubeGui : protected QOpenGLFunctions
 {
 public:
-    GeometryEngine();
-    virtual ~GeometryEngine();
+    CubeGui();
+    virtual ~CubeGui();
 
-    void drawCubeGeometry(QOpenGLShaderProgram *program);
+    void drawCubeGeometry(QMatrix4x4 view, QMatrix4x4 projection);
+
+	QMatrix4x4 model;
+	QOpenGLShaderProgram program;
+	QOpenGLTexture *texture = nullptr;
 
 private:
     void initCubeGeometry();
 
+	QOpenGLVertexArrayObject vao;
     QOpenGLBuffer arrayBuf;
     QOpenGLBuffer indexBuf;
+	QOpenGLExtraFunctions *f;
+	void initTextures();
+	void initShaders();
 };
 
-#endif // GEOMETRYENGINE_H
+#endif // CUBEG_H

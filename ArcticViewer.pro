@@ -10,7 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     Skyboxgui.cpp \
-    geometryengine.cpp \
+    cubeg.cpp \
     main.cpp \
     mainwidget.cpp \
     mainwindow.cpp \
@@ -19,7 +19,7 @@ SOURCES += \
 
 HEADERS += \
     Skyboxgui.h \
-    geometryengine.h \
+    cubeg.h \
     mainwidget.h \
     mainwindow.h \
     terrarian/cameragui.h \

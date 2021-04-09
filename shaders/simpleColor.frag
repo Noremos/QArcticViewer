@@ -1,15 +1,16 @@
-#version 150 core
+#version 330 core
 
 //uniform sampler2D terrain;
 //uniform vec4 ambient;
-uniform sampler2D texture;
+uniform sampler2D texture0;
 
-varying vec2 v_texcoord;
+in vec2 v_texcoord;
 
+out vec4 FragColor;
 //! [0]
 void main()
 {
     // Set fragment color from texture
-    gl_FragColor = texture2D(texture, v_texcoord);
-//    gl_FragColor = vec4(0.4,0.6,1,1);
+    FragColor = texture(texture0, v_texcoord);
+//    FragColor = vec4(0.4,0.6,1,1);
 }

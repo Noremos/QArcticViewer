@@ -53,11 +53,14 @@ void SkyBoxGUI::loadImages()
 void SkyBoxGUI::initializeGL()
 {
 	initializeOpenGLFunctions();
+	f = QOpenGLContext::currentContext()->extraFunctions();
 
 	mProgram.addShaderFromSourceCode(QOpenGLShader::Vertex,
 									 R"(
-				attribute vec3 aPosition;
-				varying vec3 vTexCoord;
+				#version 330 core
+				layout(location = 0) in vec3 aPosition;
+
+				out vec3 vTexCoord;
 
 
 				uniform mat4 projection;
@@ -73,17 +76,19 @@ void SkyBoxGUI::initializeGL()
 
 	mProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,
 									 R"(
+				#version 330 core
+				out vec4 FragColor;
+
 				uniform samplerCube uTexture;
-				varying vec3 vTexCoord;
+				in vec3 vTexCoord;
 
 				void main()
 				{
-					gl_FragColor = textureCube(uTexture, vTexCoord);
+					FragColor = texture(uTexture, vTexCoord);
 				}
 				)");
 
 	mProgram.link();
-	mProgram.bind();
 
 	loadImages();
 
@@ -99,27 +104,34 @@ void SkyBoxGUI::initializeGL()
 
 							{-1.0f, -1.0f, -1.0f}, {-1.0f, -1.0f, +1.0f}, {+1.0f, -1.0f, -1.0f}, {+1.0f, -1.0f, -1.0f}, {-1.0f, -1.0f, +1.0f}, {+1.0f, -1.0f, +1.0f}};
 
+	vao.create();
+	vao.bind();
+
 	mVertexBuf.create();
+	mVertexBuf.setUsagePattern(QOpenGLBuffer::StaticDraw);
 	mVertexBuf.bind();
 	mVertexBuf.allocate(vertices, 36 * sizeof(QVector3D));
 
-	mProgram.enableAttributeArray("aPosition");
-	mProgram.setAttributeBuffer("aPosition", GL_FLOAT, 0, 3, sizeof(QVector3D));
+	mProgram.bind();
+	int loc = mProgram.attributeLocation("aPosition");
+	assert(loc >= 0);
+//	mProgram.setAttributeArray(loc, GL_FLOAT, 0, 3, sizeof(QVector3D));
+	mProgram.setAttributeBuffer(loc, GL_FLOAT, 0, 3, sizeof(QVector3D));
+	mProgram.enableAttributeArray(loc);
+//	f->glVertexAttribDivisor()
 
 	mProgram.setUniformValue("uTexture", 0);
 	//!!!!!!!!!!!!!!!!!!!
-	//	mProgram.disableAttributeArray("aPosition");
-	//		mProgram.release();
-	//	mVertexBuf.release();
+	vao.release();
+	mVertexBuf.release();
+
+	mProgram.release();
 }
 
 
 
 void SkyBoxGUI::paintGL(QMatrix4x4 view, QMatrix4x4 projection)
 {
-	mProgram.bind();
-	mVertexBuf.bind();
-	mTexture.bind();
 
 //	view.lookAt(mLookAt.eye, mLookAt.center, mLookAt.up);
 
@@ -127,19 +139,25 @@ void SkyBoxGUI::paintGL(QMatrix4x4 view, QMatrix4x4 projection)
 //	projection.perspective(mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane);
 
 
-	mProgram.enableAttributeArray("aPosition");
-	mProgram.setAttributeBuffer("aPosition", GL_FLOAT, 0, 3, sizeof(QVector3D));
+	mProgram.bind();
+
+	//mVertexBuf.bind();
+	mTexture.bind();
+
+//	mProgram.enableAttributeArray(0);
+//	mProgram.setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(QVector3D));
 
 	//projection * view * model * vec4(position, 1.0f);
-	mProgram.setUniformValue("uTexture", 0);
 	mProgram.setUniformValue("projection", projection);
 	mProgram.setUniformValue("view", view);
 
+	vao.bind();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+	vao.release();
 
-	mProgram.disableAttributeArray("aPosition");
-	mVertexBuf.release();
+//	mVertexBuf.release();
 	mTexture.release();
+//	mProgram.disableAttributeArray(0);
 	mProgram.release();
 }
 

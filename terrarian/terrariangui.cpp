@@ -12,15 +12,13 @@
 Terrain::Terrain():indexBuf(QOpenGLBuffer::IndexBuffer)
 {
 	initializeOpenGLFunctions();
-	arrayBuf.create();
-	indexBuf.create();
-
+	f = QOpenGLContext::currentContext()->extraFunctions();
 }
 
 void Terrain::initGL()
 {
+
 	initShaders();
-	initArrays();
 }
 
 void Terrain::initShaders()
@@ -39,9 +37,7 @@ void Terrain::addTexture(QString path)
 	if (path.startsWith("file:///"))
 		path = path.remove(0, 8);
 
-	QImage temp = QImage(path).mirrored();
-//	qDebug() << temp.width();
-	QOpenGLTexture *texture = new QOpenGLTexture(temp);
+	QOpenGLTexture *texture = new QOpenGLTexture(QImage(path).mirrored());
 
 	texture->setMinificationFilter(QOpenGLTexture::Nearest);
 	texture->setMagnificationFilter(QOpenGLTexture::Linear);
@@ -60,31 +56,43 @@ struct VertexData
 
 void Terrain::initArrays()
 {
+	arrayBuf.create();
+	indexBuf.create();
+	vao.create();
+	vao.bind();
+
+	textureShader.bind();
 	// Transfer vertex data to VBO 0
 	arrayBuf.bind();
 	arrayBuf.allocate((const void *) vetexes.data(), vetexes.size() * sizeof(vertex));
+	arrayBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 
 	// Transfer index data to VBO 1
 	indexBuf.bind();
 	indexBuf.allocate((const void *) faces.data(), faces.size() * sizeof(face));
+	indexBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
+
+	int offset = 0;
+	int vertexLocation = textureShader.attributeLocation("a_position");
+	textureShader.setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(vertex));
+	textureShader.enableAttributeArray(vertexLocation);
+
+	// Offset for texture coordinate
+	offset += sizeof(QVector3D);
+
+	int texcoordLocation = textureShader.attributeLocation("a_texcoord");
+	textureShader.setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(vertex));
+	textureShader.enableAttributeArray(texcoordLocation);
+
+	vao.release();
+	textureShader.release();
 
 	arrayBuf.release();
 	indexBuf.release();
-
-
-
-//	arrayBuf.bind();
-//	arrayBuf.allocate(vertices, 24 * sizeof(VertexData));
-
-//	// Transfer index data to VBO 1
-//	indexBuf.bind();
-//	indexBuf.allocate(indices, 34 * sizeof(GLushort));
-
-
+	faceSize = faces.size();
+	vertSize = vetexes.size();
 	faces.clear();
 	vetexes.clear();
-	arrayBuf.release();
-	indexBuf.release();
 }
 
 void Terrain::drawFull(QMatrix4x4& view, QMatrix4x4& projection)
@@ -110,7 +118,7 @@ void Terrain::drawFull(QMatrix4x4& view, QMatrix4x4& projection)
 			textures[textNum]->bind();
 			curshader->bind();
 //			int idt = textures[textNum]->textureId() - 1;
-			curshader->setUniformValue("texture", 0);
+			curshader->setUniformValue("texture0", 0);
 			break;
 		}
 	default:
@@ -125,32 +133,13 @@ void Terrain::drawFull(QMatrix4x4& view, QMatrix4x4& projection)
 	curshader->setUniformValue("projection", projection);
 	curshader->setUniformValue("view", view);
 	curshader->setUniformValue("model", model);
-	// Tell OpenGL programmable pipeline how to locate vertex position data
 
-	arrayBuf.bind();
-	indexBuf.bind();
-
-	quintptr offset = 0;
-
-	int vertexLocation = curshader->attributeLocation("a_position");
-	curshader->enableAttributeArray(vertexLocation);
-	curshader->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(vertex));
-
-	// Offset for texture coordinate
-	offset += sizeof(QVector3D);
-
-	//	 Tell OpenGL curshadermable pipeline how to locate vertex texture coordinate data
-	int texcoordLocation = curshader->attributeLocation("a_texcoord");
-	curshader->enableAttributeArray(texcoordLocation);
-	curshader->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(vertex));
 	// Draw cube geometry using indices from VBO 1
-	glDrawElements(GL_TRIANGLES, 65000, GL_UNSIGNED_SHORT, nullptr);
+	vao.bind();
+	glDrawElements(GL_TRIANGLES, faceSize*3, GL_UNSIGNED_INT, nullptr);
+	vao.release();
 
-	curshader->disableAttributeArray(texcoordLocation);
-	curshader->disableAttributeArray(vertexLocation);
 	curshader->release();
-	arrayBuf.release();
-	indexBuf.release();
 
 	switch (this->displayMode)
 	{
@@ -250,32 +239,8 @@ void Terrain::readfile(const char *filename)
 
 	std::string temp;
 
-	// Transfer vertex data to VBO 0
-	arrayBuf.bind();
-	arrayBuf.allocate((const void *) vetexes.data(), vetexes.size() * sizeof(vertex));
-
-	// Transfer index data to VBO 1
-	indexBuf.bind();
-	indexBuf.allocate((const void *) faces.data(), faces.size() * sizeof(face));
-
-	arrayBuf.release();
-	indexBuf.release();
-
-
-
-	//	arrayBuf.bind();
-	//	arrayBuf.allocate(vertices, 24 * sizeof(VertexData));
-
-	//	// Transfer index data to VBO 1
-	//	indexBuf.bind();
-	//	indexBuf.allocate(indices, 34 * sizeof(GLushort));
-
-
 	faces.clear();
 	vetexes.clear();
-	arrayBuf.release();
-	indexBuf.release();
-
 	while (std::getline(fin, s))
 	{
 		switch (*s.c_str())
@@ -325,6 +290,13 @@ void Terrain::readfile(const char *filename)
 	qDebug() << "Readed " << lines << " lines";
 	qDebug() << "Vs: " << vetexes.size();
 	qDebug() << "Fs: " << faces.size();
+	qDebug() << vetexes[vetexes.size()-1].x<< vetexes[vetexes.size()-1].y<< vetexes[vetexes.size()-1].z;
+	qDebug() << faces[faces.size()-1].v1<< faces[faces.size()-1].v2<< faces[faces.size()-1].v3;
+//	const unsigned char *ssda = glGetString(GL_VERSION);
+
+//	QString sds = QString::fromLocal8Bit((const char*)ssda);
+//	qDebug() << sds;
+	initArrays();
 	return;
 }
 

@@ -5,10 +5,11 @@
 
 int main(int argc, char *argv[])
 {
-//	QSurfaceFormat fmt;
-//	fmt.setVersion(3, 1);
-//	fmt.setDepthBufferSize(24);
-//	QSurfaceFormat::setDefaultFormat(fmt);
+	QSurfaceFormat fmt;
+	fmt.setRenderableType(QSurfaceFormat::OpenGL);
+	fmt.setVersion(3, 3);
+	fmt.setDepthBufferSize(24);
+	QSurfaceFormat::setDefaultFormat(fmt);
 
 	QApplication a(argc, argv);
 	MainWindow w;

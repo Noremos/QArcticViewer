@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-#include "geometryengine.h"
+#include "cubeg.h"
 
 #include <QVector2D>
 #include <QVector3D>
@@ -60,26 +60,53 @@ struct VertexData
 };
 
 //! [0]
-GeometryEngine::GeometryEngine(): indexBuf(QOpenGLBuffer::IndexBuffer)
+CubeGui::CubeGui(): indexBuf(QOpenGLBuffer::IndexBuffer)
 {
-    initializeOpenGLFunctions();
-
-    // Generate 2 VBOs
-    arrayBuf.create();
-    indexBuf.create();
-
-    // Initializes cube geometry and transfers it to VBOs
     initCubeGeometry();
 }
 
-GeometryEngine::~GeometryEngine()
+CubeGui::~CubeGui()
 {
     arrayBuf.destroy();
     indexBuf.destroy();
 }
-//! [0]
 
-void GeometryEngine::initCubeGeometry()
+void CubeGui::initShaders()
+{
+	// Compile vertex shader
+	if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vshader.glsl"))
+		return;
+
+	// Compile fragment shader
+	if (!program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fshader.glsl"))
+		return;
+
+	// Link shader pipeline
+	if (!program.link())
+		return;
+
+	// Bind shader pipeline for use
+}
+//! [3]
+
+//! [4]
+void CubeGui::initTextures()
+{
+	//    // Load cube.png image
+	texture = new QOpenGLTexture(QImage(":/cube.png").mirrored());
+
+	//    // Set nearest filtering mode for texture minification
+	texture->setMinificationFilter(QOpenGLTexture::Nearest);
+
+	//    // Set bilinear filtering mode for texture magnification
+	texture->setMagnificationFilter(QOpenGLTexture::Linear);
+
+	//    // Wrap texture coordinates by repeating
+	//	// f.ex. texture coordinate (1.1, 1.2) is same as (0.1, 0.2)
+	texture->setWrapMode(QOpenGLTexture::Repeat);
+}
+
+void CubeGui::initCubeGeometry()
 {
     // For cube we would need only 8 vertices but we have to
     // duplicate vertex for each face because texture coordinate
@@ -136,10 +163,21 @@ void GeometryEngine::initCubeGeometry()
         12, 12, 13, 14, 15, 15, // Face 3 - triangle strip (v12, v13, v14, v15)
         16, 16, 17, 18, 19, 19, // Face 4 - triangle strip (v16, v17, v18, v19)
         20, 20, 21, 22, 23      // Face 5 - triangle strip (v20, v21, v22, v23)
-    };
+	};
 
-//! [1]
-    // Transfer vertex data to VBO 0
+	initializeOpenGLFunctions();
+	f = QOpenGLContext::currentContext()->extraFunctions();
+
+	// Generate 2 VBOs
+	arrayBuf.create();
+	indexBuf.create();
+
+	initShaders();
+	initTextures();
+
+	vao.create();
+	vao.bind();
+	// Transfer vertex data to VBO 0
     arrayBuf.bind();
     arrayBuf.allocate(vertices, 24 * sizeof(VertexData));
 
@@ -147,40 +185,42 @@ void GeometryEngine::initCubeGeometry()
 	indexBuf.bind();
 	indexBuf.allocate(indices, 34 * sizeof(GLushort));
 
-	arrayBuf.release();
-	indexBuf.release();
-//! [1]
-}
-
-//! [2]
-void GeometryEngine::drawCubeGeometry(QOpenGLShaderProgram *program)
-{
-	// Tell OpenGL which VBOs to use
-	arrayBuf.bind();
-	indexBuf.bind();
-
-	// Offset for position
 	quintptr offset = 0;
 
-	// Tell OpenGL programmable pipeline how to locate vertex position data
-	int vertexLocation = program->attributeLocation("a_position");
-	program->enableAttributeArray(vertexLocation);
-	program->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
+	program.bind();
+	int vertexLocation = program.attributeLocation("a_position");
+	program.setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
+	program.enableAttributeArray(vertexLocation);
 
 	// Offset for texture coordinate
 	offset += sizeof(QVector3D);
 
 	//	 Tell OpenGL programmable pipeline how to locate vertex texture coordinate data
-	int texcoordLocation = program->attributeLocation("a_texcoord");
-	program->enableAttributeArray(texcoordLocation);
-	program->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
+	int texcoordLocation = program.attributeLocation("a_texcoord");
+	program.setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
+	program.enableAttributeArray(texcoordLocation);
+	program.setUniformValue("texture0", 0);
 
-	// Draw cube geometry using indices from VBO 1
-	glDrawElements(GL_TRIANGLE_STRIP, 34, GL_UNSIGNED_SHORT, nullptr);
-	program->disableAttributeArray(texcoordLocation);
-	program->disableAttributeArray(vertexLocation);
+	vao.release();
 	arrayBuf.release();
 	indexBuf.release();
-	program->release();
+	program.release();
+}
+
+void CubeGui::drawCubeGeometry(QMatrix4x4 view, QMatrix4x4 projection)
+{
+	program.bind();
+	texture->bind();
+	program.setUniformValue("projection", projection);
+	program.setUniformValue("view", view);
+	program.setUniformValue("model", model);
+
+	// Tell OpenGL programmable pipeline how to locate vertex position data
+	vao.bind();
+	// Draw cube geometry using indices from VBO 1
+	glDrawElements(GL_TRIANGLE_STRIP, 34, GL_UNSIGNED_SHORT, nullptr);
+	vao.release();
+	texture->release();
+	program.release();
 }
 //! [2]

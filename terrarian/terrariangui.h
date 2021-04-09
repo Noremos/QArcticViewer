@@ -5,6 +5,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 
+#include <QOpenGLVertexArrayObject>
 #include <QVector2D>
 #include <QVector3D>
 
@@ -64,6 +65,7 @@ struct ObjBuffers
 class Terrain :protected QOpenGLFunctions
 {
 	// OpenGL data
+	size_t faceSize, vertSize;
 	QOpenGLBuffer arrayBuf;
 	QOpenGLBuffer indexBuf;
 //	QVector<ObjBuffers*> buffers;
@@ -119,7 +121,11 @@ public:
 
 	void addTexture(QString path);
 
+	QOpenGLVertexArrayObject vao;
+
 private:
+	QOpenGLExtraFunctions *f;
+
 	static void initShader(QOpenGLShaderProgram& prog, QString vert, QString frag)
 	{
 		// Compile vertex shader
