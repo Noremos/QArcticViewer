@@ -8,8 +8,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 
-
-Terrain::Terrain():indexBuf(QOpenGLBuffer::IndexBuffer)
+Terrain::Terrain() : indexBuf(QOpenGLBuffer::IndexBuffer)
 {
 	initializeOpenGLFunctions();
 	f = QOpenGLContext::currentContext()->extraFunctions();
@@ -26,7 +25,7 @@ void Terrain::initShaders()
 	initShader(heimapShader, ":/shaders/HeightFactor.vert", ":/shaders/HeightFactor.frag");
 	initShader(objectShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
 	initShader(textureShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
-//	initShader(textureShader, ":/vshader.glsl", ":/fshader.glsl");
+	//	initShader(textureShader, ":/vshader.glsl", ":/fshader.glsl");
 }
 
 void Terrain::addTexture(QString path)
@@ -64,12 +63,12 @@ void Terrain::initArrays()
 	textureShader.bind();
 	// Transfer vertex data to VBO 0
 	arrayBuf.bind();
-	arrayBuf.allocate((const void *) vetexes.data(), vetexes.size() * sizeof(vertex));
+	arrayBuf.allocate((const void *)vetexes.data(), vetexes.size() * sizeof(vertex));
 	arrayBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 
 	// Transfer index data to VBO 1
 	indexBuf.bind();
-	indexBuf.allocate((const void *) faces.data(), faces.size() * sizeof(face));
+	indexBuf.allocate((const void *)faces.data(), faces.size() * sizeof(face));
 	indexBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 
 	int offset = 0;
@@ -95,13 +94,12 @@ void Terrain::initArrays()
 	vetexes.clear();
 }
 
-void Terrain::drawFull(QMatrix4x4& view, QMatrix4x4& projection)
+void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 {
 	// Tell OpenGL which VBOs to use
 
-
 	// Offset for position
-	QOpenGLShaderProgram* curshader;
+	QOpenGLShaderProgram *curshader;
 	switch (this->displayMode)
 	{
 	case DisplayMode::Heimap:
@@ -113,18 +111,17 @@ void Terrain::drawFull(QMatrix4x4& view, QMatrix4x4& projection)
 		curshader->bind();
 		break;
 	case DisplayMode::texture:
-		{
-			curshader = &this->textureShader;
-			textures[textNum]->bind();
-			curshader->bind();
-//			int idt = textures[textNum]->textureId() - 1;
-			curshader->setUniformValue("texture0", 0);
-			break;
-		}
+	{
+		curshader = &this->textureShader;
+		textures[textNum]->bind();
+		curshader->bind();
+		//			int idt = textures[textNum]->textureId() - 1;
+		curshader->setUniformValue("texture0", 0);
+		break;
+	}
 	default:
 		break;
 	}
-
 
 	QMatrix4x4 model;
 	model.setToIdentity();
@@ -136,7 +133,7 @@ void Terrain::drawFull(QMatrix4x4& view, QMatrix4x4& projection)
 
 	// Draw cube geometry using indices from VBO 1
 	vao.bind();
-	glDrawElements(GL_TRIANGLES, faceSize*3, GL_UNSIGNED_INT, nullptr);
+	glDrawElements(GL_TRIANGLES, faceSize * 3, GL_UNSIGNED_INT, nullptr);
 	vao.release();
 
 	curshader->release();
@@ -151,28 +148,6 @@ void Terrain::drawFull(QMatrix4x4& view, QMatrix4x4& projection)
 	}
 }
 
-int parceFace(const char *str, int len)
-{
-	const char *razd = str;
-	int poz = 0;
-	while (*razd != '/')
-	{
-		if (len == poz)
-			return 0;
-		++razd;
-		++poz;
-	}
-	return poz;
-}
-
-void initFace(std::string &str, unsigned int &faceV)
-{
-	const char *cstr = str.c_str();
-	int poz = parceFace(cstr, str.length());
-	str[poz] = '\0';
-	faceV = atoi(cstr);
-}
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -181,54 +156,127 @@ void initFace(std::string &str, unsigned int &faceV)
 #include <sys/stat.h>
 #include <errno.h>
 
-void raedFast(const char* fName)
+void raedFast(const char *fName)
 {
-//	struct stat sb;
-//	long cntr = 0;
-//	int fd, lineLen;
-//	char *data;
-//	char *line;
-//	// map the file
-//	fd = open(fName, O_RDONLY);
-//	fstat(fd, &sb);
-//	//// int pageSize;
-//	//// pageSize = getpagesize();
-//	//// data = mmap((caddr_t)0, pageSize, PROT_READ, MAP_PRIVATE, fd, pageSize);
-//	data = mmap((void*)0, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	//	struct stat sb;
+	//	long cntr = 0;
+	//	int fd, lineLen;
+	//	char *data;
+	//	char *line;
+	//	// map the file
+	//	fd = open(fName, O_RDONLY);
+	//	fstat(fd, &sb);
+	//	//// int pageSize;
+	//	//// pageSize = getpagesize();
+	//	//// data = mmap((caddr_t)0, pageSize, PROT_READ, MAP_PRIVATE, fd, pageSize);
+	//	data = mmap((void*)0, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
+	//	// проецировать файл в память
+	//	auto hMapping = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+	//	if (hMapping == INVALID_HANDLE_VALUE)
+	//	{
+	//		CloseHandle(hFile);
+	//		return ERR_SYS_FUNCTION;
+	//	}
+	//	// отобразить файл в память
+	//	image = (octet*)MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+	//	if (image == NULL)
+	//	{
+	//		CloseHandle(hMapping), CloseHandle(hFile);
+	//		return ERR_SYS_FUNCTION;
+	//	}
 
-//	// проецировать файл в память
-//	auto hMapping = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-//	if (hMapping == INVALID_HANDLE_VALUE)
-//	{
-//		CloseHandle(hFile);
-//		return ERR_SYS_FUNCTION;
-//	}
-//	// отобразить файл в память
-//	image = (octet*)MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
-//	if (image == NULL)
-//	{
-//		CloseHandle(hMapping), CloseHandle(hFile);
-//		return ERR_SYS_FUNCTION;
-//	}
-
-//	line = data;
-//	// get lines
-//	while(cntr < sb.st_size) {
-//		lineLen = 0;
-//		line = data;
-//		// find the next line
-//		while(*data != '\n' && cntr < sb.st_size) {
-//			data++;
-//			cntr++;
-//			lineLen++;
-//		}
-//		/***** PROCESS LINE *****/
-//		// ... processLine(line, lineLen);
-//	}
-//	return 0;
+	//	line = data;
+	//	// get lines
+	//	while(cntr < sb.st_size) {
+	//		lineLen = 0;
+	//		line = data;
+	//		// find the next line
+	//		while(*data != '\n' && cntr < sb.st_size) {
+	//			data++;
+	//			cntr++;
+	//			lineLen++;
+	//		}
+	//		/***** PROCESS LINE *****/
+	//		// ... processLine(line, lineLen);
+	//	}
+	//	return 0;
 }
-#include  <sstream>
+#include <sstream>
+#include <charconv>
+#include "fast_float/fast_float.h"
+
+int parceIntFast(const char *num, int len)
+{
+	int ret;
+	std::from_chars(num, num + len, ret);
+	return ret;
+
+	int sum = 0;
+	for (int i = 0; i < len; i++)
+	{
+		sum = (sum * 10) + (num[i] - '0');
+	}
+	return sum;
+}
+
+static bool getLineFast(std::istream &is, std::string &t)
+{
+	t.clear();
+
+	std::istream::sentry se(is, true);
+	std::streambuf *sb = is.rdbuf();
+
+	while (true)
+	{
+		int c = sb->sbumpc();
+		if (c == EOF)
+			return false;
+		if (c == '\n' || c == '\r')
+		{
+			c = sb->sbumpc();
+			if (c == '\n')
+				sb->sbumpc();
+			else if (c == EOF)
+				return false;
+			else
+				sb->sungetc();
+			return true;
+		}
+		t += c;
+	}
+	return true;
+}
+inline bool isNotEnd(int c)
+{
+	return (c != ' ' && c != '\n' && c != '\r');
+}
+int getWord(const char *base)
+{
+	const char *ref = base;
+	int len = 0;
+	while (isNotEnd(*ref))
+	{
+		++ref;
+		++len;
+	}
+	return len;
+}
+
+void parceFace(const char *str, unsigned int &f)
+{
+	const char *razd = str;
+	//	int len = 0;
+	while (*razd != '/')
+	{
+		++razd;
+		//		++len;
+	}
+	std::from_chars(str, razd, f);
+	--f;
+	//	f = parceIntFast(str, len);
+}
+
 void Terrain::readfile(const char *filename)
 {
 	std::string s;
@@ -237,81 +285,106 @@ void Terrain::readfile(const char *filename)
 		return;
 	size_t lines = 0;
 
-	std::string temp;
-
 	faces.clear();
 	vetexes.clear();
-	while (std::getline(fin, s))
+
+	std::stringstream errss;
+	std::string name;
+
+	std::string curline;
+	bool notLastLine = true;
+	while (notLastLine)
 	{
-		switch (*s.c_str())
+		notLastLine = getLineFast(fin, curline) && fin.peek() != EOF;
+		lines++;
+
+		// Skip if empty line.
+		if (curline.empty())
+			continue;
+
+		const char *token = curline.c_str();
+		int len;
+
+		if (token[0] == 'v')
 		{
-		case 'v': {
-			std::istringstream iss(s);
-
 			vertex v;
-			iss >> temp >> v.x >> v.y >> v.z;
 
-			std::getline(fin, s);
+			token += 2;
+			len = getWord(token);
+			fast_float::from_chars(token, token + len, v.x);
+			token += len + 1;
+
+			len = getWord(token);
+			fast_float::from_chars(token, token + len, v.y);
+			token += len + 1;
+
+			len = getWord(token);
+			fast_float::from_chars(token, token + len, v.z);
+
+			getLineFast(fin, curline);
+			token = curline.c_str();
 			lines++;
 
 			// vt
-			assert(s[0] == 'v' && s[1] == 't');
+			assert(token[0] == 'v' && token[1] == 't');
 
-			int i = 2;
-			while (s[++i] != ' ')
-				;
+			token += 3;
+			len = getWord(token);
 
-			s[i] = '\0';
+			fast_float::from_chars(token, token + len, v.texX);
 
-			v.texX = atof(s.c_str() + 3);
-			v.texY = atof(s.c_str() + i+1);
+			int end = curline.length() - len - 4;
+			fast_float::from_chars(token + len + 1, token + end, v.texY);
 
 			this->vetexes.push_back(v);
 
-			break;
+			continue;
 		}
-		case 'f': {
-			std::istringstream iss(s);
-			face f;
-			// skip 'f'
-			iss >> temp >> temp;
-			initFace(temp, f.v1);
-			iss >> temp;
-			initFace(temp, f.v2);
-			iss >> temp;
-			initFace(temp, f.v3);
+		if (token[0] == 'f')
+		{
+			face fc;
+			token += 2;
+			len = getWord(token);
+			parceFace(token, fc.v1);
 
-			faces.push_back(f);
-			}
+			token += len + 1;
+			len = getWord(token);
+			parceFace(token, fc.v2);
+
+			token += len + 1;
+//			len = getWord(token);
+			parceFace(token, fc.v3);
+
+			faces.push_back(fc);
+			continue;
 		}
-		lines++;
 	}
 	fin.close();
 	qDebug() << "Readed " << lines << " lines";
 	qDebug() << "Vs: " << vetexes.size();
 	qDebug() << "Fs: " << faces.size();
-	qDebug() << vetexes[vetexes.size()-1].x<< vetexes[vetexes.size()-1].y<< vetexes[vetexes.size()-1].z;
-	qDebug() << faces[faces.size()-1].v1<< faces[faces.size()-1].v2<< faces[faces.size()-1].v3;
-//	const unsigned char *ssda = glGetString(GL_VERSION);
+	qDebug() << vetexes[1000].x << vetexes[1000].y << vetexes[1000].z;
+	qDebug() << faces[1000].v1 << faces[1000].v2 << faces[1000].v3;
+	//	const unsigned char *ssda = glGetString(GL_VERSION);
 
-//	QString sds = QString::fromLocal8Bit((const char*)ssda);
-//	qDebug() << sds;
+	//	QString sds = QString::fromLocal8Bit((const char*)ssda);
+	//	qDebug() << sds;
 	initArrays();
 	return;
 }
 
 void Terrain::draw()
 {
-//	glBegin(GL_TRIANGLES);
-//	for(int i=0;i<faces.size();i++)
-//	{
-//		vertex v1= vetexes[faces[i].v1-1];
-//		vertex v2=vetexes[faces[i].v2-1];
-//		vertex v3=vetexes[faces[i].v3-1];
+	//	glBegin(GL_TRIANGLES);
+	//	for(int i=0;i<faces.size();i++)
+	//	{
+	//		vertex v1= vetexes[faces[i].v1-1];
+	//		vertex v2=vetexes[faces[i].v2-1];
+	//		vertex v3=vetexes[faces[i].v3-1];
 
-//		glVertex3f(v1.x,v1.y,v1.z);
-//		glVertex3f(v2.x,v2.y,v2.z);
-//		glVertex3f(v3.x,v3.y,v3.z);
-//	}
-//	glEnd();
+	//		glVertex3f(v1.x,v1.y,v1.z);
+	//		glVertex3f(v2.x,v2.y,v2.z);
+	//		glVertex3f(v3.x,v3.y,v3.z);
+	//	}
+	//	glEnd();
 }
