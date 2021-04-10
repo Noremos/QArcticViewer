@@ -75,7 +75,7 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	mshader.setUniformValue("factor", factor);
 
 	vao.bind();
-	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 30, boundySize);
+	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 24, boundySize);
 	vao.release();
 	mshader.release();
 
@@ -91,18 +91,18 @@ void SpotZones::
 		1.0f, 1.0f,-1.0f, // Треугольник 2 : начало
 		-1.0f,-1.0f,-1.0f,
 		-1.0f, 1.0f,-1.0f, // Треугольник 2 : конец
-		1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f,-1.0f,
+//		1.0f,-1.0f, 1.0f,//
+//		-1.0f,-1.0f,-1.0f,
+//		1.0f,-1.0f,-1.0f,//
+		1.0f, 1.0f,-1.0f,//
 		1.0f,-1.0f,-1.0f,
-		1.0f, 1.0f,-1.0f,
-		1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,//
+		-1.0f,-1.0f,-1.0f,//
 		-1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f,-1.0f,
-		1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f, 1.0f,
-		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,//
+//		1.0f,-1.0f, 1.0f,
+//		-1.0f,-1.0f, 1.0f,
+//		-1.0f,-1.0f,-1.0f,
 		-1.0f, 1.0f, 1.0f,
 		-1.0f,-1.0f, 1.0f,
 		1.0f,-1.0f, 1.0f,
