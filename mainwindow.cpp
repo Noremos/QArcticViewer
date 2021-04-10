@@ -68,6 +68,7 @@ void MainWindow::openProject(QString projName)
 
 	ui->glWidget->terra->setTexture(0, proj->getPath(BackPath::texture1));
 	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
+	ui->glWidget->terra->displayTexture(0);
 	ui->glWidget->drawTerra = true;
 	ui->glWidget->doneCurrent();
 

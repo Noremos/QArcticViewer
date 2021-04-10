@@ -24,6 +24,7 @@ void SpotZones::updateBuffer()
 	modelsBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 	modelsBuf.allocate(this->boundydata.data(), boundydata.size() * sizeof(QMatrix4x4));
 	qDebug() << boundydata.size();
+	boundySize = boundydata.size();
 
 	GLsizei vec4size = sizeof(QVector4D);
 	GLsizei matr4Size = sizeof(QMatrix4x4);
@@ -59,7 +60,7 @@ void SpotZones::updateBuffer()
 	indexBuf.release();
 	mshader.release();
 
-//	boundydata.clear();
+	boundydata.clear();
 }
 
 void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
@@ -74,7 +75,7 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	mshader.setUniformValue("factor", factor);
 
 	vao.bind();
-	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 36, boundydata.size());
+	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 30, boundySize);
 	vao.release();
 	mshader.release();
 
@@ -83,7 +84,7 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 void SpotZones::
 	initSpotModel()
 {
-	static const GLfloat g_vertex_buffer_data[108] = {
+	static const GLfloat g_vertex_buffer_data[] = {
 		-1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
 		-1.0f,-1.0f, 1.0f,
 		-1.0f, 1.0f, 1.0f, // Треугольник 1 : конец
@@ -111,12 +112,12 @@ void SpotZones::
 		1.0f,-1.0f,-1.0f,
 		1.0f, 1.0f, 1.0f,
 		1.0f,-1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f,-1.0f,
-		-1.0f, 1.0f,-1.0f,
-		1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
+//		1.0f, 1.0f, 1.0f,
+//		1.0f, 1.0f,-1.0f,
+//		-1.0f, 1.0f,-1.0f,
+//		1.0f, 1.0f, 1.0f,
+//		-1.0f, 1.0f,-1.0f,
+//		-1.0f, 1.0f, 1.0f,
 		1.0f, 1.0f, 1.0f,
 		-1.0f, 1.0f, 1.0f,
 		1.0f,-1.0f, 1.0f

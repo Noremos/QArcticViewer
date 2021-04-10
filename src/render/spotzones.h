@@ -33,6 +33,7 @@ public:
 	QOpenGLShaderProgram mshader;
 	QOpenGLExtraFunctions *f;
 
+	size_t boundySize = 0;
 	void addBoundy(boundy &bb)
 	{
 		QMatrix4x4 matr;

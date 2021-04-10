@@ -128,11 +128,11 @@ void MainWidget::initializeGL()
 
 	glEnable(GL_DEPTH_TEST);
 	// Enable back face culling
-	glEnable(GL_CULL_FACE);
+//	glEnable(GL_CULL_FACE);
+//	glCullFace(GL_FRONT_AND_BACK);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//	glCullFace(GL_FRONT_AND_BACK);
 
 	glClearColor(0.3, 0.3, 0, 1);
 
@@ -328,8 +328,18 @@ void MainWidget::paintGL()
 
 
 	if (drawZones)
+	{
+//		glFrontFace(GL_CCW);
+//		glEnable(GL_CULL_FACE);
+//		glCullFace(GL_FRONT_AND_BACK);
+//		glFrontFace(GL_CW);
 		zones->renderGL(view, projection);
+//		glCullFace(GL_BACK);
+//		glDisable(GL_CULL_FACE);
+//		glFrontFace(GL_CW);
+//		glCullFace(GL_BACK);
 
+	}
 //	QPainter painter(this);
 //	painter.setPen(Qt::black);
 //	painter.setFont(QFont("Arial", 56));
