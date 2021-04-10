@@ -56,10 +56,18 @@
 #include <QPainter>
 #include <cmath>
 
+MainWidget::MainWidget(QWidget *parent)
+{
+	sky = new SkyBoxGUI();//58.25 -34.25 -24.4309 573.158 -205.05
+	camera = new CameraGui(QVector3D(-25, 551, -159), QVector3D(0,1,0), 56, -32.25);
+	terra = new Terrain();
+	zones = new SpotZones();
+}
+
 MainWidget::~MainWidget()
 {
-    // Make sure the context is current when deleting the texture
-    // and the buffers.
+	// Make sure the context is current when deleting the texture
+	// and the buffers.
 	makeCurrent();
 	delete sky;
 	delete terra;
@@ -122,13 +130,15 @@ void MainWidget::initializeGL()
 	// Enable back face culling
 	glEnable(GL_CULL_FACE);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 //	glCullFace(GL_FRONT_AND_BACK);
 
 	glClearColor(0.3, 0.3, 0, 1);
 
 	// During init, enable debug output
-	glEnable( GL_DEBUG_OUTPUT );
-	f->glDebugMessageCallback( MessageCallback, 0 );
+//	glEnable( GL_DEBUG_OUTPUT );
+//	f->glDebugMessageCallback( MessageCallback, 0 );
 
 
 	geometries = new CubeGui();

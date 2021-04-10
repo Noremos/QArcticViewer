@@ -136,6 +136,7 @@ public:
 		this->Yaw   += invertX ? -xoffset : xoffset;
 		this->Pitch += invertY ? -yoffset : yoffset;
 
+//		qDebug() << Yaw << Pitch << Position.x() << Position.y() << Position.z();
 		// Make sure that when pitch is out of bounds, screen doesn't get flipped
 		if (constrainPitch)
 		{

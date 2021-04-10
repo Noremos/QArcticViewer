@@ -82,13 +82,7 @@ class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
     Q_OBJECT
 
 public:
-	MainWidget(QWidget *parent = nullptr)
-	{
-		sky = new SkyBoxGUI();
-		camera = new CameraGui(QVector3D(200, 30, 200));
-		terra = new Terrain();
-		zones = new SpotZones();
-	}
+	MainWidget(QWidget *parent = nullptr);
     ~MainWidget();
 
 	QLabel *fpsLabel;
