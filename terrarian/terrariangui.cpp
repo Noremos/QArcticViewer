@@ -372,12 +372,12 @@ void Terrain::readfile(const char *filename)
 	qDebug() << "Vs: " << vetexes.size();
 	qDebug() << "Fs: " << faces.size();
 
-	for (int i = 0; i < 50; ++i)
-	{
-		qDebug() << vetexes[i].x << vetexes[i].y << vetexes[i].z << vetexes[i].texX << vetexes[i].texY;
-		qDebug() << faces[i].v1 << faces[i].v2 << faces[i].v3;
+//	for (int i = 0; i < 50; ++i)
+//	{
+//		qDebug() << vetexes[i].x << vetexes[i].y << vetexes[i].z << vetexes[i].texX << vetexes[i].texY;
+//		qDebug() << faces[i].v1 << faces[i].v2 << faces[i].v3;
 
-	}
+//	}
 	//	const unsigned char *ssda = glGetString(GL_VERSION);
 
 	//	QString sds = QString::fromLocal8Bit((const char*)ssda);
