@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.epp": "cpp",
+        "array": "cpp",
+        "fstream": "cpp",
+        "list": "cpp",
+        "system_error": "cpp",
+        "type_traits": "cpp",
+        "vector": "cpp",
+        "xhash": "cpp",
+        "xlocale": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
+    }
+}

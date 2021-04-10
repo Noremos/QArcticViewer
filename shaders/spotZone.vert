@@ -1,22 +1,21 @@
-#version 150 core
-in vec3 vertexPosition;
+#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in mat4 instanceMatrix;
 
-out vec2 TexCoord;
-out float y;
 
-uniform mat4 modelMatrix;
-uniform mat4 mvp;
-
+//uniform vec2 offsets[100];
 uniform float factor;
+uniform mat4 projection;
+uniform mat4 view;
+
+out float y;
 
 void main()
 {
-    vec3 vp = vertexPosition;
+    vec3 vp = aPos;
     vp.y *= factor;
     y = vp.y;
-//    position = vec3(modelView * vec4(vertexPosition, 1.0));
-
-    // Transform position, normal, and tangent to world coords
-    // Calculate vertex position in clip coordinates
-    gl_Position = mvp * vec4(vp, 1.0);
+//    vec2 offset = offsets[gl_InstanceID];
+    //    gl_Position = vec4(aPos + offset, 0.0, 1.0);
+    gl_Position = projection * view * instanceMatrix  * vec4(aPos, 1.0);
 }

@@ -14,6 +14,7 @@ SOURCES += \
     main.cpp \
     mainwidget.cpp \
     mainwindow.cpp \
+    src/render/spotzones.cpp \
     terrarian/terrariangui.cpp \
     terrarian/textgui.cpp
 
@@ -22,7 +23,11 @@ HEADERS += \
     cubeg.h \
     mainwidget.h \
     mainwindow.h \
+    src/base.h \
+    src/types/instinfo.h \
+    src/types/types.h \
     terrarian/cameragui.h \
+    src/render/spotzones.h \
     terrarian/terrariangui.h \
     terrarian/textgui.h
 

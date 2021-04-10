@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	ui->setupUi(this);
 	ui->glWidget->fpsLabel = ui->fpsLabel;
+	ui->glWidget->activateWindow();
 }
 
 MainWindow::~MainWindow()
