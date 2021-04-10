@@ -4,7 +4,7 @@ layout (location = 1) in mat4 instanceMatrix;
 
 
 //uniform vec2 offsets[100];
-uniform float factor;
+uniform int factor;
 uniform mat4 projection;
 uniform mat4 view;
 

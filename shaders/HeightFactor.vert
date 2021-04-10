@@ -1,20 +1,21 @@
-#version 150 core
+#version 330 core
 in vec3 vertexPosition;
 
-out vec2 TexCoord;
 out float curHei;
 
-uniform mat4 mvp_matrix;
+uniform mat4 model;
+uniform mat4 projection;
+uniform mat4 view;
 
-uniform float factor;
+uniform float minHei;// = -2.1988;
+uniform int factor;
 
 void main()
 {
     vec3 vp = vertexPosition;
 
     curHei = vp.y;
-    vp.y += factor;
+    vp.y += (vp.y - minHei)* factor;
 
-
-    gl_Position = mvp_matrix * vec4(vp, 1.0);
+    gl_Position =  projection * view * model * vec4(vp, 1.0);
 }

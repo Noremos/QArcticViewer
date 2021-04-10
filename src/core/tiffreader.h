@@ -316,7 +316,7 @@ public:
 		if (t != cachedData.end())
 			return t->second;
 		else
-			throw exception();
+			throw std::exception();
 
 	}
 	T getData(int i, T& defaultValue)

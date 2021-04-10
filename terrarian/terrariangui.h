@@ -16,6 +16,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
+#include "src/core/project.h"
 //#include "cubegl.h"
 
 struct MaterialInfo
@@ -72,6 +73,7 @@ class Terrain :protected QOpenGLFunctions
 	QOpenGLShaderProgram heimapShader, objectShader, textureShader;
 
 
+
 	// Display data
 	DisplayMode displayMode;
 	int textNum;
@@ -103,6 +105,7 @@ class Terrain :protected QOpenGLFunctions
 
 public:
 	Terrain();
+	~Terrain();
 	void initGL();
 	void displayHeimap(float minH, float maxH)
 	{
@@ -123,6 +126,23 @@ public:
 
 	QOpenGLVertexArrayObject vao;
 
+
+	void clearTextures()
+	{
+//		makeCurrent();
+		for (auto *tex : textures)
+		{
+			if (tex != nullptr)
+				delete tex;
+		}
+//		textures.clear();
+//		textures.append(nullptr);
+//		textures.append(nullptr);
+	}
+
+	int factor = 10;
+
+	Project *proj;
 private:
 	QOpenGLExtraFunctions *f;
 
@@ -152,8 +172,9 @@ private:
 	void initArrays();
 	void draw();
 public:
-	void readfile(const char* filename);
+	void readfile(QString path);
 	void drawFull(QMatrix4x4 &view, QMatrix4x4 &projection);
+	void setTexture(int num, QString path);
 };
 #include <fstream>
 #include <string>

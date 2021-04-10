@@ -20,18 +20,33 @@ public:
 	void setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax);
 	void setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax);
 
-public slots:
+
+private slots:
+	void on_mattype_currentIndexChanged(int index);
+
+	void on_textureLoder_clicked();
+
 	void importDTM();
-
 	void openProject();
-
 	void findByParams();
-	void test(QString path);
-
 	void saveSettings();
+
+	void on_pbOpenProject_clicked();
+
+	void on_pbOpenDTM_clicked();
+
+	void on_pbCreateBars_clicked();
+
+	void on_pbFindByParams_clicked();
+
+	void on_pbSave_clicked();
+
+	void on_heightSpin_valueChanged(int arg1);
+
 private:
 	Ui::MainWindow *ui;
 	Project* proj;
 
+	bool opened = false;
 };
 #endif // MAINWINDOW_H

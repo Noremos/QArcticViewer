@@ -215,7 +215,7 @@ color:red;
         </item>
         <item>
          <property name="text">
-          <string>Свет</string>
+          <string>Материал</string>
          </property>
         </item>
         <item>
@@ -323,7 +323,7 @@ color:red;
        <property name="title">
         <string>Обработка</string>
        </property>
-       <widget class="QPushButton" name="findZones">
+       <widget class="QPushButton" name="pbCreateBars">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -456,7 +456,7 @@ color:red;
 background-color: &quot;#d4d1d1&quot;;
 }</string>
         </property>
-        <widget class="QPushButton" name="pbFind">
+        <widget class="QPushButton" name="pbFindByParams">
          <property name="geometry">
           <rect>
            <x>10</x>

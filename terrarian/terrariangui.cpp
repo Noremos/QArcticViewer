@@ -3,20 +3,29 @@
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLFunctions>
+#include <QFile>
 
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <fstream>
 
-Terrain::Terrain() : indexBuf(QOpenGLBuffer::IndexBuffer)
+Terrain::Terrain() : indexBuf(QOpenGLBuffer::IndexBuffer), displayMode(DisplayMode::Heimap), textNum(0)
 {
-	initializeOpenGLFunctions();
-	f = QOpenGLContext::currentContext()->extraFunctions();
+	textures.append(nullptr);
+	textures.append(nullptr);
+	this->proj = Project::getProject();
+}
+
+Terrain::~Terrain()
+{
+	clearTextures();
 }
 
 void Terrain::initGL()
 {
-
+	initializeOpenGLFunctions();
+	f = QOpenGLContext::currentContext()->extraFunctions();
 	initShaders();
 }
 
@@ -26,6 +35,30 @@ void Terrain::initShaders()
 	initShader(objectShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
 	initShader(textureShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
 	//	initShader(textureShader, ":/vshader.glsl", ":/fshader.glsl");
+}
+
+void Terrain::setTexture(int num, QString path)
+{
+	// Load cube.png image
+	//":/shaders/cube.png"
+	qDebug() << path;
+	if (path.length() == 0)
+		return;
+	if (path.startsWith("file:///"))
+		path = path.remove(0, 8);
+
+	QOpenGLTexture *texture = new QOpenGLTexture(QImage(path).mirrored());
+
+	texture->setMinificationFilter(QOpenGLTexture::Nearest);
+	texture->setMagnificationFilter(QOpenGLTexture::Linear);
+
+	// Wrap texture coordinates by repeating
+	// f.ex. texture coordinate (1.1, 1.2) is same as (0.1, 0.2)
+	texture->setWrapMode(QOpenGLTexture::WrapMode::Repeat);
+
+	if (textures[num] != nullptr)
+		delete textures[num];
+	textures[num] = texture;
 }
 
 void Terrain::addTexture(QString path)
@@ -105,20 +138,25 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 	case DisplayMode::Heimap:
 		curshader = &this->heimapShader;
 		curshader->bind();
+		curshader->setUniformValue("texture0", 0);
+		curshader->setUniformValue("aminHei", proj->getImgMinVal());
+		curshader->setUniformValue("amaxHei", proj->getImgMaxVal());
+
+
 		break;
 	case DisplayMode::object:
 		curshader = &this->objectShader;
 		curshader->bind();
 		break;
 	case DisplayMode::texture:
-	{
 		curshader = &this->textureShader;
-		textures[textNum]->bind();
+		if (textNum < textures.size() && textures[textNum]!=nullptr)
+			textures[textNum]->bind();
+
 		curshader->bind();
 		//			int idt = textures[textNum]->textureId() - 1;
 		curshader->setUniformValue("texture0", 0);
 		break;
-	}
 	default:
 		break;
 	}
@@ -127,6 +165,10 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 	model.setToIdentity();
 	model.scale(0.005, 0.005, 0.005);
 	model.translate(-200.0, -30.0, -200.0);
+
+	curshader->setUniformValue("factor", factor);
+	curshader->setUniformValue("minHei", proj->getImgMinVal());
+
 	curshader->setUniformValue("projection", projection);
 	curshader->setUniformValue("view", view);
 	curshader->setUniformValue("model", model);
@@ -141,7 +183,8 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 	switch (this->displayMode)
 	{
 	case DisplayMode::texture:
-		textures[textNum]->release();
+		if (textNum < textures.size() && textures[textNum]!=nullptr)
+			textures[textNum]->release();
 		break;
 	default:
 		break;
@@ -204,7 +247,7 @@ void raedFast(const char *fName)
 }
 #include <sstream>
 #include <charconv>
-#include "fast_float/fast_float.h"
+#include "side-src/fast_float/fast_float.h"
 
 int parceIntFast(const char *num, int len)
 {
@@ -277,13 +320,16 @@ void parceFace(const char *str, unsigned int &f)
 	//	f = parceIntFast(str, len);
 }
 
-void Terrain::readfile(const char *filename)
+#include <filesystem>
+
+void Terrain::readfile(QString path)
 {
-	std::string s;
-	std::ifstream fin(filename);
-	if (!fin)
+	QFile fin(path);
+	//	std::string s;
+	//	std::fstream fin(std::file);
+	if (!fin.open(QFile::OpenModeFlag::ReadOnly))
 	{
-		qDebug() << "File " << filename << " not found!";
+		qDebug() << "File " << path << " not found!";
 		return;
 	}
 	size_t lines = 0;
@@ -294,18 +340,18 @@ void Terrain::readfile(const char *filename)
 	std::stringstream errss;
 	std::string name;
 
-	std::string curline;
-	bool notLastLine = true;
-	while (notLastLine)
+	char rawtoken[500];
+	const char *token;
+	while (!fin.atEnd())
 	{
-		notLastLine = getLineFast(fin, curline) && fin.peek() != EOF;
+		int size = fin.readLine(rawtoken, 500);
+		token = rawtoken;
 		lines++;
 
 		// Skip if empty line.
-		if (curline.empty())
+		if (size==0)
 			continue;
 
-		const char *token = curline.c_str();
 		int len;
 
 		if (token[0] == 'v')
@@ -324,8 +370,9 @@ void Terrain::readfile(const char *filename)
 			len = getWord(token);
 			fast_float::from_chars(token, token + len, v.z);
 
-			getLineFast(fin, curline);
-			token = curline.c_str();
+			fin.readLine(rawtoken, 500);
+			token = rawtoken;
+
 			lines++;
 
 			// vt
@@ -335,7 +382,7 @@ void Terrain::readfile(const char *filename)
 			len = getWord(token);
 
 			fast_float::from_chars(token, token + len, v.texX);
-			int end = curline.length() - 3;
+			int end = size - 3;
 			fast_float::from_chars(token + len + 1, token + end, v.texY);
 
 

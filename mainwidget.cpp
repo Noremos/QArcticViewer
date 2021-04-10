@@ -61,6 +61,9 @@ MainWidget::~MainWidget()
     // Make sure the context is current when deleting the texture
     // and the buffers.
 	makeCurrent();
+	delete sky;
+	delete terra;
+	delete camera;
 //    delete texture;
 //    delete geometries;
 	doneCurrent();
@@ -127,10 +130,7 @@ void MainWidget::initializeGL()
 
 	geometries = new CubeGui();
 
-	sky = new SkyBoxGUI();
 	sky->initializeGL();
-
-	camera = new CameraGui();
 
 	camera->setEnableTraking(false);
 	camera->invertX = true;
@@ -138,14 +138,15 @@ void MainWidget::initializeGL()
 //	camera->invertX = false;
 //	camera->invertY = false;
 
-	terra = new Terrain();
 	terra->initGL();
 //		terra->readfile("D:\2.obj");
-		terra->readfile("D:\\2_.OBJ");
-	terra->addTexture("file:///D:/2.png");
-	terra->addTexture("file:///D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
-	terra->addTexture("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/50_60_1_2_2m_v3.0_reg_dem_browse.tif");
-	terra->displayTexture(0);
+//	terra->readfile("D:\\2_.OBJ");
+//	drawTerra = true;
+
+	// terra->addTexture("file:///D:/2.png");
+	// terra->addTexture("file:///D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
+	// terra->addTexture("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/50_60_1_2_2m_v3.0_reg_dem_browse.tif");
+	// terra->displayTexture(0);
 
 
 
@@ -272,7 +273,8 @@ void MainWidget::paintGL()
 //	program.bind();
 	geometries->drawCubeGeometry(view, projection);
 
-	terra->drawFull(view, projection);
+	if (drawTerra)
+		terra->drawFull(view, projection);
 
 
 //	QPainter painter(this);

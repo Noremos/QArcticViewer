@@ -109,7 +109,7 @@ Img ImageSearcher::getTile(int index)
 	// * * *
 	// i * *
 	// * * *
-	for (int i = ty * tileHei, total = min((ty + 1) * tileHei + diffset, reader->height()), k = 0; i < total; ++i, ++k)
+	for (int i = ty * tileHei, total = std::min((ty + 1) * tileHei + diffset, reader->height()), k = 0; i < total; ++i, ++k)
 	{
 		img.setInRow(k, 0, static_cast<float*>(reader->getRow(i)) + st, len);
 	}
@@ -182,7 +182,7 @@ void check(void *ptr)
 	if (ptr == nullptr)
 		qDebug() << "PTR IS NULL";
 }
-void ImageSearcher::findZones(vector<boundy> &bounds, int start, int len)
+void ImageSearcher::findZones(std::vector<boundy> &bounds, int start, int len)
 {
 
 

@@ -8,7 +8,7 @@
 
 #include <src/types/types.h>
 #include <src/types/img.h>
-//#include "barcodeCreator.h"
+#include "side-src/Barcode/PrjBarlib/include/barcodeCreator.h"
 using namespace bc;
 
 
@@ -86,7 +86,7 @@ public:
         return tilesInHei;
     }
 	int getMaxTiles();
-	void findZones(vector<boundy> &bounds, int start, int len);
+	void findZones(std::vector<boundy> &bounds, int start, int len);
 
 };
 

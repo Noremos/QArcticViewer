@@ -82,11 +82,18 @@ class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
 public:
 	MainWidget(QWidget *parent = nullptr)
 	{
+		sky = new SkyBoxGUI();
+		camera = new CameraGui();
+		terra = new Terrain();
 	}
     ~MainWidget();
 
 	QLabel *fpsLabel;
 	void Do_Movement();
+	Terrain *terra = nullptr;
+
+	bool drawTerra = false;
+	bool drawZones = false;
 
 protected:
 
@@ -118,7 +125,6 @@ private:
 	timeType timeStart;
 
 	CameraGui *camera;
-	Terrain *terra = nullptr;
 	SkyBoxGUI *sky;
 	QBasicTimer timer;
 	CubeGui *geometries = nullptr;

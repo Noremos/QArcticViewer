@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
-#include "base.h"
+#include "../base.h"
 
 class Face3d
 {

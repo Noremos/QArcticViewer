@@ -6,8 +6,8 @@
 #include <QDebug>
 
 #include "../base.h"
-using namespace std;
 
+using std::cout;
 
 inline long long st(long long st)
 {
