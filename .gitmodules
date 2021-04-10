@@ -1,0 +1,3 @@
+[submodule "side-src/Barcode"]
+	path = side-src/Barcode
+	url = git@github.com:UnknownAr/Barcode.git
