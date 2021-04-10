@@ -64,6 +64,7 @@ MainWidget::~MainWidget()
 	delete sky;
 	delete terra;
 	delete camera;
+	delete zones;
 //    delete texture;
 //    delete geometries;
 	doneCurrent();
@@ -121,6 +122,8 @@ void MainWidget::initializeGL()
 	// Enable back face culling
 	glEnable(GL_CULL_FACE);
 
+//	glCullFace(GL_FRONT_AND_BACK);
+
 	glClearColor(0.3, 0.3, 0, 1);
 
 	// During init, enable debug output
@@ -139,6 +142,8 @@ void MainWidget::initializeGL()
 //	camera->invertY = false;
 
 	terra->initGL();
+
+	zones->initGL();
 //		terra->readfile("D:\2.obj");
 //	terra->readfile("D:\\2_.OBJ");
 //	drawTerra = true;
@@ -225,69 +230,13 @@ void MainWidget::resizeGL(int w, int h)
 //	projection.setToIdentity();
 
 	// Set perspective projection
-//	projection.perspective(fov, aspect, zNear, zFar);
+//	projection.perspective(fov, aspect, zNear, zFar);x
 
 }
 //! [5]
 
-
-double timediff(timeType &t1, timeType &t2)
+void MainWidget::printErrors()
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t2).count() * 0.001;
-}
-void MainWidget::paintGL()
-{
-	const qreal zNear = 0.1, zFar = 10000.0, fov = 60.0;
-
-	timeType currentFrame = std::chrono::steady_clock::now();
-	deltaTime = timediff(lastFrame, currentFrame);
-	lastFrame = currentFrame;
-	if (fpsLabel != nullptr)
-	{
-		fpsLabel->setText("fps: " + QString::number(1000.0 / deltaTime));
-	}
-
-	Do_Movement();
-	QMatrix4x4 view = camera->GetViewMatrix();
-	QMatrix4x4 skyboxview(view.normalMatrix());
-	QMatrix4x4 projection;
-	projection.setToIdentity();
-	projection.perspective(fov, aspect, zNear, zFar);
-//	 sky->mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane
-//	 Set perspective projection
-
-//	makeCurrent();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-	// makeCurrent();
-	// doneCurrent();
-
-
-//	texture->bind();
-
-	geometries->model.setToIdentity();
-	geometries->model.translate(0.0, 0.0, -5.0);
-	geometries->model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
-
-//	program.bind();
-	geometries->drawCubeGeometry(view, projection);
-
-	if (drawTerra)
-		terra->drawFull(view, projection);
-
-
-//	QPainter painter(this);
-//	painter.setPen(Qt::black);
-//	painter.setFont(QFont("Arial", 56));
-//	painter.drawText(0, 0, width(), height(), Qt::AlignCenter, "Hello World!");
-//	painter.end();
-
-	///skybox
-	glDepthFunc(GL_LEQUAL);
-	sky->paintGL(skyboxview, projection); //projection * matrix
-	glDepthFunc(GL_LESS);
-
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR)
 	{
@@ -320,6 +269,69 @@ void MainWidget::paintGL()
 		qDebug() << err;
 		// Process/log the error.
 	}
+}
+
+double timediff(timeType &t1, timeType &t2)
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t2).count() * 0.001;
+}
+void MainWidget::paintGL()
+{
+	const qreal zNear = 0.1, zFar = 10000.0, fov = 60.0;
+
+	timeType currentFrame = std::chrono::steady_clock::now();
+	deltaTime = timediff(currentFrame, lastFrame);
+	lastFrame = currentFrame;
+	if (fpsLabel != nullptr)
+	{
+		fpsLabel->setText("fps: " + QString::number(round(1000.0 / deltaTime)));
+	}
+
+	Do_Movement();
+	QMatrix4x4 view = camera->GetViewMatrix();
+	QMatrix4x4 skyboxview(view.normalMatrix());
+	QMatrix4x4 projection;
+	projection.setToIdentity();
+	projection.perspective(fov, aspect, zNear, zFar);
+//	 sky->mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane
+//	 Set perspective projection
+
+//	makeCurrent();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	// makeCurrent();
+	// doneCurrent();
+
+
+//	texture->bind();
+
+	geometries->model.setToIdentity();
+	geometries->model.translate(0.0, 0.0, -5.0);
+	geometries->model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
+
+//	program.bind();
+	geometries->drawCubeGeometry(view, projection);
+
+	if (drawTerra)
+		terra->drawFull(view, projection);
+
+
+	if (drawZones)
+		zones->renderGL(view, projection);
+
+//	QPainter painter(this);
+//	painter.setPen(Qt::black);
+//	painter.setFont(QFont("Arial", 56));
+//	painter.drawText(0, 0, width(), height(), Qt::AlignCenter, "Hello World!");
+//	painter.end();
+
+	///skybox
+	glDepthFunc(GL_LEQUAL);
+	sky->paintGL(skyboxview, projection); //projection * matrix
+	glDepthFunc(GL_LESS);
+
+	printErrors();
 //	doneCurrent();
 //	update();
 

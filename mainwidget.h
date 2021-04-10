@@ -72,6 +72,8 @@
 #include <chrono>
 #include <QOpenGLExtraFunctions>
 
+#include <src/render/spotzones.h>
+
 class CubeGL;
 typedef std::chrono::time_point<std::chrono::steady_clock> timeType;
 
@@ -83,18 +85,22 @@ public:
 	MainWidget(QWidget *parent = nullptr)
 	{
 		sky = new SkyBoxGUI();
-		camera = new CameraGui();
+		camera = new CameraGui(QVector3D(200, 30, 200));
 		terra = new Terrain();
+		zones = new SpotZones();
 	}
     ~MainWidget();
 
 	QLabel *fpsLabel;
 	void Do_Movement();
+
 	Terrain *terra = nullptr;
+	SpotZones* zones;
 
 	bool drawTerra = false;
 	bool drawZones = false;
 
+	void printErrors();
 protected:
 
 	void mouseMoveEvent(QMouseEvent *event) override;
@@ -126,6 +132,7 @@ private:
 
 	CameraGui *camera;
 	SkyBoxGUI *sky;
+
 	QBasicTimer timer;
 	CubeGui *geometries = nullptr;
 

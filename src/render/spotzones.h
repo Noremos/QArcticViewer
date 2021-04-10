@@ -26,19 +26,20 @@ public:
 	QVector<QMatrix4x4> boundydata;
 
 	QOpenGLVertexArrayObject vao;
-
+	int factor = 10;
 	QOpenGLBuffer arrBuf, modelsBuf;
 	QOpenGLBuffer indexBuf;
 
 	QOpenGLShaderProgram mshader;
 	QOpenGLExtraFunctions *f;
 
-	void addBoundy(boundy *bb)
+	void addBoundy(boundy &bb)
 	{
 		QMatrix4x4 matr;
 		matr.setToIdentity();
-		matr.translate(bb->x, bb->z, bb->y);
-		matr.scale(bb->wid(), bb->hei());
+		matr.translate(bb.x + bb.wid() / 2, bb.endZ + bb.zei()/2 + 1,bb.y + bb.hei() / 2);
+		//text bb.x, bb.endZ, bb.y
+		matr.scale(bb.wid(), 1, bb.hei());
 		boundydata.append(matr);
 	}
 	SpotZones();
@@ -47,6 +48,43 @@ public:
 	void initGL();
 	void renderGL(QMatrix4x4 view, QMatrix4x4 projection);
 	void initSpotModel();
+
+
+	void printErrors()
+	{
+		GLenum err;
+		while ((err = glGetError()) != GL_NO_ERROR)
+		{
+			switch (err)
+			{
+			case GL_INVALID_ENUM:
+				qDebug() << "GL_INVALID_ENUM";
+				break;
+			case GL_INVALID_VALUE:
+				qDebug() << "GL_INVALID_VALUE";
+				break;
+			case GL_INVALID_OPERATION:
+				qDebug() << "GL_INVALID_OPERATION";
+				break;
+			case GL_INVALID_FRAMEBUFFER_OPERATION:
+				qDebug() << "GL_INVALID_FRAMEBUFFER_OPERATION";
+				break;
+			case GL_OUT_OF_MEMORY:
+				qDebug() << "GL_OUT_OF_MEMORY";
+				break;
+			case GL_STACK_UNDERFLOW:
+				qDebug() << "GL_STACK_UNDERFLOW";
+				break;
+			case GL_STACK_OVERFLOW:
+				qDebug() << "GL_STACK_OVERFLOW";
+				break;
+			default:
+				break;
+			}
+			// Process/log the error.
+		}
+	}
+
 };
 
 #endif // SPOTZONES_H

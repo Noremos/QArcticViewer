@@ -129,11 +129,10 @@ public:
 
 	void clearTextures()
 	{
-//		makeCurrent();
-		for (auto *tex : textures)
+		for (int var = 0; var < textures.size(); ++var)
 		{
-			if (tex != nullptr)
-				delete tex;
+			delete textures[var];
+			textures[var] = nullptr;
 		}
 //		textures.clear();
 //		textures.append(nullptr);

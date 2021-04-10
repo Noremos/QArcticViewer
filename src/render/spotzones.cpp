@@ -1,4 +1,5 @@
 #include <QVector2D>
+#include <src/core/project.h>
 #include "spotzones.h"
 
 SpotZones::SpotZones() :
@@ -6,42 +7,59 @@ SpotZones::SpotZones() :
 	  modelsBuf(QOpenGLBuffer::Type::VertexBuffer),
 	  indexBuf(QOpenGLBuffer::Type::IndexBuffer)
 {
-	initializeOpenGLFunctions();
-	f = QOpenGLContext::currentContext()->extraFunctions();
-
-	initGL();
+	Project::getProject()->spotZones = this;
 }
 
 void SpotZones::updateBuffer()
 {
 	vao.bind();
 
+	mshader.bind();
+	initSpotModel();
+
+
+	modelsBuf.destroy();
+	modelsBuf.create();
 	modelsBuf.bind();
 	modelsBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 	modelsBuf.allocate(this->boundydata.data(), boundydata.size() * sizeof(QMatrix4x4));
-
+	qDebug() << boundydata.size();
 
 	GLsizei vec4size = sizeof(QVector4D);
 	GLsizei matr4Size = sizeof(QMatrix4x4);
 
 	int loc = mshader.attributeLocation("instanceMatrix");
-	mshader.setAttributeBuffer(loc, GL_FLOAT, 0, matr4Size, 0);
+//	mshader.setUniformValueArray(loc, boundydata.data(), boundydata.size());
+	//
+	//							 loc,size, type,   norm       ,stride, off
+	//	f->glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FAILSE, matr4Size, 0);
+	//										off,tupleSize, stride
+	mshader.setAttributeBuffer(loc, GL_FLOAT, 0,			4, matr4Size);
 	mshader.enableAttributeArray(loc);
-	//	++loc;
-	//	mshader.setAttributeBuffer(loc, GL_FLOAT, 0, matr4Size, vec4size);
-	//	mshader.enableAttributeArray(loc);
-	//	++loc;
-	//	mshader.setAttributeBuffer(loc, GL_FLOAT, 0, matr4Size, vec4size*2);
-	//	mshader.enableAttributeArray(loc);
-	//	++loc;
-	//	mshader.setAttributeBuffer(loc, GL_FLOAT, 0, matr4Size, vec4size*3);
-	//	mshader.enableAttributeArray(loc);
+	++loc;
+	mshader.setAttributeBuffer(loc, GL_FLOAT, vec4size,		4, matr4Size);
+	mshader.enableAttributeArray(loc);
+	++loc;
+	mshader.setAttributeBuffer(loc, GL_FLOAT, vec4size * 2,	4, matr4Size);
+	mshader.enableAttributeArray(loc);
+	++loc;
+	mshader.setAttributeBuffer(loc, GL_FLOAT, vec4size * 3,	4, matr4Size);
+	mshader.enableAttributeArray(loc);
 
+	f->glVertexAttribDivisor(loc-3, 1);
+	f->glVertexAttribDivisor(loc-2, 1);
+	f->glVertexAttribDivisor(loc-1, 1);
+	f->glVertexAttribDivisor(loc  , 1);
 
-	modelsBuf.release();
 
 	vao.release();
 
+	modelsBuf.release();
+	arrBuf.release();
+	indexBuf.release();
+	mshader.release();
+
+//	boundydata.clear();
 }
 
 void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
@@ -53,101 +71,95 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	//projection * view * model * vec4(position, 1.0f);
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
-	mshader.setUniformValue("factor", 1.0f);
+	mshader.setUniformValue("factor", factor);
 
 	vao.bind();
-	f->glDrawElementsInstanced(GL_TRIANGLES, boundydata.size(), GL_UNSIGNED_INT, 0, 34);
+	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 36, boundydata.size());
 	vao.release();
 	mshader.release();
 
 }
 
-void SpotZones::initSpotModel()
+void SpotZones::
+	initSpotModel()
 {
-	QVector3D vertices[] = {
-		// Vertex data for face 0
-		QVector3D(-1.0f, -1.0f,  1.0f), // v0
-		QVector3D( 1.0f, -1.0f,  1.0f), // v1
-		QVector3D(-1.0f,  1.0f,  1.0f), // v2
-		QVector3D( 1.0f,  1.0f,  1.0f), // v3
-
-		// Vertex data for face 1
-		QVector3D( 1.0f, -1.0f,  1.0f), // v4
-		QVector3D( 1.0f, -1.0f, -1.0f), // v5
-		QVector3D( 1.0f,  1.0f,  1.0f), // v6
-		QVector3D( 1.0f,  1.0f, -1.0f), // v7
-
-		// Vertex data for face 2
-		QVector3D( 1.0f, -1.0f, -1.0f), // v8
-		QVector3D(-1.0f, -1.0f, -1.0f), // v9
-		QVector3D( 1.0f,  1.0f, -1.0f), // v10
-		QVector3D(-1.0f,  1.0f, -1.0f), // v11
-
-		// Vertex data for face 3
-		QVector3D(-1.0f, -1.0f, -1.0f), // v12
-		QVector3D(-1.0f, -1.0f,  1.0f), // v13
-		QVector3D(-1.0f,  1.0f, -1.0f), // v14
-		QVector3D(-1.0f,  1.0f,  1.0f), // v15
-
-		// Vertex data for face 4
-		QVector3D(-1.0f, -1.0f, -1.0f), // v16
-		QVector3D( 1.0f, -1.0f, -1.0f), // v17
-		QVector3D(-1.0f, -1.0f,  1.0f), // v18
-		QVector3D( 1.0f, -1.0f,  1.0f), // v19
-
-		// Vertex data for face 5
-		QVector3D(-1.0f,  1.0f,  1.0f), // v20
-		QVector3D( 1.0f,  1.0f,  1.0f), // v21
-		QVector3D(-1.0f,  1.0f, -1.0f), // v22
-		QVector3D( 1.0f,  1.0f, -1.0f), // v23
+	static const GLfloat g_vertex_buffer_data[108] = {
+		-1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
+		-1.0f,-1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f, // Треугольник 1 : конец
+		1.0f, 1.0f,-1.0f, // Треугольник 2 : начало
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f, // Треугольник 2 : конец
+		1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f
 	};
-
-	// Indices for drawing cube faces using triangle strips.
-	// Triangle strips can be connected by duplicating indices
-	// between the strips. If connecting strips have opposite
-	// vertex order then last index of the first strip and first
-	// index of the second strip needs to be duplicated. If
-	// connecting strips have same vertex order then only last
-	// index of the first strip needs to be duplicated.
-	GLushort indices[] = {
-		0,  1,  2,  3,  3,     // Face 0 - triangle strip ( v0,  v1,  v2,  v3)
-		4,  4,  5,  6,  7,  7, // Face 1 - triangle strip ( v4,  v5,  v6,  v7)
-		8,  8,  9, 10, 11, 11, // Face 2 - triangle strip ( v8,  v9, v10, v11)
-		12, 12, 13, 14, 15, 15, // Face 3 - triangle strip (v12, v13, v14, v15)
-		16, 16, 17, 18, 19, 19, // Face 4 - triangle strip (v16, v17, v18, v19)
-		20, 20, 21, 22, 23      // Face 5 - triangle strip (v20, v21, v22, v23)
-	};
-
-	vao.bind();
+//	vao.bind();
 
 	// Generate 2 VBOs
-	arrBuf.create();
-	indexBuf.create();
 
+
+	arrBuf.destroy();
+	arrBuf.create();
 	// Transfer vertex data to VBO 0
 	arrBuf.bind();
-	arrBuf.allocate(vertices, 24 * sizeof(QVector3D));
+	arrBuf.allocate(g_vertex_buffer_data, sizeof(g_vertex_buffer_data));
 
 	// Transfer index data to VBO 1
-	indexBuf.bind();
-	indexBuf.allocate(indices, 34 * sizeof(GLushort));
+//	indexBuf.destroy();
+//	indexBuf.create();
+//	indexBuf.bind();
+//	indexBuf.allocate(cube_elements, 36);
 
-	mshader.bind();
+//	mshader.bind();
 	int vertexLocation = mshader.attributeLocation("aPos");
 	mshader.setAttributeBuffer(vertexLocation, GL_FLOAT, 0, 3, sizeof(QVector3D));
 	mshader.enableAttributeArray(vertexLocation);
 
-	vao.release();
-	arrBuf.release();
-	indexBuf.release();
-	mshader.release();
+
+//	vao.release();
+//	arrBuf.release();
+//	indexBuf.release();
+//	mshader.release();
 }
 
 void SpotZones::initGL()
 {
+	initializeOpenGLFunctions();
+	f = QOpenGLContext::currentContext()->extraFunctions();
 
 	glinstanse::initShader(mshader, ":/shaders/spotZone.vert", ":/shaders/spotZone.frag");
 	modelsBuf.create();
+	vao.create();
+	arrBuf.create();
+	indexBuf.create();
 //	int index = 0;
 //	float offset = 0.1f;
 //	for(int y = -10; y < 10; y += 2)
@@ -169,9 +181,4 @@ void SpotZones::initGL()
 //		index = ss.str();
 //		shader.setVec2(("offsets[" + index + "]").c_str(), translations[i]);
 //	}
-
-
-
-
-
 }

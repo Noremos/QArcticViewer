@@ -4,6 +4,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include "src/render/spotzones.h"
+
 using std::min;
 using std::vector;
 
@@ -131,11 +133,12 @@ void Project::findByParams()
 		++l;
 
 		bb->setFactor(xScale);
+		spotZones->addBoundy(bb->bb);
 		//			model->boundydata.append(bb);
 		k++;
 	}
-	//		model->updateAll();
-	//	spotZone->setProperty("buffer", QVariant::fromValue(dataList));
+	spotZones->updateBuffer();
+
 	saveProject();
 
 }

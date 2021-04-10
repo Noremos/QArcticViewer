@@ -20,7 +20,6 @@ void MainWindow::importDTM()
 {
 	QFileDialog fileDialog;
 
-	QString defaultPath ="D:/";
 	QString fileName = QFileDialog::getOpenFileName(0, "Импорт ЦМР", QString(), tr("TIFF (*.tif *.tiff)"));
 	if (fileName.length()==0)
 		return;
@@ -46,6 +45,11 @@ void MainWindow::importDTM()
 void MainWindow::openProject()
 {
 	QString projName = QFileDialog::getOpenFileName(0, "Открыть проект", QString(), tr("AW prject (*.qwr)"));
+	openProject(projName);
+}
+
+void MainWindow::openProject(QString projName)
+{
 
 	if (projName.length() == 0)
 		return;
@@ -54,8 +58,8 @@ void MainWindow::openProject()
 	ui->coofSB->setValue(proj->searchSetts.coof);
 	ui->dminSB->setValue(proj->searchSetts.diametrMin());
 	ui->dmaxDB->setValue(proj->searchSetts.diametrMax());
-	ui->minSizeHeiSB->setValue(proj->searchSetts.heightMax());
-	ui->maxSizeHeiSB->setValue(proj->searchSetts.heightMin());
+	ui->minSizeHeiSB->setValue(proj->searchSetts.heightMin());
+	ui->maxSizeHeiSB->setValue(proj->searchSetts.heightMax());
 	ui->bottomLenSB->setValue(proj->searchSetts.bottomProc);
 
 	ui->glWidget->makeCurrent();
@@ -78,7 +82,11 @@ void MainWindow::openProject()
 
 void MainWindow::findByParams()
 {
+	ui->glWidget->makeCurrent();
 	proj->findByParams();
+	ui->glWidget->drawZones = true;
+	ui->glWidget->doneCurrent();
+	finded = true;
 }
 
 void MainWindow::saveSettings()
@@ -164,7 +172,8 @@ void MainWindow::on_textureLoder_clicked()
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-	openProject();
+	openProject("D:\\proj.qwr");
+//	openProject();
 }
 
 void MainWindow::on_pbOpenDTM_clicked()
@@ -190,5 +199,13 @@ void MainWindow::on_pbSave_clicked()
 void MainWindow::on_heightSpin_valueChanged(int arg1)
 {
 	ui->glWidget->terra->factor = arg1;
-	qDebug() << ui->glWidget->terra->factor;
+	ui->glWidget->zones->factor = arg1;
+	qDebug() << ui->glWidget->zones->factor;
+}
+
+void MainWindow::on_chShowFinded_stateChanged(int arg1)
+{
+	if (finded)
+	ui->glWidget->drawZones = ui->chShowFinded->checkState() == Qt::CheckState::Checked;
+
 }

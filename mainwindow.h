@@ -19,7 +19,7 @@ public:
 
 	void setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax);
 	void setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax);
-
+	bool finded = false;
 
 private slots:
 	void on_mattype_currentIndexChanged(int index);
@@ -28,6 +28,7 @@ private slots:
 
 	void importDTM();
 	void openProject();
+	void openProject(QString path);
 	void findByParams();
 	void saveSettings();
 
@@ -42,6 +43,8 @@ private slots:
 	void on_pbSave_clicked();
 
 	void on_heightSpin_valueChanged(int arg1);
+
+	void on_chShowFinded_stateChanged(int arg1);
 
 private:
 	Ui::MainWindow *ui;

@@ -10,6 +10,8 @@
 #include "src/types/instinfo.h"
 #include "src/core/obj3d.h"
 
+class SpotZones;
+
 enum class BackPath
 {
 	texture1,
@@ -75,6 +77,9 @@ public:
 
 		reader = new TiffReader();
 	}
+
+	SpotZones *spotZones;
+
 	static Project *proj;
 public:
 	SeachingSettings searchSetts;
@@ -140,7 +145,7 @@ public:
 	{
 		switch (pathI) {
 		case BackPath::project:
-			return projectPath + "qwr";
+			return projectPath + "proj.qwr";
 			break;
 		case BackPath::barlist:
 			return projectPath + "bds.lst";
