@@ -4,6 +4,7 @@
 #include <QAbstractSpinBox>
 #include <QMainWindow>
 #include <QSpinBox>
+#include "src/core/project.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -21,11 +22,16 @@ public:
 
 public slots:
 	void importDTM();
+
+	void openProject();
+
+	void findByParams();
+	void test(QString path);
+
+	void saveSettings();
 private:
 	Ui::MainWindow *ui;
-	Project proj;
-
-
+	Project* proj;
 
 };
 #endif // MAINWINDOW_H

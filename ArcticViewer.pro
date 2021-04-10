@@ -14,6 +14,8 @@ SOURCES += \
     main.cpp \
     mainwidget.cpp \
     mainwindow.cpp \
+    src/core/imagesearcher.cpp \
+    src/core/project.cpp \
     src/render/spotzones.cpp \
     terrarian/terrariangui.cpp \
     terrarian/textgui.cpp
@@ -24,6 +26,11 @@ HEADERS += \
     mainwidget.h \
     mainwindow.h \
     src/base.h \
+    src/core/decoder.h \
+    src/core/face3d.h \
+    src/core/imagesearcher.h \
+    src/core/project.h \
+    src/core/tiffreader.h \
     src/types/instinfo.h \
     src/types/types.h \
     terrarian/cameragui.h \

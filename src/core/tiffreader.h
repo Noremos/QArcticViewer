@@ -1,6 +1,7 @@
 #ifndef TIFFREADER_H
 #define TIFFREADER_H
 //
+#include "../base.h"
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -255,7 +256,7 @@ struct TiffTags
 
 //#include <bits/unique_ptr.h>
 
-#include "Decoder.h"
+#include "decoder.h"
 
 template<class T>
 class Cache

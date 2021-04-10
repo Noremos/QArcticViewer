@@ -6,7 +6,7 @@
 
 Project::Project()
 {
-
+	projectPath.setPath("D:\\Programs\\Barcode\\_bar\\");
 }
 
 bool Project::saveProject(QString path)
@@ -43,10 +43,10 @@ bool Project::loadProject(QString path)
 
 	read(loadDoc.object());
 	
-		proj.loadProject(getPath(BackPath::project));
-	qDebug() << proj.searchSetts.height.start;
-	qDebug() << proj.searchSetts.heightMin();
-	proj.notifySettings();
+	loadProject(getPath(BackPath::project));
+	qDebug() << searchSetts.height.start;
+	qDebug() << searchSetts.heightMin();
+	notifySettings();
 	return true;
 }
 

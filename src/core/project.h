@@ -3,8 +3,18 @@
 
 #include "imagesearcher.h"
 
+#include <QDir>
 #include <QJsonObject>
 #include <QString>
+
+enum class BackPath
+{
+	texture1,
+	texture2,
+	object,
+	project,
+	barlist
+};
 
 class Project : public QObject
 {
@@ -36,7 +46,7 @@ public:
         emit modelChanged(modelPath);
         emit imgMinValChanged(imgMinVal);
         emit imgMaxValChanged(imgMaxVal);
-        emit meterialtypeChanged(materialType);
+//        emit meterialtypeChanged(materialType);
     }
 
 
@@ -49,23 +59,24 @@ public:
     int materialType=0;
 public:
 	SeachingSettings searchSetts;
-	QString projectPath = "D:\\Programs\\Barcode\\_bar\\";
+	QDir projectPath;
+	//= "D:\\Programs\\Barcode\\_bar\\";
 
 	QString getPath(BackPath pathI)
 	{
 		switch (pathI) {
 		case BackPath::project:
-			return projectPath+ "proj.qwr";
+			return projectPath.path() + "proj.qwr";
 			break;
 		case BackPath::barlist:
-			return projectPath+ "bds.lst";
+			return projectPath.path() + "bds.lst";
 			break;
 		case BackPath::texture1:
-			return proj.texturePath;
+			return texturePath;
 		case BackPath::texture2:
-			return proj.texture2Path;
+			return texture2Path;
 		case BackPath::object:
-			return projectPath+ "2.obj";
+			return projectPath.path() + "2.obj";
 		default:
 			break;
 		}

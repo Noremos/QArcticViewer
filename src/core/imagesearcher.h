@@ -1,8 +1,14 @@
 #ifndef IMAGESEARCHER_H
 #define IMAGESEARCHER_H
-#include "base.h"
+#include "../base.h"
 #include "tiffreader.h"
-#include "barcodeCreator.h"
+
+#include <QObject>
+#include <vector>
+
+#include <src/types/types.h>
+#include <src/types/img.h>
+//#include "barcodeCreator.h"
 using namespace bc;
 
 
@@ -38,16 +44,21 @@ public:
 // FOR PORPERTYs
 
 	int diametrMin() { return diamert.start; }
-	void setDiametrMin(int val) { diamert.start = val;}
 
 	int diametrMax() { return diamert.end; }
-	void setDiametrMax(int val) { diamert.end = val;}
-
 	float heightMin() { return height.start; }
-	void setHeightMin(float val)  { height.start = val;}
-
 	float heightMax() { return height.end; }
+
+
+public slots:
+	void setDiametrMin(int val) { diamert.start = val;}
+	void setDiametrMax(int val) { diamert.end = val;}
+	void setHeightMin(float val)  { height.start = val;}
 	void setHeightMax(float val)  { height.end = val;}
+	void setCoof(float val)  { coof = val;}
+	void setBottomProc(float val)  { bottomProc = val;}
+
+
 };
 
 class ImageSearcher

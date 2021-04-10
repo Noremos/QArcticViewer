@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1009</width>
-    <height>655</height>
+    <width>1042</width>
+    <height>668</height>
    </rect>
   </property>
   <property name="mouseTracking">
@@ -154,13 +154,26 @@ color:red;
          <bool>true</bool>
         </property>
        </widget>
-       <widget class="QPushButton" name="fileDialog">
+       <widget class="QPushButton" name="pbOpenProject">
         <property name="geometry">
          <rect>
           <x>125</x>
           <y>13</y>
           <width>101</width>
-          <height>61</height>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Открыть проект</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pbOpenDTM">
+        <property name="geometry">
+         <rect>
+          <x>126</x>
+          <y>46</y>
+          <width>101</width>
+          <height>31</height>
          </rect>
         </property>
         <property name="text">
@@ -331,7 +344,7 @@ color:red;
       <widget class="QGroupBox" name="groupBox_5">
        <property name="geometry">
         <rect>
-         <x>690</x>
+         <x>700</x>
          <y>0</y>
          <width>181</width>
          <height>81</height>
@@ -401,7 +414,7 @@ color:red;
        </property>
        <property name="geometry">
         <rect>
-         <x>874</x>
+         <x>890</x>
          <y>20</y>
          <width>131</width>
          <height>51</height>
@@ -736,7 +749,7 @@ border.width:3</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1009</width>
+     <width>1042</width>
      <height>26</height>
     </rect>
    </property>
