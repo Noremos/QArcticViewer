@@ -10,6 +10,17 @@
         "xhash": "cpp",
         "xlocale": "cpp",
         "xstring": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "algorithm": "cpp",
+        "atomic": "cpp",
+        "charconv": "cpp",
+        "deque": "cpp",
+        "istream": "cpp",
+        "map": "cpp",
+        "memory": "cpp",
+        "mutex": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "xlocnum": "cpp"
     }
 }

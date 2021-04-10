@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QFileDialog>
 #include <QObject>
 
 void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
@@ -12,6 +13,19 @@ void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
 void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
 {
 	connect(boxMin, qOverload<double>(&QDoubleSpinBox::valueChanged), boxMax, &QDoubleSpinBox::setMinimum);
+}
+
+void MainWindow::importDTM()
+{
+	QFileDialog fileDialog;
+
+	QString defaultPath ="D:/";
+	QString ret = QFileDialog::getOpenFileName(0, "Импорт ЦМР", QString(), tr("TIFF (*.tif *.tiff)"));
+//	fileDialog.setLabelText("Выберите файл, пожалуйста");
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+													"/home/jana/untitled.png",
+													tr("ЦМР (*.tif *.tiff )"));
+
 }
 
 

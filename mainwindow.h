@@ -18,8 +18,13 @@ public:
 
 	void setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax);
 	void setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax);
+
+public slots:
+	void importDTM();
 private:
 	Ui::MainWindow *ui;
+	Project proj;
+
 
 
 };

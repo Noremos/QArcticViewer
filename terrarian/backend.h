@@ -29,16 +29,11 @@ enum class BackPath
 	barlist
 };
 
-class Backend: public QObject
+class BackendProxy
 {
-	Q_OBJECT
-
 	ImageReader* reader = nullptr;
-	Squircle* m_openrender;
 public:
-	QObject *root = nullptr;
-	QString projectPath = "D:\\Programs\\Barcode\\_bar\\";
-	explicit Backend(QObject *parent = nullptr);
+	Backend(QObject *parent = nullptr);
 	bool block = true;
 //	cv::Mat imgread(QString path);
 
@@ -50,17 +45,12 @@ public:
             delete reader;
         }
     }
-	ProjectParametrs proj;
+	Project proj;
 
 //	Qt3DCore::QEntity* spotZone;
 	Q_INVOKABLE void findByParams();
 	Q_INVOKABLE void test(QString path);
     Q_INVOKABLE QString loadImage(QString path, int step, int type);
-
-//	Qt3DCore::QEntity *getMarkerZone();
-//	Qt3DCore::QEntity *getSpotZone();
-
-//	Q_INVOKABLE void setStopItem(Qt3DCore::QEntity *area);
 	Q_INVOKABLE void setFactorSpinBox(QQuickItem *spinBox);
 
 	Q_INVOKABLE int getHei();
@@ -96,8 +86,8 @@ public:
 	{
 		m_openrender->mouseClick_callback(xpos, ypos, static_cast<Qt::MouseButton>(button));
 	}
-	//	Q_PROPERTY(ProjectParametrs *projParams READ getProjSetts)
-//	ProjectParametrs *getProjSetts() { return &proj; }
+	//	Q_PROPERTY(Project *projParams READ getProjSetts)
+//	Project *getProjSetts() { return &proj; }
 	bool checkBounty(boundy &bb);
 
 

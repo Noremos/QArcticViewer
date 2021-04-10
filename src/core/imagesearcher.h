@@ -25,10 +25,15 @@ public:
 
 	SeachingSettings()
 	{
-		coof = 0;
-		diamert = {0, 0};
-		height = {0, 0};
-		bottomProc = 0;
+		// coof = 0;
+		// diamert = {0, 0};
+		// height = {0, 0};
+		// bottomProc = 0;
+		
+		bottomProc = 0.1f;
+		coof = 1.7f;
+		diamert = TRange<int>(10, 400);
+		height = TRange<float>(2, 6);
 	}
 // FOR PORPERTYs
 
@@ -71,6 +76,7 @@ public:
     }
 	int getMaxTiles();
 	void findZones(vector<boundy> &bounds, int start, int len);
+
 };
 
 #endif // IMAGESEARCHER_H

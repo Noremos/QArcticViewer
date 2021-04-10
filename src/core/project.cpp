@@ -4,12 +4,12 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-ProjectParametrs::ProjectParametrs()
+Project::Project()
 {
 
 }
 
-bool ProjectParametrs::saveProject(QString path)
+bool Project::saveProject(QString path)
 {
 	QFile saveFile(path);
 
@@ -26,8 +26,9 @@ bool ProjectParametrs::saveProject(QString path)
 	return true;
 }
 
-bool ProjectParametrs::loadProject(QString path)
+bool Project::loadProject(QString path)
 {
+	projectPath = QDir(path);
 	QFile loadFile(path);
 
 	if (!loadFile.open(QIODevice::ReadOnly))
@@ -41,10 +42,15 @@ bool ProjectParametrs::loadProject(QString path)
 	QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
 
 	read(loadDoc.object());
+	
+		proj.loadProject(getPath(BackPath::project));
+	qDebug() << proj.searchSetts.height.start;
+	qDebug() << proj.searchSetts.heightMin();
+	proj.notifySettings();
 	return true;
 }
 
-void ProjectParametrs::read(const QJsonObject &json)
+void Project::read(const QJsonObject &json)
 {
 	this->modelPath		= json["modelPath"].toString();
 	this->heimapPath	= json["heimapPath"].toString();
@@ -64,7 +70,7 @@ void ProjectParametrs::read(const QJsonObject &json)
 	searchSetts.bottomProc = setts["bottom"].toDouble();
 }
 
-void ProjectParametrs::write(QJsonObject &json) const
+void Project::write(QJsonObject &json) const
 {
 	json["modelPath"]		= this->modelPath;
 	json["heimapPath"]	= this->heimapPath;
