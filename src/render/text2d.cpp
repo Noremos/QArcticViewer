@@ -19,7 +19,11 @@ void Text2d::addText(boundy &bb)
 	{
 		QMatrix4x4 matr;
 		matr.setToIdentity();
-		matr.translate(bb.x + bb.wid() / 2 + i * xSize, bb.endZ + bb.zei() / 2 + 1, bb.y + bb.hei() / 2);
+		matr.translate(bb.x + bb.wid() / 2, bb.endZ + bb.zei()/2 + 1,bb.y + bb.hei() / 2);
+		//text bb.x, bb.endZ, bb.y
+		matr.scale(bb.wid(), 1, bb.hei());
+
+//		matr.translate(bb.x + bb.wid() / 2 + i * xSize, bb.endZ + bb.zei() / 2 + 1, bb.y + bb.hei() / 2);
 //		matr.scale(bb.wid(), 1, bb.hei());
 		//text bb.x, bb.endZ, bb.y
 		int b = text[i].toUpper().toLatin1();
@@ -99,7 +103,6 @@ void Text2d::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	//projection * view * model * vec4(position, 1.0f);
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
-	mshader.setUniformValue("factor", factor);
 
 	vao.bind();
 	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 6, boundySize);

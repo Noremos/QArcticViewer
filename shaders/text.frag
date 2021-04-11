@@ -18,7 +18,7 @@ void main()
 {
     // Set fragment color from texture
     FragColor = texture(texture0, v_texcoord);
-    if (FragColor == vec4(1.0,1.0,1.0,1.0))
-        FragColor.a = 0;
+//    if (FragColor == vec4(1.0,1.0,1.0,1.0))
+//        FragColor.a = 0;
 //    FragColor = vec4(0.4,0.6,1,1);
 }

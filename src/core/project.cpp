@@ -145,6 +145,7 @@ void Project::findByParams()
 		k++;
 	}
 	spotZones->updateBuffer();
+	text->updateBuffer();
 
 	saveProject();
 
