@@ -11,6 +11,7 @@
 #include "src/core/obj3d.h"
 
 class SpotZones;
+class Text2d;
 
 enum class BackPath
 {
@@ -83,6 +84,7 @@ public:
 	}
 
 	SpotZones *spotZones;
+	Text2d *text;
 
 	static Project *proj;
 public:

@@ -1,5 +1,6 @@
 #ifndef IMG_H
 #define IMG_H
+#include "src/base.h"
 
 struct Img
 {

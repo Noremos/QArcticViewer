@@ -5,6 +5,7 @@
 #include <QJsonObject>
 
 #include "src/render/spotzones.h"
+#include "src/render/text2d.h"
 
 using std::min;
 using std::vector;
@@ -86,6 +87,8 @@ void Project::processHiemap(int start, int end)
 	closeReader();
 }
 
+
+
 void Project::findByParams()
 {
 	if (block)return;
@@ -134,8 +137,10 @@ void Project::findByParams()
 			continue;
 		++l;
 
+
 		bb->setFactor(xScale);
 		spotZones->addBoundy(bb->bb);
+		text->addText(bb->bb);
 		//			model->boundydata.append(bb);
 		k++;
 	}

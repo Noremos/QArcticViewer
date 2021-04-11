@@ -73,6 +73,7 @@
 #include <QOpenGLExtraFunctions>
 
 #include <src/render/spotzones.h>
+#include <src/render/text2d.h>
 
 class CubeGL;
 typedef std::chrono::time_point<std::chrono::steady_clock> timeType;
@@ -126,6 +127,7 @@ private:
 
 	CameraGui *camera;
 	SkyBoxGUI *sky;
+	Text2d *text;
 
 	QBasicTimer timer;
 	CubeGui *geometries = nullptr;

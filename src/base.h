@@ -28,5 +28,12 @@ namespace
 #endif
 }
 
+#ifndef MAX
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
+#endif
+
+#ifndef MIN
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+#endif
 
 #endif // BASE_H

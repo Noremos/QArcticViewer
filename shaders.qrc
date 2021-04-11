@@ -10,5 +10,7 @@
         <file>shaders/simpleColor.vert</file>
         <file>shaders/spotZone.frag</file>
         <file>shaders/spotZone.vert</file>
+        <file>shaders/text.vert</file>
+        <file>shaders/text.frag</file>
     </qresource>
 </RCC>

@@ -23,6 +23,7 @@ SOURCES += \
     src/core/project.cpp \
     src/core/tiffreader.cpp \
     src/render/spotzones.cpp \
+    src/render/text2d.cpp \
     terrarian/terrariangui.cpp \
     terrarian/textgui.cpp
 
@@ -38,6 +39,7 @@ HEADERS += \
     src/core/obj3d.h \
     src/core/project.h \
     src/core/tiffreader.h \
+    src/render/text2d.h \
     src/types/instinfo.h \
     src/types/types.h \
     terrarian/cameragui.h \
@@ -51,13 +53,15 @@ FORMS += \
 
 INCLUDEPATH += side-src/Barcode/PrjBarlib/include
 DEPENDPATH += side-src/Barcode/PrjBarlib/include
-
+#INCLUDEPATH += D:\Install\Qt\5.15.2\Src\qtbase\src\3rdparty\freetype\include
+#DEPENDPATH += D:\Install\Qt\5.15.2\Src\qtbase\src\3rdparty\freetype\include
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    qt_conf.qrc \
     shaders.qrc \
     textures.qrc
 
