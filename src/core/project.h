@@ -19,7 +19,8 @@ enum class BackPath
 	texture2,
 	object,
 	project,
-	barlist
+	barlist,
+	heimap
 };
 
 class Project : public QObject
@@ -65,7 +66,7 @@ public:
 	float imgMinVal;
 	int materialType=0;
 
-	TiffReader *reader;
+	TiffReader *reader = nullptr;
 
 	void closeReader()
 	{
@@ -81,6 +82,7 @@ public:
 	{
 		closeReader();
 		reader = new TiffReader();
+		reader->open(getPath(BackPath::heimap).toStdWString().c_str());
 	}
 
 	SpotZones *spotZones;
@@ -133,8 +135,8 @@ private:
 			return false;
 
 
-		// diametr
-		if (dmin * resol < searchSetts.diamert.start || dmax * resol > searchSetts.diamert.end)
+		// diametr// dmin in pixels. Cast in  to meters
+		if (dmax * resol < searchSetts.diamert.start || dmax * resol > searchSetts.diamert.end)
 			return false;
 
 		if (bb.zei() < searchSetts.height.start)
@@ -162,6 +164,8 @@ public:
 			return texture2Path;
 		case BackPath::object:
 			return modelPath;
+		case BackPath::heimap:
+			return heimapPath;
 		default:
 			break;
 		}
