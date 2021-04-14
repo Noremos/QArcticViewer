@@ -203,8 +203,8 @@ void Project::findByParams()
 	while (stream.readLineInto(&line))
 	{
 		++l;
-		if (l!=685584)
-			continue;
+//		if (l!=685584)
+//			continue;
 		// tile
 		if (line.startsWith("t"))
 		{
@@ -240,8 +240,8 @@ void Project::findByParams()
 				continue;
 			bc::BarImg<float> bimg(img->wid, img->hei, 1, reinterpret_cast<uchar *>(img->data), false, false);
 
-			qDebug() << bimg.wid() << bimg.hei() << bimg.get(0, 0) << bimg.get(1, 0);
-			qDebug() << "Line num:" << l;
+//			qDebug() << bimg.wid() << bimg.hei() << bimg.get(0, 0) << bimg.get(1, 0);
+//			qDebug() << "Line num:" << l;S
 
 
 
@@ -295,7 +295,7 @@ void Project::findByParams()
 				maxRet = MAX(maxRet, rew);
 			}
 			delete baritem;
-			qDebug() <<"max^" <<  maxRet;
+			qDebug() <<"max:" <<  maxRet;
 			if (maxRet < POROG)
 				continue;
 		}

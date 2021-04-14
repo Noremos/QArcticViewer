@@ -9,12 +9,10 @@ void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
 //	connect(boxMax, qOverload<int>(&QSpinBox::valueChanged), boxMin, &QSpinBox::setMaximum);
 }
 
-
 void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
 {
 	connect(boxMin, qOverload<double>(&QDoubleSpinBox::valueChanged), boxMax, &QDoubleSpinBox::setMinimum);
 }
-
 
 void MainWindow::importDTM()
 {
@@ -36,9 +34,6 @@ void MainWindow::importDTM()
 	proj->saveProject();
 
 	ui->glWidget->drawTerra = true;
-
-
-
 	//	fileDialog.setLabelText("Выберите файл, пожалуйста");
 }
 
@@ -175,7 +170,7 @@ void MainWindow::on_textureLoder_clicked()
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-	openProject("D:\\proj.qwr");
+	openProject("D:\\Programs\\Barcode\\_bar\\p1\\proj.qwr");
 //	openProject();
 }
 

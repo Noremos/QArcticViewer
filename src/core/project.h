@@ -93,7 +93,13 @@ public:
 	SeachingSettings searchSetts;
 	//= "D:\\Programs\\Barcode\\_bar\\";
 
-	void setProjectPath(QString &path) { projectPath = QFileInfo(path).absoluteDir().absolutePath(); }
+	void setProjectPath(QString &path)
+	{
+		projectPath = QFileInfo(path).absoluteDir().absolutePath();
+		QChar last = projectPath[projectPath.length() - 1];
+		if (last != '\\' || last != '/')
+			projectPath += '/';
+	}
 
 	static Project *getProject()
 	{
@@ -163,7 +169,7 @@ public:
 		case BackPath::texture2:
 			return texture2Path;
 		case BackPath::object:
-			return modelPath;
+			return projectPath + modelPath;
 		case BackPath::heimap:
 			return heimapPath;
 		default:
