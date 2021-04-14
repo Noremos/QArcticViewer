@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QAbstractSpinBox>
+#include <QFutureWatcher>
 #include <QMainWindow>
 #include <QSpinBox>
 #include "src/core/project.h"
@@ -20,8 +21,28 @@ public:
 	void setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax);
 	void setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax);
 	bool finded = false;
+	volatile bool stopAction = false;
+
+	void findByParamsAsync();
+
+	QFutureWatcher<void> *watcher;
+	QFuture<void> future1;
+
+
+signals:
+	void signalProgressMaxChanged(int);
+	void signalProgressValueChawnged(int);
 
 private slots:
+	//Progress
+
+	void slotSetProgressMax(int maxVal);
+	void slotSetProgressValue(int incr);
+
+	void setPorogBarMax(int maxVal);
+	void incementProgBarVal(int incr = 1);
+
+	void findByParamsAsyncEnd();
 	void on_mattype_currentIndexChanged(int index);
 
 	void on_textureLoder_clicked();
@@ -45,6 +66,8 @@ private slots:
 	void on_heightSpin_valueChanged(int arg1);
 
 	void on_chShowFinded_stateChanged(int arg1);
+
+	void on_pbStopButton_clicked();
 
 private:
 	Ui::MainWindow *ui;

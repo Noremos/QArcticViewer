@@ -2,10 +2,21 @@
 #include <src/core/project.h>
 #include "spotzones.h"
 
+void SpotZones::addBoundy(boundy &bb, bool good)
+{
+	QMatrix4x4 matr;
+	matr.setToIdentity();
+	matr.translate(bb.x + bb.wid() / 2, bb.endZ + bb.zei()/2 + 1, bb.y + bb.hei() / 2);
+	//text bb.x, bb.endZ, bb.y
+	matr.scale(bb.wid(), 1, bb.hei());
+	boundydata.append(InstanceData(matr, good?1:0));
+}
+
 SpotZones::SpotZones() :
 	  arrBuf(QOpenGLBuffer::Type::VertexBuffer),
 	  modelsBuf(QOpenGLBuffer::Type::VertexBuffer),
 	  indexBuf(QOpenGLBuffer::Type::IndexBuffer)
+//	  ,goodBuff(QOpenGLBuffer::Type::VertexBuffer)
 {
 	Project::getProject()->spotZones = this;
 }
@@ -13,23 +24,32 @@ SpotZones::SpotZones() :
 void SpotZones::updateBuffer()
 {
 	vao.bind();
-
+	int loc, offloc;
 	mshader.bind();
 	initSpotModel();
+
+//	goodBuff.destroy();
+//	goodBuff.create();
+//	goodBuff.bind();
+//	goodBuff.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
+//	goodBuff.allocate(this->goodOrBad.data(), goodOrBad.size() * sizeof(int));
+
 
 
 	modelsBuf.destroy();
 	modelsBuf.create();
 	modelsBuf.bind();
 	modelsBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
-	modelsBuf.allocate(this->boundydata.data(), boundydata.size() * sizeof(QMatrix4x4));
+	modelsBuf.allocate(this->boundydata.data(), boundydata.size() * sizeof(InstanceData));
+
 	qDebug() << boundydata.size();
 	boundySize = boundydata.size();
 
 	GLsizei vec4size = sizeof(QVector4D);
-	GLsizei matr4Size = sizeof(QMatrix4x4);
+	GLsizei matr4Size = sizeof(InstanceData);
 
-	int loc = mshader.attributeLocation("instanceMatrix");
+
+	loc = mshader.attributeLocation("instanceMatrix");
 //	mshader.setUniformValueArray(loc, boundydata.data(), boundydata.size());
 	//
 	//							 loc,size, type,   norm       ,stride, off
@@ -47,14 +67,32 @@ void SpotZones::updateBuffer()
 	mshader.setAttributeBuffer(loc, GL_FLOAT, vec4size * 3,	4, matr4Size);
 	mshader.enableAttributeArray(loc);
 
-	f->glVertexAttribDivisor(loc-3, 1);
-	f->glVertexAttribDivisor(loc-2, 1);
-	f->glVertexAttribDivisor(loc-1, 1);
-	f->glVertexAttribDivisor(loc  , 1);
+	offloc = mshader.attributeLocation("aColor");
+	mshader.setAttributeBuffer(offloc, GL_INT, vec4size * 4,1, matr4Size);
+	mshader.enableAttributeArray(offloc);
+
+	/*
+	int vertexLocation = program.attributeLocation("a_position");
+	program.setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
+	program.enableAttributeArray(vertexLocation);
+
+	// Offset for texture coordinate
+	offset += sizeof(QVector3D);
+
+	//	 Tell OpenGL programmable pipeline how to locate vertex texture coordinate data
+	int texcoordLocation = program.attributeLocation("a_texcoord");
+	program.setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
+	*/
+	f->glVertexAttribDivisor(loc - 3, 1);
+	f->glVertexAttribDivisor(loc - 2, 1);
+	f->glVertexAttribDivisor(loc - 1, 1);
+	f->glVertexAttribDivisor(loc    , 1);
+	f->glVertexAttribDivisor(offloc , 1);
 
 
 	vao.release();
 
+//	goodBuff.release();
 	modelsBuf.release();
 	arrBuf.release();
 	indexBuf.release();
@@ -65,7 +103,6 @@ void SpotZones::updateBuffer()
 
 void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 {
-
 	// draw meteorites
 	mshader.bind();
 
@@ -158,6 +195,7 @@ void SpotZones::initGL()
 
 	glinstanse::initShader(mshader, ":/shaders/spotZone.vert", ":/shaders/spotZone.frag");
 	modelsBuf.create();
+//	goodBuff.create();
 	vao.create();
 	arrBuf.create();
 	indexBuf.create();

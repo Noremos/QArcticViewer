@@ -92,7 +92,8 @@ void Project::processHiemap(int start, int end)
 
 #include <fstream>
 
-void Project::findByParams()
+
+void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<void(int)> cbSetMax, volatile bool & stopAction)
 {
 	if (block)return;
 
@@ -121,7 +122,7 @@ void Project::findByParams()
 	bool checkSyrcl = false;
 	bool exportImg = false;
 	bool checkBoundy = true;
-	bool checkBar3d = true;
+	bool checkBar3d = false;
 
 
 
@@ -142,14 +143,10 @@ void Project::findByParams()
 		painter->setPen(pen);
 	}
 
-	ImageSearcher *imgsrch = nullptr;
+	openReader();
+	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 	//!###############################КРУГ############################
 
-	if (checkSyrcl)
-	{
-		openReader();
-		imgsrch = new ImageSearcher(dynamic_cast<TiffReader *>(reader));
-	}
 
 	//!###############################BARCODE############################
 	float POROG = 0.3;
@@ -159,11 +156,6 @@ void Project::findByParams()
 	BarConstructor<float> constr;
 	if (checkBar3d)
 	{
-		if (imgsrch == nullptr)
-		{
-			openReader();
-			imgsrch = new ImageSearcher(dynamic_cast<TiffReader *>(reader));
-		}
 		constr.addStructure(ProcType::f0t255, ColorType::gray, ComponentType::Component);
 		constr.returnType = ReturnType::barcode3d;
 		constr.createBinayMasks = false;
@@ -200,6 +192,9 @@ void Project::findByParams()
 	QString line;
 	int k = 0, l = 0;
 
+	if (cbSetMax)
+		cbSetMax(imgsrch.getMaxTiles()-1);
+
 	while (stream.readLineInto(&line))
 	{
 		++l;
@@ -208,10 +203,16 @@ void Project::findByParams()
 		// tile
 		if (line.startsWith("t"))
 		{
-			//            qDebug() << l;
+			qDebug() << l;
+
+			if (cbIncrValue)
+				cbIncrValue(1);
 //			l = 0;
 			continue;
 		}
+
+		if ((l % 20 == 0) && stopAction)
+			break;
 
 		// data
 		QStringList list = line.split(" ");
@@ -222,20 +223,23 @@ void Project::findByParams()
 		if (checkBoundy)
 		{
 			if (!checkBounty(bb->bb))
+			{
+				spotZones->addBoundy(bb->bb, false);
 				continue;
+			}
 		}
 
 
 
 		if (checkSyrcl)
 		{
-			if (!imgsrch->checkCircle(bb->bb))
+			if (!imgsrch.checkCircle(bb->bb))
 				continue;
 		}
 
 		if (checkBar3d)
 		{
-			Img *img = imgsrch->getRect(bb->bb);
+			Img *img = imgsrch.getRect(bb->bb);
 			if (img == nullptr)
 				continue;
 			bc::BarImg<float> bimg(img->wid, img->hei, 1, reinterpret_cast<uchar *>(img->data), false, false);
@@ -246,7 +250,7 @@ void Project::findByParams()
 
 
 			// EXPOT AS RAW
-			std::ofstream fout;
+//			std::ofstream fout;
 //			fout.open("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/out.fd", std::ios::binary | std::ios::out | std::ios::trunc);
 //			char wid[] = {(char) bimg.wid(), (char) bimg.hei()};
 //			fout.write(wid, 2);
@@ -299,7 +303,8 @@ void Project::findByParams()
 			if (maxRet < POROG)
 				continue;
 		}
-		
+		//			l = 0;
+
 		// xScale -- восколько у нас уменьшина карта. Сейчас у нас рельные пиксельные размеры
 		// И чтобы их корректно отобразить, надо поделить всё на процент уменьшения.
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
@@ -310,40 +315,29 @@ void Project::findByParams()
 		k++;
 	}
 
+	if (cbIncrValue)
+		cbIncrValue(imgsrch.getMaxTiles()-1);
 
-	if (checkSyrcl)
-	{
-		delete imgsrch;
-		closeReader();
-	}
+	closeReader();
 	if (exportImg)
 	{
+		painter->save();
+		painter->end();
+		image.save("D:\\rest.jpg");
 		delete painter;
 	}
 
 	if (checkBar3d)
 	{
-		if (imgsrch != nullptr)
-		{
-			delete imgsrch;
-			closeReader();
-		}
 		for (int i = 0; i < etalons.size(); ++i)
 		{
 			delete etalons[i];
 		}
 	}
 
-//	painter.save();
-//	painter.end();
-//	image.save("D:\\rest.jpg");
-
-	spotZones->updateBuffer();
-	text->updateBuffer();
+	qDebug() << "Done: " << k;
 
 	saveProject();
-
-
 }
 
 void Project::loadImage(QString path, int step, int type)
@@ -446,3 +440,4 @@ void Project::write(QJsonObject &json) const
 //	setts.height = {minHei, maxHei};
 //	setts.bottomProc = bottomLineProc;
 }
+

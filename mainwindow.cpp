@@ -1,7 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
+#include <QFuture>
 #include <QObject>
+#include <QThread>
+#include <QtConcurrent/QtConcurrent>
 
 void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
 {
@@ -78,13 +81,72 @@ void MainWindow::openProject(QString projName)
 //	proj->searchSetts.bottomProc = ui->bottomLenSB->value();
 }
 
-void MainWindow::findByParams()
+
+void MainWindow::incementProgBarVal(int incr)
 {
+	emit signalProgressValueChawnged(incr);
+}
+
+void MainWindow::setPorogBarMax(int maxVal)
+{
+	emit signalProgressMaxChanged(maxVal);
+}
+
+void MainWindow::findByParamsAsync()
+{
+	using std::placeholders::_1;
+	std::function<void(int)> setMax = std::bind(&MainWindow::setPorogBarMax, this, _1);
+	std::function<void(int)> inctrm = std::bind(&MainWindow::incementProgBarVal, this, _1);
+	proj->findByParams(inctrm, setMax, stopAction);
+}
+
+void MainWindow::slotSetProgressMax(int maxVal)
+{
+	ui->progressBar->setMaximum(maxVal);
+}
+
+void MainWindow::slotSetProgressValue(int incr)
+{
+	int val = ui->progressBar->value();
+	int maxval = ui->progressBar->maximum();
+	if (val + incr > maxval)
+	{
+		ui->progressBar->setValue(maxval);
+	}
+	else
+		ui->progressBar->setValue(val + incr);
+}
+
+void MainWindow::findByParamsAsyncEnd()
+{
+	qDebug() << "Update beffers";
 	ui->glWidget->makeCurrent();
-	proj->findByParams();
+	proj->spotZones->updateBuffer();
+	proj->text->updateBuffer();
+
 	ui->glWidget->drawZones = true;
 	ui->glWidget->doneCurrent();
 	finded = true;
+	ui->pbFindByParams->setEnabled(true);
+	ui->pbStopButton->setEnabled(false);
+}
+
+
+
+void MainWindow::findByParams()
+{
+	ui->pbFindByParams->setEnabled(false);
+	ui->progressBar->reset();
+
+	ui->pbStopButton->setEnabled(true);
+	stopAction = false;
+
+	future1 = QtConcurrent::run(this, &MainWindow::findByParamsAsync); // Thread 1
+
+	connect(watcher, SIGNAL(finished()), this, SLOT(findByParamsAsyncEnd()));
+	// delete the watcher when finished too
+//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
+	watcher->setFuture(future1);
 }
 
 void MainWindow::saveSettings()
@@ -132,13 +194,23 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connectSettsI(ui->bottomLenSB, &SeachingSettings::setBottomProc);
 
+	connect(this, &MainWindow::signalProgressValueChawnged, this, &MainWindow::slotSetProgressValue);
+	connect(this, &MainWindow::signalProgressMaxChanged, this, &MainWindow::slotSetProgressMax);
+
+	watcher = new QFutureWatcher<void>(this);
+
 //	connect(ui->pbFindByParams, &QPushButton::click, proj, .)
 
 }
 
 MainWindow::~MainWindow()
 {
+	future1.cancel();
+	while (!future1.isCanceled());
+
 	delete ui;
+	delete watcher;
+
 }
 
 
@@ -186,6 +258,9 @@ void MainWindow::on_pbCreateBars_clicked()
 
 void MainWindow::on_pbFindByParams_clicked()
 {
+	qDebug() << "MainThread: " << QThread::currentThread();
+
+
 	findByParams();
 	ui->glWidget->update();
 }
@@ -210,4 +285,9 @@ void MainWindow::on_chShowFinded_stateChanged(int arg1)
 		ui->glWidget->update();
 	}
 
+}
+
+void MainWindow::on_pbStopButton_clicked()
+{
+	stopAction = true;
 }

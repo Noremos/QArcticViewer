@@ -1,9 +1,12 @@
 #version 330 core
 
-uniform vec4 color;
+flat in int outColor;
 out vec4 fragColor;
 
 void main(void)
 {
-    fragColor = vec4(0.0,1.0,0.0,0.4);
+    if (outColor==1)
+        fragColor = vec4(0, 1, 0, 0.4);
+    else
+        fragColor = vec4(1, 0, 0, 0.4);
 }

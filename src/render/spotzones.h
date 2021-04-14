@@ -20,29 +20,33 @@
 #include "../types/types.h"
 #include "../types/glinstanse.h"
 
+struct InstanceData
+{
+	QMatrix4x4 matr;
+	int val;
+	InstanceData(QMatrix4x4 matr, int val)
+	{
+		this->matr = matr;
+		this->val = val;
+	}
+
+};
+
 class SpotZones :protected QOpenGLFunctions
 {
 public:
-	QVector<QMatrix4x4> boundydata;
+	QVector<InstanceData> boundydata;
 
 	QOpenGLVertexArrayObject vao;
 	int factor = 10;
-	QOpenGLBuffer arrBuf, modelsBuf;
+	QOpenGLBuffer arrBuf, modelsBuf, goodBuff;
 	QOpenGLBuffer indexBuf;
 
 	QOpenGLShaderProgram mshader;
 	QOpenGLExtraFunctions *f;
 
 	size_t boundySize = 0;
-	void addBoundy(boundy &bb)
-	{
-		QMatrix4x4 matr;
-		matr.setToIdentity();
-		matr.translate(bb.x + bb.wid() / 2, bb.endZ + bb.zei()/2 + 1,bb.y + bb.hei() / 2);
-		//text bb.x, bb.endZ, bb.y
-		matr.scale(bb.wid(), 1, bb.hei());
-		boundydata.append(matr);
-	}
+	void addBoundy(boundy &bb, bool good = true);
 	SpotZones();
 
 	void updateBuffer();

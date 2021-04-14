@@ -180,7 +180,7 @@ public:
 	
 	void processHiemap(int start, int end);
 
-	void findByParams();
+	void findByParams(std::function<void (int)> cbIncrValue, std::function<void (int)> cbSetMax, volatile bool &stopAction);
 
 
 	void loadImage(QString path, int step, int type);
