@@ -38,9 +38,9 @@ public:
 
 	// Camera Attributes
 	QVector3D Position;
-	QVector3D Front;
+	QVector3D Front, baseFront;
 	QVector3D Up;
-	QVector3D Right;
+	QVector3D Right, baseRight;
 	QVector3D WorldUp;
 	// Eular Angles
 	GLfloat Yaw;
@@ -59,6 +59,8 @@ public:
 		this->Pitch = pitch;
 		this->updateCameraVectors();
 		firstMouse = true;
+		baseFront = Front;
+		baseRight = Right;
 	}
 	// Constructor with scalar values
 	CameraGui(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat upX, GLfloat upY, GLfloat upZ, GLfloat yaw, GLfloat pitch) : Front(QVector3D(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
@@ -69,6 +71,8 @@ public:
 		this->Pitch = pitch;
 		this->updateCameraVectors();
 		firstMouse = true;
+		baseFront = Front;
+		baseRight = Right;
 	}
 
 	// Returns the view matrix calculated using Eular Angles and the LookAt Matrix
@@ -81,17 +85,37 @@ public:
 	}
 
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
+	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime, bool sift)
 	{
 		GLfloat velocity = this->MovementSpeed * deltaTime;
+		if (sift)
+			velocity *= 2;
+
 		if (direction == FORWARD)
-			this->Position += this->Front * velocity;
+		{
+			QVector3D res = this->Position + this->baseFront * velocity;
+			this->Position.setX(res.x());
+			this->Position.setZ(res.z());
+		}
 		if (direction == BACKWARD)
-			this->Position -= this->Front * velocity;
+		{
+			QVector3D res = this->Position - this->baseFront * velocity;
+			this->Position.setX(res.x());
+			this->Position.setZ(res.z());
+		}
 		if (direction == LEFT)
-			this->Position -= this->Right * velocity;
+		{
+			QVector3D res = this->Position - this->baseRight * velocity;
+			this->Position.setX(res.x());
+			this->Position.setZ(res.z());
+		}
 		if (direction == RIGHT)
-			this->Position += this->Right * velocity;
+		{
+			QVector3D res = this->Position + this->baseRight * velocity;
+			this->Position.setX(res.x());
+			this->Position.setZ(res.z());
+		}
+
 	}
 
 	GLfloat lastX = 400, lastY = 300;
@@ -155,12 +179,14 @@ public:
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 	void ProcessMouseScroll(GLfloat yoffset)
 	{
-		if (this->Zoom >= 1.0f && this->Zoom <= 45.0f)
-			this->Zoom -= yoffset;
-		if (this->Zoom <= 1.0f)
-			this->Zoom = 1.0f;
-		if (this->Zoom >= 45.0f)
-			this->Zoom = 45.0f;
+		GLfloat velocity = MovementSpeed * deltaTime;
+		this->Position += this->baseFront * velocity;
+//		if (this->Zoom >= 1.0f && this->Zoom <= 45.0f)
+//			this->Zoom -= yoffset;
+//		if (this->Zoom <= 1.0f)
+//			this->Zoom = 1.0f;
+//		if (this->Zoom >= 45.0f)
+//			this->Zoom = 45.0f;
 	}
 
 private:

@@ -225,6 +225,7 @@ void MainWidget::wheelEvent(QWheelEvent *event)
 
 void MainWidget::keyPressEvent(QKeyEvent *event)
 {
+	shitfp = event->modifiers() & Qt::ShiftModifier;
 	auto key = event->key();
 	if (key >= 0 && key < 1024)
 	{
@@ -242,6 +243,8 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 //! [4]
 void MainWidget::keyReleaseEvent(QKeyEvent *event)
 {
+	shitfp = event->modifiers() & Qt::ShiftModifier;
+
 	auto key = event->key();
 	if (key >= 0 && key < 1024)
 	{
@@ -412,12 +415,13 @@ void MainWidget::paintGL()
 void MainWidget::Do_Movement()
 {
 	// Camera controls
+	bool isShift = shitfp;
 	if(keys[Qt::Key::Key_W])
-		camera->ProcessKeyboard(FORWARD, deltaTime);
+		camera->ProcessKeyboard(FORWARD, deltaTime, isShift);
 	if(keys[Qt::Key::Key_S])
-		camera->ProcessKeyboard(BACKWARD, deltaTime);
+		camera->ProcessKeyboard(BACKWARD, deltaTime, isShift);
 	if(keys[Qt::Key::Key_A])
-		camera->ProcessKeyboard(LEFT, deltaTime);
+		camera->ProcessKeyboard(LEFT, deltaTime, isShift);
 	if(keys[Qt::Key::Key_D])
-		camera->ProcessKeyboard(RIGHT, deltaTime);
+		camera->ProcessKeyboard(RIGHT, deltaTime, isShift);
 }

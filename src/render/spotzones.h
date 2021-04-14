@@ -20,10 +20,13 @@
 #include "../types/types.h"
 #include "../types/glinstanse.h"
 
+//64 casts to 72
 struct InstanceData
 {
 	QMatrix4x4 matr;
 	int val;
+	int zer1;
+	int zer2;
 	InstanceData(QMatrix4x4 matr, int val)
 	{
 		this->matr = matr;

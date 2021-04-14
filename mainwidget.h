@@ -119,6 +119,7 @@ protected:
 	void initTextures();
 
 private:
+	bool shitfp;
 	bool keys[1024];
 	int pressed = 0;
 	qreal aspect;
