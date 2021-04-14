@@ -83,6 +83,8 @@ class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
     Q_OBJECT
 
 public:
+	bool useTimer = false;
+
 	MainWidget(QWidget *parent = nullptr);
     ~MainWidget();
 
@@ -118,6 +120,7 @@ protected:
 
 private:
 	bool keys[1024];
+	int pressed = 0;
 	qreal aspect;
 
 
@@ -146,7 +149,6 @@ private:
 	// QPaintDevice interface
 	// QWidget interface
 protected:
-
 };
 
 #endif // MAINWIDGET_H

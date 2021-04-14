@@ -2,6 +2,8 @@
 #define TYPES_H
 #include "../base.h"
 
+#include <QString>
+
 struct boundy
 {
 public:

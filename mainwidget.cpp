@@ -64,6 +64,8 @@ MainWidget::MainWidget(QWidget *parent)
 	terra = new Terrain();
 	zones = new SpotZones();
 	text = new Text2d();
+
+	useTimer = false;
 }
 
 MainWidget::~MainWidget()
@@ -89,14 +91,19 @@ void MainWidget::timerEvent(QTimerEvent * ev)
 	angularSpeed *= 0.99;
 
 	// Stop rotation when speed goes below threshold
-	if (angularSpeed < 0.01) {
+	if (angularSpeed < 0.01)
+	{
 		angularSpeed = 0.0;
-	} else {
+	}
+	else
+	{
 		// Update rotation
 		rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
 
 		// Request an update
-		update();
+		// if (useTimer)
+//		if(pressed!=0)
+			update();
 	}
 }
 //! [1]
@@ -168,8 +175,8 @@ void MainWidget::initializeGL()
 	// terra->displayTexture(0);
 
 
-
-	timer.start(12, this);
+//
+	timer.start(5, this);
 }
 
 //! [0]
@@ -202,12 +209,17 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
 //	sky->mouseMoveEvent(event);
 	camera->ProcessMouseMovement(event->localPos().x(), event->localPos().y());
+
+//	if (!useTimer && camera->isEnableTraking())
+//		update();
 }
 
 void MainWidget::wheelEvent(QWheelEvent *event)
 {
 //	sky->wheelEvent(event);
 	camera->ProcessMouseScroll(event->position().y());
+//	if (!useTimer)
+//		update();
 }
 
 
@@ -216,8 +228,16 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 	auto key = event->key();
 	if (key >= 0 && key < 1024)
 	{
+//		bool jg = keys[key];
 		keys[key] = true;
+
+//		if (!jg)
+//		{
+//			++pressed;
+//		}
 	}
+//	if (!useTimer)
+//		update();
 }
 //! [4]
 void MainWidget::keyReleaseEvent(QKeyEvent *event)
@@ -225,8 +245,21 @@ void MainWidget::keyReleaseEvent(QKeyEvent *event)
 	auto key = event->key();
 	if (key >= 0 && key < 1024)
 	{
+//		bool jg = keys[key];
+
 		keys[key] = false;
+
+//		if (jg)
+//		{
+//			--pressed;
+//		}
+
 	}
+
+//	qDebug() << pressed;
+
+//	if (!useTimer)
+//		update();
 }
 
 //! [5]
@@ -236,6 +269,9 @@ void MainWidget::resizeGL(int w, int h)
 
     // Calculate aspect ratio
 	aspect = qreal(w) / qreal(h ? h : 1);
+
+//	if (!useTimer)
+//		update();
 
 	// Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
 //	const qreal zNear = 3.0, zFar = 7.0, fov = 45.0;
@@ -298,7 +334,7 @@ void MainWidget::paintGL()
 	lastFrame = currentFrame;
 	if (fpsLabel != nullptr)
 	{
-		fpsLabel->setText("fps: " + QString::number(round(1000.0 / deltaTime)));
+		fpsLabel->setText("fps: " + QString::number(round(1.0 / deltaTime)));
 	}
 
 	Do_Movement();
@@ -369,7 +405,7 @@ void MainWidget::paintGL()
 
 //	const QList<QOpenGLDebugMessage> messages = logger->loggedMessages();
 //	for (const QOpenGLDebugMessage &message : messages)
-//		qDebug() << message;
+	//		qDebug() << message;
 }
 
 

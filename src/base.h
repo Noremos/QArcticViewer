@@ -16,6 +16,7 @@ typedef unsigned int offu64;
 
 typedef unsigned int objoff;
 
+//2 метра на пиксель
 constexpr const int resol = 2;
 namespace
 {

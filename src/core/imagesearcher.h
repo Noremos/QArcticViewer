@@ -92,6 +92,7 @@ public:
 	bool checkCircle(boundy &bb);
 
 	Img getTile(int tx, int ty);
+	Img *getRect(boundy &bb);
 };
 
 #endif // IMAGESEARCHER_H

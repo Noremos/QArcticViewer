@@ -97,24 +97,28 @@ Img ImageSearcher::getTile(int tx, int ty)
 	}
 
 	Img img(tileWid + diffset, tileHei + diffset);
-	for (int i = 0; i < tileWid * tileHei; ++i)
+	for (int i = 0; i < img.wid * img.hei; ++i)
 		img.data[i] = -9999;
 
-	// Pixel    "st" is a column number is source image
+	// Pixel    "st=columnNum" is a column number is source image
 	// *  *  *
 	// *  st *
 	// *  *  *
-	int st = tileWid * tx;
+	int columnNum = tileWid * tx;
 	int len = (tx == tilesInWid - 1 ? tileWid : tileWid + diffset);
 
-	// Pixel  "i" is a row number in source image
+	// Pixel  "i=firstRow" is a row number in source image
 	// * * *
 	// i * *
 	// * * *
-	for (int i = ty * tileHei, total = std::min((ty + 1) * tileHei + diffset, reader->height()), k = 0; i < total; ++i, ++k)
+	int firstRow = ty * tileHei;
+	int lastRow = std::min((ty + 1) * tileHei + diffset, reader->height());
+	for (int rowInDest = 0; firstRow < lastRow; ++firstRow, ++rowInDest)
 	{
-		img.setInRow(k, 0, static_cast<float*>(reader->getRow(i)) + st, len);
+		float *data = reader->getRow(firstRow);
+		img.setInRow(rowInDest, 0, data + columnNum, len);
 	}
+
 	return img;
 }
 
@@ -239,12 +243,51 @@ void ImageSearcher::findZones(std::vector<boundy> &bounds, int start, int len)
 
 }
 
+Img *ImageSearcher::getRect(boundy &bb)
+{
+	int startX = bb.x / tileWid;
+	int endX = bb.endX / tileWid;
+	int startY = bb.y / tileHei;
+	int endY = bb.endY / tileHei;
+
+	if (startX != endX || startY != endY)
+		return nullptr;
+
+
+	int index = getTid(startX, startY, tilesInWid);
+
+	Img *null = nullptr;
+	Img *g = this->cachedTiles.getData(index, null);
+	if (g == null)
+	{
+		Img tg = getTile(startX, startY);
+		g = new Img(tg.data, tg.wid, tg.hei);
+		tg.data = new float[1];
+		cachedTiles.storeData(index, g);
+	}
+
+	Img *ret = new Img(bb.wid(), bb.hei());
+
+	//bb.x==1054 || startX * tileWid==1000 || startInTile = 54
+	int startInTileX = bb.x - startX * tileWid;
+	int startInTileY = bb.y - startY * tileHei;
+	for (uint j = 0; j < bb.hei(); ++j)
+	{
+		for (uint i = 0; i < bb.wid(); ++i)
+		{
+			float d = g->getSafe(startInTileX + i, startInTileY + j);
+			ret->set(i, j, d);
+		}
+	}
+	return ret;
+}
+
 bool ImageSearcher::checkCircle(boundy &bb)
 {
 	int startX = bb.x / tileWid;
 	int endX = bb.endX / tileWid;
-	int startY = bb.x / tileWid;
-	int endY = bb.endY / tileWid;
+	int startY = bb.y / tileHei;
+	int endY = bb.endY / tileHei;
 
 	if (startX != endX || startY != endY)
 		return false;

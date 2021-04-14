@@ -72,6 +72,8 @@ void MainWindow::openProject(QString projName)
 	ui->glWidget->drawTerra = true;
 	ui->glWidget->doneCurrent();
 
+	ui->glWidget->update();
+
 
 //	proj->searchSetts.coof = ui->coofSB->value();
 //	proj->searchSetts.setDiametrMin(ui->dminSB->value());
@@ -190,6 +192,7 @@ void MainWindow::on_pbCreateBars_clicked()
 void MainWindow::on_pbFindByParams_clicked()
 {
 	findByParams();
+	ui->glWidget->update();
 }
 
 void MainWindow::on_pbSave_clicked()
@@ -207,6 +210,9 @@ void MainWindow::on_heightSpin_valueChanged(int arg1)
 void MainWindow::on_chShowFinded_stateChanged(int arg1)
 {
 	if (finded)
-	ui->glWidget->drawZones = ui->chShowFinded->checkState() == Qt::CheckState::Checked;
+	{
+		ui->glWidget->drawZones = ui->chShowFinded->checkState() == Qt::CheckState::Checked;
+		ui->glWidget->update();
+	}
 
 }

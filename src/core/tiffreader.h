@@ -358,7 +358,7 @@ template<class T>
 class PointerArrayCache : public Cache<T>
 {
 public:
-	PointerArrayCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)):
+	PointerArrayCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T*)):
 		  Cache<T>(maxElemCount, maxCachSize,sizeOfElement)
 	{  }
 
@@ -374,32 +374,32 @@ public:
 
 
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rdb8, argb8 };
-typedef float *rowdta;
+typedef float* rowptr;
 
 class ImageReader
 {
 public:
-	virtual rowdta getRowData(int ri)=0;
+	virtual rowptr getRowData(int ri)=0;
 	virtual bool open(const wchar_t *path)=0;
 	virtual void close()=0;
 	virtual ImageType getType()=0;
 	virtual int widght()=0;
 	virtual int height()=0;
-	PointerArrayCache<rowdta> cachedRows;
+	PointerArrayCache<rowptr> cachedRows;
 	bool ready = false;
 	bool isTile = true;
 	float max, min;
 
-	void *getRow(int i)
+	rowptr getRow(int i)
 	{
-		rowdta d = nullptr;
-		rowdta data = cachedRows.getData(i, d);
+		rowptr d = nullptr;
+		rowptr data = cachedRows.getData(i, d);
 		if (data != nullptr)
 			return data;
 		else
 		{
 			data = getRowData(i);
-			cachedRows.storeData(i, reinterpret_cast<float*>(data));
+			cachedRows.storeData(i, reinterpret_cast<rowptr>(data));
 			return data;
 		}
 	}
@@ -457,7 +457,7 @@ public:
 	void setTitleCacheSize(size_t n);
 	void setRowsCacheSize(size_t n);
 	// ImageReader interface
-	rowdta getRowData(int ri) override;
+	rowptr getRowData(int ri) override;
 
 	int widght() override;
 	int height() override;
@@ -465,7 +465,7 @@ public:
 	ImageType getType() override;
 
 	uchar *getTile(int ind);
-	rowdta processData(uchar *bytes);
+	rowptr processData(uchar *bytes);
 
 };
 

@@ -375,9 +375,9 @@ color:red;
        <widget class="QSpinBox" name="heightSpin">
         <property name="geometry">
          <rect>
-          <x>100</x>
+          <x>95</x>
           <y>20</y>
-          <width>71</width>
+          <width>81</width>
           <height>31</height>
          </rect>
         </property>
