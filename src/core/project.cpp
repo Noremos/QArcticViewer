@@ -368,7 +368,7 @@ void Project::loadImage(QString path, int step, int type)
 	this->imgMinVal = reader->min;
 	this->imgMaxVal = reader->max;
 	this->modelPath = getPath(BackPath::object);
-	this->heimapPath = path;
+	this->heimapPath = QFileInfo(path).fileName();
 	this->step = step;
 
 	notifySettings();
