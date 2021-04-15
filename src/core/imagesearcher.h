@@ -3,6 +3,7 @@
 #include "../base.h"
 #include "tiffreader.h"
 
+#include <QFile>
 #include <QObject>
 #include <vector>
 
@@ -61,6 +62,60 @@ public slots:
 
 };
 
+struct FileBuffer
+{
+	QString buffer;
+	QFile outfile;
+	QTextStream *stream = nullptr;
+	int maxBufferSize = 10000;
+
+	bool openFileStream(QString path, int maxBufferSize = 10000)
+	{
+		outfile.setFileName(path);
+
+		//		if (outfile.exists())outfile.remove();
+		if (!outfile.open(QFile::WriteOnly | QFile::Truncate))
+			return false;
+
+		if (stream != nullptr)
+			delete stream;
+		stream = new QTextStream(&outfile);
+
+		this->maxBufferSize = maxBufferSize;
+
+		return true;
+	}
+
+	void write(const QString &part)
+	{
+		buffer += part;
+		if (buffer.size() > maxBufferSize)
+		{
+			stream->operator<<(buffer);
+			buffer.clear();
+		}
+	}
+
+
+	void writeLine(const QString &part= "")
+	{
+		buffer += part + nl;
+		if (buffer.size() > maxBufferSize)
+		{
+			stream->operator<<(buffer);
+			buffer.clear();
+		}
+	}
+
+	void close()
+	{
+		stream->operator<<(buffer);
+		buffer.clear();
+
+		outfile.close();
+	}
+};
+
 class ImageSearcher
 {
 	TiffReader *reader;
@@ -72,27 +127,36 @@ class ImageSearcher
 	// наложение одного тайла на другой
 	int diffset = 100;
 
+	// Процент отсечения снизу
+	int bottomLevel = 0;
+
 	Img getTile(int index);
 
 	PointerCache<Img *> cachedTiles;
+	boundy getBounty(barline<float> *line);
 public:
 	ImageSearcher(TiffReader *reader);
 
     uint getTilesInWid()
     {
-        return tilesInWid;
-    }
+		return tilesInWid;
+	}
     uint getTilesInHei()
     {
-        return tilesInHei;
+		return tilesInHei;
     }
 	int getMaxTiles();
-	void findZones(std::vector<boundy> &bounds, int start, int len);
+	size_t findROIs(FileBuffer &bounds, FileBuffer &bars, int start, int len, int bottom);
 
-	bool checkCircle(boundy &bb);
+	bool checkCircle(boundy &bb, float eps  = 5);
 
 	Img getTile(int tx, int ty);
-	Img *getRect(boundy &bb);
+	Img getRect(boundy &bb)
+	{
+		int a, b;
+		return getRect(bb, a, b);
+	}
+	Img getRect(boundy &bb, int &maxX, int &maxY);
 };
 
 #endif // IMAGESEARCHER_H

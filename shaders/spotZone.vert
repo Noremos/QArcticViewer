@@ -4,7 +4,7 @@ layout (location = 1) in mat4 instanceMatrix; //vec[0]
 //     (location = 2)                         //vec[1]
 //     (location = 3)                         //vec[2]
 //     (location = 4)                         //vec[3]
-layout (location = 5) in int aColor;
+//layout (location = 5) in int aColor;
 
 uniform int factor;
 //uniform int minHei;
@@ -15,7 +15,7 @@ flat out int outColor;
 
 void main()
 {
-    outColor = aColor;
+    outColor =1;// aColor;
     //aColor;
     vec3 vp = aPos;
     vp.y *= factor;

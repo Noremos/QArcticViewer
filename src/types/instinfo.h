@@ -42,7 +42,7 @@ public:
 		nam.append(" W: ");
         nam.append(QString::number(factor * bb.wid() * resol));
 		nam.append(" H: ");
-        nam.append(QString::number(factor * bb.zei()));
+		nam.append(QString::number(bb.zei()));
 
 //		qDebug() << nam;
 		return nam;

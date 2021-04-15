@@ -47,23 +47,29 @@ float Project::getImgMaxVal() const
 	return imgMaxVal;
 }
 
-void Project::processHiemap(int start, int end)
+void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int end)
 {
 	if (block)
 		return;
 
+	FileBuffer boundStream;
+	if (!boundStream.openFileStream(getPath(BackPath::roilist)))
+		return;
+	FileBuffer barStream;
 
-	QString bpath = getPath(BackPath::barlist);
-
-	qDebug() << bpath;
-	QFile out(bpath);
-	if (out.exists())out.remove();
-	if (!out.open(QFile::WriteOnly | QFile::Truncate))return;
-	QTextStream boundSteam(&out);
+	if (!barStream.openFileStream(getPath(BackPath::barlist)))
+		return;
 
 	QString sw;
+	QString barjson;
 	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
+
+	--start;
+	--end;
+
+	if (pbCallback.cbSetMax)
+		pbCallback.cbSetMax(end - start+1);
 
 	start = min(start, imgsrch.getMaxTiles()-1);
 	end = min(end, imgsrch.getMaxTiles()-1);
@@ -71,20 +77,24 @@ void Project::processHiemap(int start, int end)
 	//1000/18
 	for (int ind = start; ind <= end; ++ind)
 	{
-		vector<boundy> objects;
-		imgsrch.findZones(objects, ind, 1);
+		int size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc);
 
-		sw = "t " + QString::number(ind) + nl;
-		for (size_t io = 0, totobjs = objects.size(); io < totobjs; ++io)
-		{
-			sw += objects[io].getStr() + nl;
-		}
+		if (ind != end)
+			barStream.writeLine(",");
+		else
+			barStream.writeLine();
 
-		qDebug() << ind << "/" << imgsrch.getMaxTiles() << ": " << objects.size();
+		if (pbCallback.cbIncrValue)
+			pbCallback.cbIncrValue(1);
 
-		out.close();
-		sw.clear();
+		qDebug() << ind << "/" << imgsrch.getMaxTiles() << ": " << size;
 	}
+
+	if (pbCallback.cbIncrValue)
+		pbCallback.cbIncrValue(end - start+1);
+
+	barStream.close();
+	boundStream.close();
 
 	closeReader();
 }
@@ -93,17 +103,15 @@ void Project::processHiemap(int start, int end)
 #include <fstream>
 
 
-void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<void(int)> cbSetMax, volatile bool & stopAction)
+void Project::filterROIs(const PrjgBarCallback &pbCallback)
 {
 	if (block)return;
-
-	float xScale = 10;
 
 	//		InstanseModel *model = nullptr;
 	//spotZone->findChild<InstanseModel *>("buffer");
 	//		model->clearAll();
 
-	QString bpath = getPath(BackPath::barlist);
+	QString bpath = getPath(BackPath::roilist);
 	QFile out(bpath);
 
 	if (!out.exists())
@@ -170,7 +178,7 @@ void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<v
 			file.open(QIODevice::ReadOnly);
 
 			QByteArray arr = file.read(file.size());
-			char shape[2]{arr.at(0), arr.at(1)};
+//			char shape[2]{arr.at(0), arr.at(1)};
 			uchar *imgdata = (uchar *) (arr.data() + 2);
 
 			BarImg<float> fileimg(60, 60, 1, imgdata, false, false);
@@ -192,8 +200,8 @@ void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<v
 	QString line;
 	int k = 0, l = 0;
 
-	if (cbSetMax)
-		cbSetMax(imgsrch.getMaxTiles()-1);
+	if (pbCallback.cbSetMax)
+		pbCallback.cbSetMax(imgsrch.getMaxTiles()-1);
 
 	while (stream.readLineInto(&line))
 	{
@@ -201,17 +209,20 @@ void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<v
 //		if (l!=685584)
 //			continue;
 		// tile
+		if (line.length()==0)
+			continue;
+
 		if (line.startsWith("t"))
 		{
 			qDebug() << l;
 
-			if (cbIncrValue)
-				cbIncrValue(1);
+			if (pbCallback.cbIncrValue)
+				pbCallback.cbIncrValue(1);
 //			l = 0;
 			continue;
 		}
 
-		if ((l % 20 == 0) && stopAction)
+		if ((l % 20 == 0) && pbCallback.stopAction)
 			break;
 
 		// data
@@ -239,10 +250,8 @@ void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<v
 
 		if (checkBar3d)
 		{
-			Img *img = imgsrch.getRect(bb->bb);
-			if (img == nullptr)
-				continue;
-			bc::BarImg<float> bimg(img->wid, img->hei, 1, reinterpret_cast<uchar *>(img->data), false, false);
+			Img img = imgsrch.getRect(bb->bb);
+			bc::BarImg<float> bimg(img.wid, img.hei, 1, reinterpret_cast<uchar *>(img.data), false, false);
 
 //			qDebug() << bimg.wid() << bimg.hei() << bimg.get(0, 0) << bimg.get(1, 0);
 //			qDebug() << "Line num:" << l;S
@@ -290,7 +299,7 @@ void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<v
 			baritem->removePorog(3);
 
 			delete retf;
-			delete img;
+			img.release();
 
 			float maxRet = 0;
 			for (auto *bas : etalons)
@@ -308,15 +317,15 @@ void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<v
 		// xScale -- восколько у нас уменьшина карта. Сейчас у нас рельные пиксельные размеры
 		// И чтобы их корректно отобразить, надо поделить всё на процент уменьшения.
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
-		bb->setFactor(xScale);
+		bb->setFactor(displayFactor);
 		spotZones->addBoundy(bb->bb);
 		text->addText(bb->bb);
 		//			model->boundydata.append(bb);
 		k++;
 	}
 
-	if (cbIncrValue)
-		cbIncrValue(imgsrch.getMaxTiles()-1);
+	if (pbCallback.cbIncrValue)
+		pbCallback.cbIncrValue(imgsrch.getMaxTiles()-1);
 
 	closeReader();
 	if (exportImg)
@@ -342,13 +351,14 @@ void Project::findByParams(std::function<void(int)> cbIncrValue, std::function<v
 
 void Project::loadImage(QString path, int step, int type)
 {
-	int imgtype = 0;
+//	int imgtype = 0;
 //	switch (imgtype)
 //	{
 //	default:
 //		reader = new TiffReader();
 //		break;
 //	}
+
 	heimapPath = path;
 	openReader();
 	if (!reader->ready)
@@ -363,7 +373,7 @@ void Project::loadImage(QString path, int step, int type)
 	this->imgMaxVal = reader->max;
 	this->modelPath = getPath(BackPath::object);
 	this->heimapPath = QFileInfo(path).fileName();
-	this->step = step;
+	this->displayFactor = step;
 
 	notifySettings();
 	saveProject();
@@ -398,7 +408,7 @@ void Project::read(const QJsonObject &json)
 	this->heimapPath	= json["heimapPath"].toString();
 	this->texturePath	= json["texturePath"].toString();
 	this->texture2Path	= json["texture2Path"].toString();
-	this->step			= json["step"].toInt();
+	this->displayFactor			= json["step"].toInt();
 	this->imgMinVal		= json["imgMinVal"].toDouble();
 	this->imgMaxVal		= json["imgMaxVal"].toDouble();
 	this->materialType  = json["materialType"].toInt();
@@ -418,7 +428,7 @@ void Project::write(QJsonObject &json) const
 	json["heimapPath"]	= this->heimapPath;
 	json["texturePath"] = this->texturePath;
 	json["texture2Path"] = this->texture2Path;
-	json["step"]		= this->step;
+	json["step"]		= this->displayFactor;
 	json["imgMaxVal"]	= this->imgMaxVal;
 	json["imgMinVal"]	= this->imgMinVal;
 	json["materialType"] = this->materialType;

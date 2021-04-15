@@ -2,6 +2,8 @@
 
 #include <QApplication>
 #include <QSurfaceFormat>
+#include <QMatrix4x4>
+#include <QVector2D>
 
 int main(int argc, char *argv[])
 {
@@ -11,9 +13,9 @@ int main(int argc, char *argv[])
 	fmt.setDepthBufferSize(24);
 	QSurfaceFormat::setDefaultFormat(fmt);
 
-	QApplication a(argc, argv);
+	QApplication app(argc, argv);
 	MainWindow w;
 	w.show();
 	qDebug() << QCoreApplication::applicationDirPath() + QDir::separator() + "qt.conf";
-	return a.exec();
+	return app.exec();
 }

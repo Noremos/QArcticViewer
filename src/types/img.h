@@ -11,7 +11,8 @@ struct Img
 	int hei;
 	Img(float *data = nullptr, int widgth = 0, int height = 0) : data(data), wid(widgth), hei(height) {}
 	Img(int widgth, int height) : wid(widgth), hei(height) { data = new float[wid * hei]; }
-
+	~Img()
+	{}
 	float get(int x, int y) const { return data[y * wid + x]; }
 
 	float getSafe(int x, int y) const
@@ -22,7 +23,6 @@ struct Img
 	}
 	
 	void set(int x, int y, float val) { data[y * wid + x] = val; }
-	void relese() { delete[] data; }
 	inline Img clone() const
 	{
 		Img clo(new float[wid * hei], wid, hei);

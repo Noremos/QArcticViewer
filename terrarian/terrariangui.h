@@ -131,8 +131,12 @@ public:
 	{
 		for (int var = 0; var < textures.size(); ++var)
 		{
-			delete textures[var];
-			textures[var] = nullptr;
+			if (textures[var] != nullptr)
+			{
+				textures[var]->destroy();
+				delete textures[var];
+				textures[var] = nullptr;
+			}
 		}
 //		textures.clear();
 //		textures.append(nullptr);

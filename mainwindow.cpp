@@ -17,6 +17,105 @@ void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
 	connect(boxMin, qOverload<double>(&QDoubleSpinBox::valueChanged), boxMax, &QDoubleSpinBox::setMinimum);
 }
 
+// FIND ROI AND BARS
+void MainWindow::findROIs()
+{
+	ui->progressBar->reset();
+
+//	ui->pbCreateBars->setEnabled(false);
+	ui->leftMenu->setEnabled(false);
+	ui->topMenu->setEnabled(false);
+	ui->pbStopButton->setEnabled(true);
+
+	stopAction = false;
+
+	future1 = QtConcurrent::run(this, &MainWindow::findROIsAsync); // Thread 1
+
+	connect(watcher, SIGNAL(finished()), this, SLOT(findROIsAsyncEnd()));
+	// delete the watcher when finished too
+	//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
+	watcher->setFuture(future1);
+}
+
+void MainWindow::findROIsAsyncEnd()
+{
+	qDebug() << "ROI done";
+
+//	ui->pbCreateBars->setEnabled(true);
+
+	ui->topMenu->setEnabled(true);
+	ui->leftMenu->setEnabled(true);
+	ui->pbStopButton->setEnabled(false);
+}
+
+void MainWindow::findROIsAsync()
+{
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+
+	proj->findROIsOnHiemap(callback, ui->startProc->value(), ui->endProc->value());
+}
+
+//#####################
+
+
+
+
+// FIND BURS IN ROI
+void MainWindow::findByParams()
+{
+	ui->progressBar->reset();
+//	ui->pbFindByParams->setEnabled(false);
+	ui->leftMenu->setEnabled(false);
+	ui->topMenu->setEnabled(false);
+	ui->pbStopButton->setEnabled(true);
+
+	stopAction = false;
+
+	future1 = QtConcurrent::run(this, &MainWindow::findByParamsAsync); // Thread 1
+
+	connect(watcher, SIGNAL(finished()), this, SLOT(findByParamsAsyncEnd()));
+	// delete the watcher when finished too
+	//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
+	watcher->setFuture(future1);
+}
+
+
+void MainWindow::findByParamsAsync()
+{
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+
+	proj->filterROIs(callback);
+}
+void MainWindow::findByParamsAsyncEnd()
+{
+	qDebug() << "Update beffers";
+	ui->glWidget->makeCurrent();
+
+	proj->spotZones->updateBuffer();
+	proj->text->updateBuffer();
+	ui->glWidget->drawZones = true;
+
+	ui->glWidget->doneCurrent();
+
+
+	finded = true;
+//	ui->pbFindByParams->setEnabled(true);
+	ui->pbStopButton->setEnabled(false);
+	ui->topMenu->setEnabled(true);
+	ui->leftMenu->setEnabled(true);
+
+	ui->glWidget->update();
+}
+//#####################
+
+
+
 void MainWindow::importDTM()
 {
 	QFileDialog fileDialog;
@@ -82,23 +181,16 @@ void MainWindow::openProject(QString projName)
 }
 
 
-void MainWindow::incementProgBarVal(int incr)
+void MainWindow::bindIncementProgBarVal(int incr)
 {
 	emit signalProgressValueChawnged(incr);
 }
 
-void MainWindow::setPorogBarMax(int maxVal)
+void MainWindow::bindSetPorogBarMax(int maxVal)
 {
 	emit signalProgressMaxChanged(maxVal);
 }
 
-void MainWindow::findByParamsAsync()
-{
-	using std::placeholders::_1;
-	std::function<void(int)> setMax = std::bind(&MainWindow::setPorogBarMax, this, _1);
-	std::function<void(int)> inctrm = std::bind(&MainWindow::incementProgBarVal, this, _1);
-	proj->findByParams(inctrm, setMax, stopAction);
-}
 
 void MainWindow::slotSetProgressMax(int maxVal)
 {
@@ -115,38 +207,6 @@ void MainWindow::slotSetProgressValue(int incr)
 	}
 	else
 		ui->progressBar->setValue(val + incr);
-}
-
-void MainWindow::findByParamsAsyncEnd()
-{
-	qDebug() << "Update beffers";
-	ui->glWidget->makeCurrent();
-	proj->spotZones->updateBuffer();
-	proj->text->updateBuffer();
-
-	ui->glWidget->drawZones = true;
-	ui->glWidget->doneCurrent();
-	finded = true;
-	ui->pbFindByParams->setEnabled(true);
-	ui->pbStopButton->setEnabled(false);
-}
-
-
-
-void MainWindow::findByParams()
-{
-	ui->pbFindByParams->setEnabled(false);
-	ui->progressBar->reset();
-
-	ui->pbStopButton->setEnabled(true);
-	stopAction = false;
-
-	future1 = QtConcurrent::run(this, &MainWindow::findByParamsAsync); // Thread 1
-
-	connect(watcher, SIGNAL(finished()), this, SLOT(findByParamsAsyncEnd()));
-	// delete the watcher when finished too
-//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
-	watcher->setFuture(future1);
 }
 
 void MainWindow::saveSettings()
@@ -253,16 +313,13 @@ void MainWindow::on_pbOpenDTM_clicked()
 
 void MainWindow::on_pbCreateBars_clicked()
 {
-	proj->processHiemap(ui->startProc->value(), ui->endProc->value());
+	findROIs();
 }
 
 void MainWindow::on_pbFindByParams_clicked()
 {
-	qDebug() << "MainThread: " << QThread::currentThread();
-
-
+//	qDebug() << "MainThread: " << QThread::currentThread();
 	findByParams();
-	ui->glWidget->update();
 }
 
 void MainWindow::on_pbSave_clicked()

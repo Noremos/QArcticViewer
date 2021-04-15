@@ -74,7 +74,7 @@ Img ImageSearcher::getTile(int tx, int ty)
 				lenX = diffset;
 			}
 
-			for (int i = 0; i < tileWid * tileHei; ++i)
+			for (int i = 0; i < img.wid * img.hei; ++i)
 				img.data[i] = -9999;
 
 
@@ -124,27 +124,19 @@ Img ImageSearcher::getTile(int tx, int ty)
 
 int ImageSearcher::getMaxTiles()
 {
-	return reader->widght() * reader->height() / (tileWid * tileHei);
+	return tilesInWid* tilesInHei;
+//	return reader->widght() * reader->height() / (tileWid * tileHei);
 }
 
 void findBootm()
 {}
-boundy getBounty(barvector<float> &points)
+boundy ImageSearcher::getBounty(barline<float> *line)
 {
+	auto &points = line->matr;
 	int minX = points[0].getX(), maxX = points[0].getX();
 	int minY = points[0].getY(), maxY = points[0].getY();
-	float minT = points[0].value, maxT = points[0].value;
-	for (size_t i = 1, total = points.size(); i < total; ++i)
-	{
-		bc::barvalue<float> &val = points[i];
+	float minT = line->start, maxT = line->end();
 
-		if (minT > val.value)
-			minT = val.value;
-
-		if (maxT < val.value)
-			maxT = val.value;
-
-	}
 // если поставить 10, то слипшийся покажется
 	float bottomLvl = minT + (maxT - minT) / 10;
 
@@ -152,7 +144,7 @@ boundy getBounty(barvector<float> &points)
 	for (size_t i = 0, total = points.size(); i < total; ++i)
 	{
 		barvalue<float> &val = points[i];
-		if(val.value<bottomLvl)
+		if(val.value < bottomLvl)
 			continue;
 //		if (maxT - val.second >= 2)
 //			continue;
@@ -176,6 +168,7 @@ boundy getBounty(barvector<float> &points)
 	boundy b(minX, minY, maxX, maxY);
 	b.z = minT;
 	b.endZ = maxT;
+
 //	b.sizeWid = (maxX - minX) * resol;
 //	b.sizeHei = (maxY - minY) * resol;
 //	b.sizeTop = (maxT - minT);
@@ -183,15 +176,15 @@ boundy getBounty(barvector<float> &points)
 //		qDebug() << maxT << " " << minT;
 	return b;
 }
+
 void check(void *ptr)
 {
 	if (ptr == nullptr)
 		qDebug() << "PTR IS NULL";
 }
-void ImageSearcher::findZones(std::vector<boundy> &bounds, int start, int len)
+
+size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut, int start, int len, int bottom)
 {
-
-
 	//!!!!!!!!!!!!!!!!!!!!!!!
 //	diffset = 0;
 //	tileWid = reader->widght();
@@ -199,13 +192,15 @@ void ImageSearcher::findZones(std::vector<boundy> &bounds, int start, int len)
 	//!!!!!!!!!!!!!!!!!!!!!
 
 
-	//	image = new float[(tileWid + diffset) * (tileHei + diffset)];
-
+	this->bottomLevel = bottom;
 //	start = 0;//519;
 //	start = 519;
+	size_t totalAdded = 0;
 	for (int i = start, totalTiles = MIN(start + len, tilesInWid * tilesInHei); i < totalTiles; ++i)
 	{
-//		qDebug() << i;
+		QString tileNumstr = QString::number(i);
+		boundsOut.writeLine("t " + tileNumstr);
+		barsOut.writeLine("{num:" + tileNumstr + ", barcodes:");
 		Img img = getTile(i);
 		int wid = img.wid, hei = img.hei;
 
@@ -213,37 +208,61 @@ void ImageSearcher::findZones(std::vector<boundy> &bounds, int start, int len)
 
 		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem<float> *item = bars->getItem(0);
+
+		barsOut.writeLine("{");
+		barsOut.write("bars:[ ");
+
+
+
 		img.release();
 
 		int tx = (i % tilesInWid) * tileWid;
 		int ty = (i / tilesInWid) * tileHei;
 
+		boundy b(0, 0, wid-1,  hei-1);
+		b.addXoffset(tx);
+		b.addYoffset(ty);
+		b.z = 0;
+		b.endZ = 50;
+		//		bounds.push_back(b);
+		std::string out = "[ ";
 		for (size_t i = 0, total = item->barlines.size(); i < total; ++i)
 		{
 			bc::barline<float> *line = item->barlines[i];
 //			check(line->matr);
-			boundy b = getBounty(line->matr);
-
+			boundy b = getBounty(line);
 
 			b.addXoffset(tx);
 			b.addYoffset(ty);
-			bounds.push_back(b);
+
+			boundsOut.writeLine(b.getStr());
+
+
+			line->getJsonObject(out);
+			out += ",";
 		}
+		out[out.length() - 1] = ']';
 
-		boundy b(0, 0, wid-1,  hei-1);
-		b.addXoffset(tx);
-		b.addYoffset(ty);
+		QString swr = QString::fromStdString(out);
+		swr += nl;
+		if (i != totalTiles - 1)
+			swr += "},";
+		else
+			swr += "}";
 
-		b.z = 0;
-		b.endZ = 50;
-//		bounds.push_back(b);
-        qDebug() <<"size:" <<bounds.size();
+		barsOut.writeLine(swr);
+
+
+		totalAdded += item->barlines.size();
+
+
 		delete bars;
 	}
-
+	qDebug() << "st:" << start << "ed:" << len << "size:" << totalAdded;
+	return totalAdded;
 }
 
-Img *ImageSearcher::getRect(boundy &bb)
+Img ImageSearcher::getRect(boundy &bb, int &maxX, int &maxY)
 {
 	int startX = bb.x / tileWid;
 	int endX = bb.endX / tileWid;
@@ -262,67 +281,43 @@ Img *ImageSearcher::getRect(boundy &bb)
 	{
 		Img tg = getTile(startX, startY);
 		g = new Img(tg.data, tg.wid, tg.hei);
-		tg.data = new float[1];
-		cachedTiles.storeData(index, g);
-	}
-
-	Img *ret = new Img(bb.wid(), bb.hei());
-
-	//bb.x==1054 || startX * tileWid==1000 || startInTile = 54
-	int startInTileX = bb.x - startX * tileWid;
-	int startInTileY = bb.y - startY * tileHei;
-	for (uint j = 0; j < bb.hei(); ++j)
-	{
-		for (uint i = 0; i < bb.wid(); ++i)
-		{
-			float d = g->getSafe(startInTileX + i, startInTileY + j);
-			ret->set(i, j, d);
-		}
-	}
-	return ret;
-}
-
-bool ImageSearcher::checkCircle(boundy &bb)
-{
-	int startX = bb.x / tileWid;
-	int endX = bb.endX / tileWid;
-	int startY = bb.y / tileHei;
-	int endY = bb.endY / tileHei;
-
-	if (startX != endX || startY != endY)
-		return false;
-
-
-	int index = getTid(startX, startY, tilesInWid);
-
-	Img *null = nullptr;
-	Img *g = this->cachedTiles.getData(index, null);
-	if (g == null)
-	{
-		Img tg = getTile(startX, startY);
-		g = new Img(tg.data, tg.wid, tg.hei);
-		tg.data = new float[1];
 		cachedTiles.storeData(index, g);
 	}
 
 	Img ret(bb.wid(), bb.hei());
 
+	//bb.x==1054 || startX * tileWid==1000 || startInTile = 54
+	int startInTileX = bb.x - startX * tileWid;
+	int startInTileY = bb.y - startY * tileHei;
+
+
 	float maxval = -9999;
-	int xc = 0, yc = 0;
-	for (uint i = 0; i < bb.wid(); ++i)
+
+	for (uint j = 0; j < bb.hei(); ++j)
 	{
-		for (uint j = 0; j < bb.hei(); ++j)
+		for (uint i = 0; i < bb.wid(); ++i)
 		{
-			float d = g->getSafe(bb.x + i, bb.y + j);
+			float d = g->getSafe(startInTileX + i, startInTileY + j);
 			ret.set(i, j, d);
+
 			if (d > maxval)
 			{
-				xc = i;
-				yc = j;
+				maxX = i;
+				maxY = j;
 				maxval = d;
 			}
 		}
 	}
+	ret.maxVal = maxval;
+
+	return ret;
+}
+
+bool ImageSearcher::checkCircle(boundy &bb, float eps)
+{
+	int xc=0, yc=0;
+	Img ret = getRect(bb, xc,yc);
+
 	float sum = 0;
 	int radius = 20;
 	int total = 0;
@@ -351,6 +346,5 @@ bool ImageSearcher::checkCircle(boundy &bb)
 	float t3 = abs(sum - ret.getSafe(xc - radius, yc - radius));
 	float t4 = abs(sum - ret.getSafe(xc + radius, yc + radius));
 
-	float eps = 5;
 	return (t1 <= eps && t2 <= eps && t3 <= eps && t4 <= eps);
 }

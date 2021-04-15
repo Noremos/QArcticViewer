@@ -68,10 +68,10 @@ public:
 	{
 		x /= step;
 		y /= step;
-		z /= step;
+//		z /= step;
 		endX /= step;
 		endY /= step;
-		endZ /= step;
+//		endZ /= step;
 	}
 	inline QString getStr()
 	{

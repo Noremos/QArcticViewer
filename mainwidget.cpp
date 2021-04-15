@@ -217,7 +217,7 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
 void MainWidget::wheelEvent(QWheelEvent *event)
 {
 //	sky->wheelEvent(event);
-	camera->ProcessMouseScroll(event->position().y());
+	camera->ProcessMouseScroll(event->delta(), deltaTime);
 //	if (!useTimer)
 //		update();
 }

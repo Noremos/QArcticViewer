@@ -158,7 +158,7 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 		curshader->setUniformValue("texture0", 0);
 		break;
 	default:
-		break;
+		return;
 	}
 
 	QMatrix4x4 model;
@@ -251,7 +251,7 @@ void raedFast(const char *fName)
 
 int parceIntFast(const char *num, int len)
 {
-	int ret;
+	int ret = 0;
 	std::from_chars(num, num + len, ret);
 	return ret;
 

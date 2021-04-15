@@ -20,7 +20,17 @@ enum class BackPath
 	object,
 	project,
 	barlist,
+	roilist,
 	heimap
+};
+
+struct PrjgBarCallback
+{
+	std::function<void(int)> cbIncrValue;
+	std::function<void(int)> cbSetMax;
+	volatile bool &stopAction;
+	PrjgBarCallback(volatile bool &stopAction):stopAction(stopAction)
+	{}
 };
 
 class Project : public QObject
@@ -31,7 +41,7 @@ public:
 	Q_PROPERTY(QString heimapPath MEMBER heimapPath NOTIFY heimapChanged)
 	Q_PROPERTY(QString texturePath MEMBER texturePath NOTIFY textureChanged)
 	Q_PROPERTY(QString texture2Path MEMBER texture2Path NOTIFY texture2Changed)
-	Q_PROPERTY(int step MEMBER step)
+	Q_PROPERTY(int displayFactor MEMBER displayFactor)
     Q_PROPERTY(float imgMinVal MEMBER imgMinVal NOTIFY imgMinValChanged)
     Q_PROPERTY(float imgMaxVal MEMBER imgMaxVal NOTIFY imgMaxValChanged)
 	Q_PROPERTY(int materialType MEMBER materialType NOTIFY meterialtypeChanged)
@@ -61,7 +71,7 @@ public:
 	QString modelPath;
 	QString heimapPath;
 	QString texturePath, texture2Path;
-    int step=10;
+	int displayFactor=10;
 	float imgMaxVal;
 	float imgMinVal;
 	int materialType=0;
@@ -80,9 +90,11 @@ public:
 
 	void openReader()
 	{
-		closeReader();
-		reader = new TiffReader();
-		reader->open(getPath(BackPath::heimap).toStdWString().c_str());
+		if (!reader)
+			reader = new TiffReader();
+
+		if (!reader->ready)
+			reader->open(getPath(BackPath::heimap).toStdWString().c_str());
 	}
 
 	SpotZones *spotZones;
@@ -157,13 +169,14 @@ public:
 
 	QString getPath(BackPath pathI)
 	{
-		switch (pathI) {
+		switch (pathI)
+		{
 		case BackPath::project:
 			return projectPath + "proj.qwr";
-			break;
 		case BackPath::barlist:
+			return projectPath + "bds.json";
+		case BackPath::roilist:
 			return projectPath + "bds.lst";
-			break;
 		case BackPath::texture1:
 			return texturePath;
 		case BackPath::texture2:
@@ -173,14 +186,13 @@ public:
 		case BackPath::heimap:
 			return heimapPath;
 		default:
-			break;
+			return "";
 		}
-
 	}
 	
-	void processHiemap(int start, int end);
+	void findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int end);
 
-	void findByParams(std::function<void (int)> cbIncrValue, std::function<void (int)> cbSetMax, volatile bool &stopAction);
+	void filterROIs(const PrjgBarCallback &pbCallback);
 
 
 	void loadImage(QString path, int step, int type);

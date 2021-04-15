@@ -48,7 +48,7 @@ void SpotZones::updateBuffer()
 	GLsizei vec4size = sizeof(QVector4D);
 	GLsizei matr4Size = sizeof(InstanceData);
 
-	qDebug() << matr4Size;
+	qDebug() << "Matr:" << matr4Size;
 
 	loc = mshader.attributeLocation("instanceMatrix");
 //	mshader.setUniformValueArray(loc, boundydata.data(), boundydata.size());
@@ -68,9 +68,9 @@ void SpotZones::updateBuffer()
 	mshader.setAttributeBuffer(loc, GL_FLOAT, vec4size * 3,	4, matr4Size);
 	mshader.enableAttributeArray(loc);
 
-	offloc = mshader.attributeLocation("aColor");
-	mshader.setAttributeBuffer(offloc, GL_INT, vec4size * 4,3, matr4Size);
-	mshader.enableAttributeArray(offloc);
+//	offloc = mshader.attributeLocation("aColor");
+//	mshader.setAttributeBuffer(offloc, GL_INT, vec4size * 4,1, matr4Size);
+//	mshader.enableAttributeArray(offloc);
 
 	/*
 	int vertexLocation = program.attributeLocation("a_position");
@@ -88,7 +88,7 @@ void SpotZones::updateBuffer()
 	f->glVertexAttribDivisor(loc - 2, 1);
 	f->glVertexAttribDivisor(loc - 1, 1);
 	f->glVertexAttribDivisor(loc    , 1);
-	f->glVertexAttribDivisor(offloc , 1);
+//	f->glVertexAttribDivisor(offloc , 1);
 
 
 	vao.release();
