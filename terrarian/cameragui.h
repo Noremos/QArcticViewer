@@ -85,33 +85,47 @@ public:
 	}
 
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
+
+	float setZnac(float word)
+	{
+		return word<0?-1:1;
+	}
 	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime, bool sift)
 	{
 		GLfloat velocity = this->MovementSpeed * deltaTime;
 		if (sift)
 			velocity *= 2;
 
+		QVector3D front;
+		front.setX(cos(qDegreesToRadians(this->Yaw)));
+		front.setY(0);
+		front.setZ(sin(qDegreesToRadians(this->Yaw)));
+		front.normalize();
+
 		if (direction == FORWARD)
 		{
-			QVector3D res = this->Position + this->baseFront * velocity;
+//			QVector3D poscor(setZnac(Front.x()), 0, setZnac(Front.z()));
+//			QVector3D res = this->Position + poscor * velocity;
+			QVector3D res = this->Position + front * velocity;
+
 			this->Position.setX(res.x());
 			this->Position.setZ(res.z());
 		}
 		if (direction == BACKWARD)
 		{
-			QVector3D res = this->Position - this->baseFront * velocity;
+			QVector3D res = this->Position - front * velocity;
 			this->Position.setX(res.x());
 			this->Position.setZ(res.z());
 		}
 		if (direction == LEFT)
 		{
-			QVector3D res = this->Position - this->baseRight * velocity;
+			QVector3D res = this->Position - Right * velocity;
 			this->Position.setX(res.x());
 			this->Position.setZ(res.z());
 		}
 		if (direction == RIGHT)
 		{
-			QVector3D res = this->Position + this->baseRight * velocity;
+			QVector3D res = this->Position + this->Right * velocity;
 			this->Position.setX(res.x());
 			this->Position.setZ(res.z());
 		}
@@ -121,8 +135,8 @@ public:
 	GLfloat lastX = 400, lastY = 300;
 	bool firstMouse = true;
 
-	GLfloat deltaTime = 0.0f;
-	GLfloat lastFrame = 0.0f;
+//	GLfloat deltaTime = 0.0f;
+//	GLfloat lastFrame = 0.0f;
 
 	bool invertX = false, invertY = false;
 	void setEnableTraking(bool val)
@@ -133,7 +147,10 @@ public:
 			firstMouse = true;
 		}
 	}
-	bool isEnableTraking() { return enableTraking;
+
+	bool isEnableTraking()
+	{
+		return enableTraking;
 	}
 	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 	void ProcessMouseMovement(GLfloat xpos, GLfloat ypos, GLboolean constrainPitch = true)
@@ -177,10 +194,10 @@ public:
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-	void ProcessMouseScroll(GLfloat yoffset)
+	void ProcessMouseScroll(GLfloat yoffset, float deltaTime)
 	{
-		GLfloat velocity = MovementSpeed * deltaTime;
-		this->Position += this->baseFront * velocity;
+		GLfloat velocity = 50 * yoffset * deltaTime;
+		this->Position -= this->Front * velocity;
 //		if (this->Zoom >= 1.0f && this->Zoom <= 45.0f)
 //			this->Zoom -= yoffset;
 //		if (this->Zoom <= 1.0f)
@@ -195,13 +212,15 @@ private:
 	{
 		// Calculate the new Front vector
 		QVector3D front;
-		front.setX(cos(qDegreesToRadians(this->Yaw)) * cos(qDegreesToRadians(this->Pitch)));
+		front.setX(cos(qDegreesToRadians(this->Yaw)) * cos(qDegreesToRadians(Pitch)));
 		front.setY(sin(qDegreesToRadians(this->Pitch)));
-		front.setZ(sin(qDegreesToRadians(this->Yaw)) * cos(qDegreesToRadians(this->Pitch)));
+		front.setZ(sin(qDegreesToRadians(this->Yaw)) * cos(qDegreesToRadians(Pitch)));
 		this->Front = front.normalized();
 		// Also re-calculate the Right and Up vector
 		this->Right = QVector3D::crossProduct(this->Front, this->WorldUp).normalized();  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-		this->Up    = QVector3D::crossProduct(this->Right, this->Front).normalized();
+		this->Up = QVector3D::crossProduct(this->Right, this->Front).normalized();
+		//Up.y
+//		qDebug() << Front << Right << Up;
 	}
 };
 
