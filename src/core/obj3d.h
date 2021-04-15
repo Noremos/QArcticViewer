@@ -97,7 +97,7 @@ public:
 	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
-	void write(QString path, int startRow, int lastRow, Point3f scale = Point3f(0.1f, 0.1f, 0.1f))
+	void write(QString path, int startRow, int lastRow)
 	{
 		QFile out(path);
 		if (out.exists())
@@ -137,6 +137,8 @@ public:
 		memset(prevNullRow, 0, sWidth * typeSize);
 		memset(currNullRow, 0, sWidth * typeSize);
 #endif
+
+		float scale = 1.f / step;
 //		objoff offset = 0;
 		qDebug() << startRow << " " << (lastRow==0?height: lastRow+1);
 		for (int h = (startRow==0?0:startRow-1); h < (lastRow==0?height:lastRow+1); h += step)
@@ -187,7 +189,7 @@ public:
 				if (value > max)
 					max = value;
 
-				sw.append("v " + normConv(w, scale.X) + " " + normConv(value, scale.Z) + " " + normConv(h, scale.Y) + nl);
+				sw.append("v " + normConv(w, scale) + " " + normConv(value, scale) + " " + normConv(h, scale) + nl);
 				sw.append("vt " + QString::number((float)w/width) + " " + QString::number(1.f - (float)h/height) + nl);
 
 #ifdef USE_ROW

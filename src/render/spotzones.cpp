@@ -2,13 +2,14 @@
 #include <src/core/project.h>
 #include "spotzones.h"
 
-void SpotZones::addBoundy(boundy &bb, bool good)
+void SpotZones::addBoundy(boundy &bb,int displayFactor, bool good)
 {
+	bb.divStep(displayFactor);
 	QMatrix4x4 matr;
 	matr.setToIdentity();
-	matr.translate(bb.x + bb.wid() / 2, bb.endZ + bb.zei()/2 + 1, bb.y + bb.hei() / 2);
+	matr.translate(bb.x + bb.wid(), bb.endZ + bb.zei(), bb.y + bb.hei());
 	//text bb.x, bb.endZ, bb.y
-	matr.scale(bb.wid(), 1, bb.hei());
+	matr.scale(bb.wid(), bb.zei(), bb.hei());
 	boundydata.append(InstanceData(matr, good?1:0));
 }
 

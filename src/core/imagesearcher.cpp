@@ -137,10 +137,15 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 	int minY = points[0].getY(), maxY = points[0].getY();
 	float minT = line->start, maxT = line->end();
 
+	if (minT > maxT)
+	{
+		float temp = minT;
+		minT = maxT;
+		maxT = temp;
+	}
 // если поставить 10, то слипшийся покажется
-	float bottomLvl = minT + (maxT - minT) / 10;
+	float bottomLvl = minT + (maxT - minT) / bottomLevel;
 
-	minT = maxT;
 	for (size_t i = 0, total = points.size(); i < total; ++i)
 	{
 		barvalue<float> &val = points[i];
@@ -160,9 +165,6 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 
 		if (maxY < val.getY())
 			maxY = val.getY();
-
-		if (minT > val.value)
-			minT = val.value;
 	}
 
 	boundy b(minX, minY, maxX, maxY);
@@ -182,8 +184,11 @@ void check(void *ptr)
 	if (ptr == nullptr)
 		qDebug() << "PTR IS NULL";
 }
+#include "fstream"
 
-size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut, int start, int len, int bottom)
+size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
+							   int start, int len, int bottom,
+							   volatile bool &valStop)
 {
 	//!!!!!!!!!!!!!!!!!!!!!!!
 //	diffset = 0;
@@ -201,10 +206,15 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut, int s
 		QString tileNumstr = QString::number(i);
 		boundsOut.writeLine("t " + tileNumstr);
 		barsOut.writeLine("{num:" + tileNumstr + ", barcodes:");
+
 		Img img = getTile(i);
 		int wid = img.wid, hei = img.hei;
 
 		bc::BarcodeCreator<float> creator;
+
+
+//		SaveRawData("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/outbig.bf", wid, hei, img.data);
+
 
 		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem<float> *item = bars->getItem(0);
@@ -213,18 +223,20 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut, int s
 		barsOut.write("bars:[ ");
 
 
-
+		// delete data and delete pointer on it
 		img.release();
+		reader->removeTileFromCache(i);
+
 
 		int tx = (i % tilesInWid) * tileWid;
 		int ty = (i / tilesInWid) * tileHei;
 
-		boundy b(0, 0, wid-1,  hei-1);
-		b.addXoffset(tx);
-		b.addYoffset(ty);
-		b.z = 0;
-		b.endZ = 50;
-		//		bounds.push_back(b);
+		//boundy b(0, 0, wid-1,  hei-1);
+		//b.addXoffset(tx);
+		//b.addYoffset(ty);
+		//b.z = 0;
+		//b.endZ = 50;
+		//bounds.push_back(b);
 		std::string out = "[ ";
 		for (size_t i = 0, total = item->barlines.size(); i < total; ++i)
 		{
@@ -252,11 +264,12 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut, int s
 
 		barsOut.writeLine(swr);
 
-
 		totalAdded += item->barlines.size();
 
-
 		delete bars;
+
+		if (valStop)
+			break;
 	}
 	qDebug() << "st:" << start << "ed:" << len << "size:" << totalAdded;
 	return totalAdded;
@@ -347,4 +360,19 @@ bool ImageSearcher::checkCircle(boundy &bb, float eps)
 	float t4 = abs(sum - ret.getSafe(xc + radius, yc + radius));
 
 	return (t1 <= eps && t2 <= eps && t3 <= eps && t4 <= eps);
+}
+
+void SaveRawData(const std::string &path, int wid, int hei, float *data)
+{
+	//		 EXPOT AS RAW
+	std::ofstream fout;
+	//"D:/Programs/QT/ArctivViewer/ArcticViewer/temp/outbig.bf"
+	fout.open(path, std::ios::binary | std::ios::out | std::ios::trunc);
+	int size[] = {wid, hei};
+	char *byteArr = reinterpret_cast<char *>(size);
+	fout.write("b", 1);
+	fout.write(byteArr, 2*sizeof(int));
+
+	fout.write((char *)data,wid * hei * sizeof(float));
+	fout.close();
 }

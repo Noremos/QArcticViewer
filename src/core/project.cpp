@@ -77,7 +77,7 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	//1000/18
 	for (int ind = start; ind <= end; ++ind)
 	{
-		int size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc);
+		int size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc, pbCallback.stopAction);
 
 		if (ind != end)
 			barStream.writeLine(",");
@@ -235,12 +235,10 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 		{
 			if (!checkBounty(bb->bb))
 			{
-				spotZones->addBoundy(bb->bb, false);
+				spotZones->addBoundy(bb->bb,displayFactor, false);
 				continue;
 			}
 		}
-
-
 
 		if (checkSyrcl)
 		{
@@ -317,8 +315,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 		// xScale -- восколько у нас уменьшина карта. Сейчас у нас рельные пиксельные размеры
 		// И чтобы их корректно отобразить, надо поделить всё на процент уменьшения.
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
-		bb->setFactor(displayFactor);
-		spotZones->addBoundy(bb->bb);
+		spotZones->addBoundy(bb->bb, displayFactor, true);
 		text->addText(bb->bb);
 		//			model->boundydata.append(bb);
 		k++;
@@ -344,7 +341,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 		}
 	}
 
-	qDebug() << "Done: " << k;
+	qDebug() << "Done: " << k << "/" << l;
 
 	saveProject();
 }
@@ -359,7 +356,9 @@ void Project::loadImage(QString path, int step, int type)
 //		break;
 //	}
 
-	heimapPath = path;
+	this->modelPath = "map.obj";
+	this->heimapPath = path;
+
 	openReader();
 	if (!reader->ready)
 		return ;
@@ -371,8 +370,6 @@ void Project::loadImage(QString path, int step, int type)
 
 	this->imgMinVal = reader->min;
 	this->imgMaxVal = reader->max;
-	this->modelPath = getPath(BackPath::object);
-	this->heimapPath = QFileInfo(path).fileName();
 	this->displayFactor = step;
 
 	notifySettings();
@@ -419,7 +416,7 @@ void Project::read(const QJsonObject &json)
 	searchSetts.setDiametrMax(setts["diametrMax"].toInt());
 	searchSetts.setHeightMin(setts["heightMin"].toDouble());
 	searchSetts.setHeightMax(setts["heightMax"].toDouble());
-	searchSetts.bottomProc = setts["bottom"].toDouble();
+	searchSetts.bottomProc = setts["bottom"].toInt();
 }
 
 void Project::write(QJsonObject &json) const

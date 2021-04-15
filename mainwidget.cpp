@@ -360,7 +360,7 @@ void MainWidget::paintGL()
 //	texture->bind();
 
 	geometries->model.setToIdentity();
-	geometries->model.translate(0.0, 0.0, -5.0);
+	geometries->model.translate(0.0, 0.0, 0.0);
 	geometries->model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
 
 //	program.bind();

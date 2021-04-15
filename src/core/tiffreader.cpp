@@ -298,6 +298,14 @@ uchar* TiffReader::getTile(int ind)
 	return data;
 }
 
+void TiffReader::removeTileFromCache(int ind)
+{
+	if (cachedTiles.isInCache(ind))
+	{
+		cachedTiles.setData(ind, nullptr);
+	}
+}
+
 rowptr TiffReader::processData(uchar* bytes)
 {
 	int len = widght();

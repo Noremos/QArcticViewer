@@ -82,7 +82,6 @@ void MainWindow::findByParams()
 	watcher->setFuture(future1);
 }
 
-
 void MainWindow::findByParamsAsync()
 {
 	using std::placeholders::_1;
@@ -92,6 +91,7 @@ void MainWindow::findByParamsAsync()
 
 	proj->filterROIs(callback);
 }
+
 void MainWindow::findByParamsAsyncEnd()
 {
 	qDebug() << "Update beffers";
@@ -132,7 +132,7 @@ void MainWindow::importDTM()
 		opened = true;
 	}
 
-	proj->loadImage(fileName, ui->startProc->value(), ui->endProc->value());
+	proj->loadImage(fileName, ui->simpithithion->value(), 0);
 	proj->saveProject();
 
 	ui->glWidget->drawTerra = true;
@@ -270,7 +270,6 @@ MainWindow::~MainWindow()
 
 	delete ui;
 	delete watcher;
-
 }
 
 
@@ -293,16 +292,24 @@ void MainWindow::on_mattype_currentIndexChanged(int index)
 
 void MainWindow::on_textureLoder_clicked()
 {
-	QString fileName = QFileDialog::getOpenFileName(0, "Открыть текстуру", QString(), tr("Image (*.tif *.tiff *.png *.jpg *.bmp)"));
+	QString fileName = QFileDialog::getOpenFileName(0, "Открыть текстуру", QString(),
+													tr("Image (*.tif *.tiff *.png *.jpg *.bmp)"));
 	if (fileName.length() == 0)
 		return;
 
-	ui->glWidget->terra->setTexture(ui->mattype->currentIndex()-2, fileName);
+	ui->glWidget->terra->setTexture(ui->mattype->currentIndex() - 2, fileName);
+
+	if (ui->mattype->currentIndex() - 2 == 0)
+		proj->texturePath = fileName;
+	if (ui->mattype->currentIndex() - 2 == 1)
+		proj->texture2Path = fileName;
+
+	saveSettings();
 }
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-	openProject("D:\\Programs\\Barcode\\_bar\\p1\\proj.qwr");
+	openProject("D:\\Programs\\Barcode\\_bar\\p2\\proj.qwr");
 //	openProject();
 }
 

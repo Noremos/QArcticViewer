@@ -7,7 +7,7 @@
 struct boundy
 {
 public:
-	uint x, y, endX, endY;
+	float x, y, endX, endY;
 	float z, endZ;
 	inline boundy(uint x, uint y, uint endX, uint endY): x(x), y(y), endX(endX), endY(endY)
 	{

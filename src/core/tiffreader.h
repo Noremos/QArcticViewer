@@ -319,6 +319,13 @@ public:
 			throw std::exception();
 
 	}
+	void setData(int i, T value)
+	{
+		auto t = cachedData.find(i);
+		if (t != cachedData.end())
+			t->second = value;
+	}
+
 	T getData(int i, T& defaultValue)
 	{
 		auto t = cachedData.find(i);
@@ -366,8 +373,11 @@ public:
 	{
 		auto it = this->cachedData.find(index);
 		// TODO Fix It
-		delete[] (float*)it->second;
-		it->second = nullptr;
+		if (it->second)
+		{
+			delete[](float *) it->second;
+			it->second = nullptr;
+		}
 //		qDebug() << "FREEE!";
 	}
 };
@@ -465,6 +475,7 @@ public:
 	ImageType getType() override;
 
 	uchar *getTile(int ind);
+	void removeTileFromCache(int ind);
 	rowptr processData(uchar *bytes);
 
 };

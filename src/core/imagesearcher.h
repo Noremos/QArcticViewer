@@ -12,6 +12,11 @@
 #include "side-src/Barcode/PrjBarlib/include/barcodeCreator.h"
 using namespace bc;
 
+#include "fstream"
+
+
+static void SaveRawData(const std::string &path,  int wid, int hei, float *data);
+
 
 class SeachingSettings : public QObject
 {
@@ -28,7 +33,7 @@ public:
 	float coof;
 	TRange<int> diamert;
 	TRange<float> height;
-	float bottomProc;
+	int bottomProc;
 
 	SeachingSettings()
 	{
@@ -146,7 +151,7 @@ public:
 		return tilesInHei;
     }
 	int getMaxTiles();
-	size_t findROIs(FileBuffer &bounds, FileBuffer &bars, int start, int len, int bottom);
+	size_t findROIs(FileBuffer &bounds, FileBuffer &bars, int start, int len, int bottom, volatile bool &valStop);
 
 	bool checkCircle(boundy &bb, float eps  = 5);
 

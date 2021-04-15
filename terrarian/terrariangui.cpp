@@ -163,8 +163,8 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 
 	QMatrix4x4 model;
 	model.setToIdentity();
-//	model.scale(0.005, 0.005, 0.005);
-//	model.translate(-200.0, -30.0, -200.0);
+	model.scale(1, 1, 1);
+	model.translate(0, 0, 0);
 
 	curshader->setUniformValue("factor", factor);
 	curshader->setUniformValue("minHei", proj->getImgMinVal());
