@@ -321,7 +321,7 @@ rowptr TiffReader::processData(uchar* bytes)
 rowptr TiffReader::getRowData(int y)
 {
 	vector<uchar> ret;
-	ret.reserve(tiff.ImageWidth);
+	ret.reserve(tiff.ImageWidth + 10);
 
 	if (tiff.TileWidth != 0)
 	{
