@@ -18,7 +18,7 @@ public:
     glinstanse(/* args */)
     {
         initializeOpenGLFunctions();
-        initGL();
+//        initGL();
     }
     virtual void initGL() = 0;
     virtual void renderGL() = 0;

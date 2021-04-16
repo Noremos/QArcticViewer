@@ -361,7 +361,7 @@ void MainWindow::on_heightSpin_valueChanged(int arg1)
 	qDebug() << ui->glWidget->zones->factor;
 }
 
-void MainWindow::on_chShowFinded_stateChanged(int arg1)
+void MainWindow::on_chShowFinded_stateChanged(int /*arg1*/)
 {
 	if (finded)
 	{

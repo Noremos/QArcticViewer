@@ -84,7 +84,7 @@ MainWidget::~MainWidget()
 }
 
 //! [1]
-void MainWidget::timerEvent(QTimerEvent * ev)
+void MainWidget::timerEvent(QTimerEvent * /*ev*/)
 {
     // Decrease angular speed (friction)
 	angularSpeed *= 0.99;

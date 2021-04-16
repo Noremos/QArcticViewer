@@ -134,7 +134,7 @@ private:
 	bool checkBounty(boundy& bb)
 	{
 		float coof;
-		uint dmin, dmax;
+		int dmin, dmax;
 		if (bb.wid() > bb.hei())
 		{
 			dmin = bb.hei();
@@ -154,7 +154,7 @@ private:
 
 
 		// diametr// dmin in pixels. Cast in  to meters
-		if (dmax * resol < searchSetts.diamert.start || dmax * resol > searchSetts.diamert.end)
+		if (dmin * resol < searchSetts.diamert.start || dmax * resol > searchSetts.diamert.end)
 			return false;
 
 		if (bb.zei() < searchSetts.height.start)

@@ -199,7 +199,7 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 #include <sys/stat.h>
 #include <errno.h>
 
-void raedFast(const char *fName)
+void raedFast(const char */*fName*/)
 {
 	//	struct stat sb;
 	//	long cntr = 0;
@@ -263,33 +263,35 @@ int parceIntFast(const char *num, int len)
 	return sum;
 }
 
-static bool getLineFast(std::istream &is, std::string &t)
-{
-	t.clear();
+//static bool getLineFast(std::istream &is, std::string &t)
+//{
+//	t.clear();
 
-	std::istream::sentry se(is, true);
-	std::streambuf *sb = is.rdbuf();
+//	std::istream::sentry se(is, true);
+//	std::streambuf *sb = is.rdbuf();
 
-	while (true)
-	{
-		int c = sb->sbumpc();
-		if (c == EOF)
-			return false;
-		if (c == '\n' || c == '\r')
-		{
-			c = sb->sbumpc();
-			if (c == '\n')
-				sb->sbumpc();
-			else if (c == EOF)
-				return false;
-			else
-				sb->sungetc();
-			return true;
-		}
-		t += c;
-	}
-	return true;
-}
+//	while (true)
+//	{
+//		int c = sb->sbumpc();
+//		if (c == EOF)
+//			return false;
+//		if (c == '\n' || c == '\r')
+//		{
+//			c = sb->sbumpc();
+//			if (c == '\n')
+//				sb->sbumpc();
+//			else if (c == EOF)
+//				return false;
+//			else
+//				sb->sungetc();
+//			return true;
+//		}
+//		t += c;
+//	}
+//	return true;
+//}
+
+
 inline bool isNotEnd(int c)
 {
 	return (c != ' ' && c != '\n' && c != '\r');
