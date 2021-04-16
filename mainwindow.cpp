@@ -6,137 +6,71 @@
 #include <QThread>
 #include <QtConcurrent/QtConcurrent>
 
-void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
+
+
+#define connectSettsD(filed, signl) \
+								 connect(filed, qOverload<double>(&QDoubleSpinBox::valueChanged),\
+										 &proj->searchSetts, signl);
+
+#define connectSettsI(filed, signl) \
+								 connect(filed, qOverload<int>(&QSpinBox::valueChanged),\
+										 &proj->searchSetts, signl);
+
+MainWindow::MainWindow(QWidget *parent)
+	: QMainWindow(parent),
+	  ui(new Ui::MainWindow)
 {
-	connect(boxMin, qOverload<int>(&QSpinBox::valueChanged), boxMax, &QSpinBox::setMinimum);
-//	connect(boxMax, qOverload<int>(&QSpinBox::valueChanged), boxMin, &QSpinBox::setMaximum);
+	ui->setupUi(this);
+	ui->glWidget->fpsLabel = ui->fpsLabel;
+	ui->glWidget->activateWindow();
+	setMinMaxSpin(ui->dminSB, ui->dmaxDB);
+	setMinMaxSpin(ui->minSizeHeiSB, ui->maxSizeHeiSB);
+
+	//	connect(ui->coofSB, qOverload<double>(&QDoubleSpinBox::valueChanged), sets, &SeachingSettings::setCoof);
+	//	connect(ui->dminSB, qOverload<int>(&QSpinBox::valueChanged), sets, &SeachingSettings::setDiametrMin);
+	//	connect(ui->dmaxDB, qOverload<int>(&QSpinBox::valueChanged), sets, &SeachingSettings::setDiametrMax);
+	//	connect(ui->minSizeHeiSB, qOverload<double>(&QDoubleSpinBox::valueChanged), sets, &SeachingSettings::setHeightMin);
+	//	connect(ui->maxSizeHeiSB, qOverload<double>(&QDoubleSpinBox::valueChanged), sets, &SeachingSettings::setHeightMax);
+
+	//	connect(ui->bottomLenSB, qOverload<int>(&QSpinBox::valueChanged), sets, &SeachingSettings::setBottomProc);
+
+	opened = false;
+	proj = Project::getProject();
+	// side menu
+	connectSettsD(ui->coofSB, &SeachingSettings::setCoof);
+
+	connectSettsI(ui->dminSB, &SeachingSettings::setDiametrMin);
+	connectSettsI(ui->dmaxDB, &SeachingSettings::setDiametrMax);
+
+	connectSettsD(ui->minSizeHeiSB, &SeachingSettings::setHeightMin);
+	connectSettsD(ui->maxSizeHeiSB, &SeachingSettings::setHeightMax);
+
+	connectSettsI(ui->bottomLenSB, &SeachingSettings::setBottomProc);
+
+	connect(this, &MainWindow::signalProgressValueChawnged, this, &MainWindow::slotSetProgressValue);
+	connect(this, &MainWindow::signalProgressMaxChanged, this, &MainWindow::slotSetProgressMax);
+
+	watcher = nullptr;
+	//	connect(ui->pbFindByParams, &QPushButton::click, proj, .)
+
 }
 
-void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
+MainWindow::~MainWindow()
 {
-	connect(boxMin, qOverload<double>(&QDoubleSpinBox::valueChanged), boxMax, &QDoubleSpinBox::setMinimum);
+	future1.cancel();
+	while (!future1.isCanceled());
+
+	delete ui;
+	if (watcher)
+		delete watcher;
 }
 
-// FIND ROI AND BARS
-void MainWindow::findROIs()
+
+
+void MainWindow::on_pbOpenProject_clicked()
 {
-	ui->progressBar->reset();
-
-//	ui->pbCreateBars->setEnabled(false);
-	ui->leftMenu->setEnabled(false);
-	ui->topMenu->setEnabled(false);
-	ui->pbStopButton->setEnabled(true);
-
-	stopAction = false;
-
-	future1 = QtConcurrent::run(this, &MainWindow::findROIsAsync); // Thread 1
-
-	connect(watcher, SIGNAL(finished()), this, SLOT(findROIsAsyncEnd()));
-	// delete the watcher when finished too
-	//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
-	watcher->setFuture(future1);
-}
-
-void MainWindow::findROIsAsyncEnd()
-{
-	qDebug() << "ROI done";
-
-//	ui->pbCreateBars->setEnabled(true);
-
-	ui->topMenu->setEnabled(true);
-	ui->leftMenu->setEnabled(true);
-	ui->pbStopButton->setEnabled(false);
-}
-
-void MainWindow::findROIsAsync()
-{
-	using std::placeholders::_1;
-	PrjgBarCallback callback(stopAction);
-	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
-	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
-
-	proj->findROIsOnHiemap(callback, ui->startProc->value(), ui->endProc->value());
-}
-
-//#####################
-
-
-
-
-// FIND BURS IN ROI
-void MainWindow::findByParams()
-{
-	ui->progressBar->reset();
-//	ui->pbFindByParams->setEnabled(false);
-	ui->leftMenu->setEnabled(false);
-	ui->topMenu->setEnabled(false);
-	ui->pbStopButton->setEnabled(true);
-
-	stopAction = false;
-
-	future1 = QtConcurrent::run(this, &MainWindow::findByParamsAsync); // Thread 1
-
-	connect(watcher, SIGNAL(finished()), this, SLOT(findByParamsAsyncEnd()));
-	// delete the watcher when finished too
-	//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
-	watcher->setFuture(future1);
-}
-
-void MainWindow::findByParamsAsync()
-{
-	using std::placeholders::_1;
-	PrjgBarCallback callback(stopAction);
-	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
-	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
-
-	proj->filterROIs(callback);
-}
-
-void MainWindow::findByParamsAsyncEnd()
-{
-	qDebug() << "Update beffers";
-	ui->glWidget->makeCurrent();
-
-	proj->spotZones->updateBuffer();
-	proj->text->updateBuffer();
-	ui->glWidget->drawZones = true;
-
-	ui->glWidget->doneCurrent();
-
-
-	finded = true;
-//	ui->pbFindByParams->setEnabled(true);
-	ui->pbStopButton->setEnabled(false);
-	ui->topMenu->setEnabled(true);
-	ui->leftMenu->setEnabled(true);
-
-	ui->glWidget->update();
-}
-//#####################
-
-
-
-void MainWindow::importDTM()
-{
-	QFileDialog fileDialog;
-
-	QString fileName = QFileDialog::getOpenFileName(0, "Импорт ЦМР", QString(), tr("TIFF (*.tif *.tiff)"));
-	if (fileName.length()==0)
-		return;
-	if (!opened)
-	{
-		QString projName = QFileDialog::getSaveFileName(0, "Куда сохранить проект", QString(), tr("AW prject (*.qwr)"));
-		if (projName.length()==0)
-			return;
-		proj->setProjectPath(projName);
-		opened = true;
-	}
-
-	proj->loadImage(fileName, ui->simpithithion->value(), 0);
-	proj->saveProject();
-
-	ui->glWidget->drawTerra = true;
-	//	fileDialog.setLabelText("Выберите файл, пожалуйста");
+	openProject("D:\\Programs\\Barcode\\_bar\\p2\\proj.qwr");
+	//	openProject();
 }
 
 void MainWindow::openProject()
@@ -172,12 +106,160 @@ void MainWindow::openProject(QString projName)
 	ui->glWidget->update();
 
 
-//	proj->searchSetts.coof = ui->coofSB->value();
-//	proj->searchSetts.setDiametrMin(ui->dminSB->value());
-//	proj->searchSetts.setDiametrMax(ui->dmaxDB->value());
-//	proj->searchSetts.setHeightMin(ui->minSizeHeiSB->value());
-//	proj->searchSetts.setHeightMax(ui->maxSizeHeiSB->value());
-//	proj->searchSetts.bottomProc = ui->bottomLenSB->value();
+	//	proj->searchSetts.coof = ui->coofSB->value();
+	//	proj->searchSetts.setDiametrMin(ui->dminSB->value());
+	//	proj->searchSetts.setDiametrMax(ui->dmaxDB->value());
+	//	proj->searchSetts.setHeightMin(ui->minSizeHeiSB->value());
+	//	proj->searchSetts.setHeightMax(ui->maxSizeHeiSB->value());
+	//	proj->searchSetts.bottomProc = ui->bottomLenSB->value();
+}
+
+
+
+
+void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
+{
+	connect(boxMin, qOverload<int>(&QSpinBox::valueChanged), boxMax, &QSpinBox::setMinimum);
+//	connect(boxMax, qOverload<int>(&QSpinBox::valueChanged), boxMin, &QSpinBox::setMaximum);
+}
+
+void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
+{
+	connect(boxMin, qOverload<double>(&QDoubleSpinBox::valueChanged), boxMax, &QDoubleSpinBox::setMinimum);
+}
+
+// FIND ROI AND BARS
+void MainWindow::findROIs()
+{
+	ui->progressBar->reset();
+
+//	ui->pbCreateBars->setEnabled(false);
+	ui->leftMenu->setEnabled(false);
+	ui->topMenu->setEnabled(false);
+	ui->pbStopButton->setEnabled(true);
+
+	stopAction = false;
+
+	future1 = QtConcurrent::run(this, &MainWindow::findROIsAsync); // Thread 1
+
+	if (watcher)
+		delete watcher;
+	watcher = new QFutureWatcher<void>(this);
+	watcher->setFuture(future1);
+	connect(watcher, SIGNAL(finished()), this, SLOT(findROIsAsyncEnd()));
+}
+
+void MainWindow::findROIsAsyncEnd()
+{
+	qDebug() << "ROI done";
+
+//	ui->pbCreateBars->setEnabled(true);
+
+	ui->topMenu->setEnabled(true);
+	ui->leftMenu->setEnabled(true);
+	ui->pbStopButton->setEnabled(false);
+
+	delete watcher;
+	watcher = nullptr;
+}
+
+void MainWindow::findROIsAsync()
+{
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+
+	proj->findROIsOnHiemap(callback, ui->startProc->value(), ui->endProc->value());
+}
+
+//#####################
+
+
+
+
+// FIND BURS IN ROI
+void MainWindow::findByParams()
+{
+	ui->progressBar->reset();
+//	ui->pbFindByParams->setEnabled(false);
+	ui->leftMenu->setEnabled(false);
+	ui->topMenu->setEnabled(false);
+	ui->pbStopButton->setEnabled(true);
+
+	stopAction = false;
+
+	future1 = QtConcurrent::run(this, &MainWindow::findByParamsAsync); // Thread 1
+
+	if (watcher)
+		delete watcher;
+	watcher = new QFutureWatcher<void>(this);
+	watcher->setFuture(future1);
+	connect(watcher, SIGNAL(finished()), this, SLOT(findByParamsAsyncEnd()));
+
+	// delete the watcher when finished too
+	//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
+
+}
+
+void MainWindow::findByParamsAsync()
+{
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+
+	proj->filterROIs(callback);
+}
+
+void MainWindow::findByParamsAsyncEnd()
+{
+	qDebug() << "Update beffers";
+	ui->glWidget->makeCurrent();
+
+	proj->spotZones->updateBuffer();
+	proj->text->updateBuffer();
+	ui->glWidget->drawZones = true;
+
+	ui->glWidget->doneCurrent();
+
+
+	finded = true;
+//	ui->pbFindByParams->setEnabled(true);
+	ui->pbStopButton->setEnabled(false);
+	ui->topMenu->setEnabled(true);
+	ui->leftMenu->setEnabled(true);
+
+	ui->glWidget->update();
+
+	delete watcher;
+	watcher = nullptr;
+}
+//#####################
+
+
+
+void MainWindow::importDTM()
+{
+	QFileDialog fileDialog;
+
+	QString fileName = QFileDialog::getOpenFileName(0, "Импорт ЦМР", QString(), tr("TIFF (*.tif *.tiff)"));
+	if (fileName.length()==0)
+		return;
+	if (!opened)
+	{
+		QString projName = QFileDialog::getSaveFileName(0, "Куда сохранить проект", QString(), tr("AW prject (*.qwr)"));
+		if (projName.length()==0)
+			return;
+		proj->setProjectPath(projName);
+		opened = true;
+	}
+
+	proj->loadImage(fileName, ui->simpithithion->value(), 0);
+	proj->saveProject();
+
+	ui->glWidget->drawTerra = true;
+	//	fileDialog.setLabelText("Выберите файл, пожалуйста");
 }
 
 
@@ -215,63 +297,6 @@ void MainWindow::saveSettings()
 }
 
 
-#define connectSettsD(filed, signl) \
-								 connect(filed, qOverload<double>(&QDoubleSpinBox::valueChanged),\
-										 &proj->searchSetts, signl);
-
-#define connectSettsI(filed, signl) \
-								 connect(filed, qOverload<int>(&QSpinBox::valueChanged),\
-										 &proj->searchSetts, signl);
-
-MainWindow::MainWindow(QWidget *parent)
-	: QMainWindow(parent),
-	  ui(new Ui::MainWindow)
-{
-	ui->setupUi(this);
-	ui->glWidget->fpsLabel = ui->fpsLabel;
-	ui->glWidget->activateWindow();
-	setMinMaxSpin(ui->dminSB, ui->dmaxDB);
-	setMinMaxSpin(ui->minSizeHeiSB, ui->maxSizeHeiSB);
-
-//	connect(ui->coofSB, qOverload<double>(&QDoubleSpinBox::valueChanged), sets, &SeachingSettings::setCoof);
-//	connect(ui->dminSB, qOverload<int>(&QSpinBox::valueChanged), sets, &SeachingSettings::setDiametrMin);
-//	connect(ui->dmaxDB, qOverload<int>(&QSpinBox::valueChanged), sets, &SeachingSettings::setDiametrMax);
-//	connect(ui->minSizeHeiSB, qOverload<double>(&QDoubleSpinBox::valueChanged), sets, &SeachingSettings::setHeightMin);
-//	connect(ui->maxSizeHeiSB, qOverload<double>(&QDoubleSpinBox::valueChanged), sets, &SeachingSettings::setHeightMax);
-
-	//	connect(ui->bottomLenSB, qOverload<int>(&QSpinBox::valueChanged), sets, &SeachingSettings::setBottomProc);
-
-	opened = false;
-	proj = Project::getProject();
-	// side menu
-	connectSettsD(ui->coofSB, &SeachingSettings::setCoof);
-
-	connectSettsI(ui->dminSB, &SeachingSettings::setDiametrMin);
-	connectSettsI(ui->dmaxDB, &SeachingSettings::setDiametrMax);
-
-	connectSettsD(ui->minSizeHeiSB, &SeachingSettings::setHeightMin);
-	connectSettsD(ui->maxSizeHeiSB, &SeachingSettings::setHeightMax);
-
-	connectSettsI(ui->bottomLenSB, &SeachingSettings::setBottomProc);
-
-	connect(this, &MainWindow::signalProgressValueChawnged, this, &MainWindow::slotSetProgressValue);
-	connect(this, &MainWindow::signalProgressMaxChanged, this, &MainWindow::slotSetProgressMax);
-
-	watcher = new QFutureWatcher<void>(this);
-
-//	connect(ui->pbFindByParams, &QPushButton::click, proj, .)
-
-}
-
-MainWindow::~MainWindow()
-{
-	future1.cancel();
-	while (!future1.isCanceled());
-
-	delete ui;
-	delete watcher;
-}
-
 
 void MainWindow::on_mattype_currentIndexChanged(int index)
 {
@@ -307,11 +332,6 @@ void MainWindow::on_textureLoder_clicked()
 	saveSettings();
 }
 
-void MainWindow::on_pbOpenProject_clicked()
-{
-	openProject("D:\\Programs\\Barcode\\_bar\\p2\\proj.qwr");
-//	openProject();
-}
 
 void MainWindow::on_pbOpenDTM_clicked()
 {
