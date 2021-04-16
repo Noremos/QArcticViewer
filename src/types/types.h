@@ -52,7 +52,7 @@ public:
 	}
 	inline float zei() const
 	{
-		return endZ - z;
+		return endZ > z? endZ - z : z - endZ;
 	}
 	void addXoffset(int off)
 	{
