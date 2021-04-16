@@ -176,7 +176,8 @@ void MainWidget::initializeGL()
 
 
 //
-	timer.start(5, this);
+	timer.start(20, this);
+	update();
 }
 
 //! [0]
