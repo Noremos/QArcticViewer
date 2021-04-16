@@ -57,7 +57,7 @@
 #include <QPainterPath>
 #include <cmath>
 
-MainWidget::MainWidget(QWidget *parent)
+MainWidget::MainWidget(QWidget */*parent*/)
 {
 	sky = new SkyBoxGUI();//58.25 -34.25 -24.4309 573.158 -205.05
 	camera = new CameraGui(QVector3D(-25, 551, -159), QVector3D(0,1,0), 56, -32.25);
@@ -86,7 +86,6 @@ MainWidget::~MainWidget()
 //! [1]
 void MainWidget::timerEvent(QTimerEvent * ev)
 {
-	sky->timerEvent(ev);
     // Decrease angular speed (friction)
 	angularSpeed *= 0.99;
 
@@ -108,13 +107,13 @@ void MainWidget::timerEvent(QTimerEvent * ev)
 }
 //! [1]
 
-void MessageCallback( GLenum source,
+void MessageCallback( GLenum /*source*/,
 					 GLenum type,
-					 GLuint id,
+					 GLuint /*id*/,
 					 GLenum severity,
-					 GLsizei length,
+					 GLsizei /*length*/,
 					 const GLchar* message,
-					 const void* userParam )
+					 const void* /*userParam*/ )
 {
 	fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 			( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),

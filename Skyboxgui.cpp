@@ -3,7 +3,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLTexture>
 #include <QVector3D>
-SkyBoxGUI::SkyBoxGUI(QWidget *parent) : mTexture(QOpenGLTexture::TargetCubeMap), mVertexBuf(QOpenGLBuffer::VertexBuffer), mSpeed(0.0f)
+SkyBoxGUI::SkyBoxGUI(QWidget */*parent*/) : mTexture(QOpenGLTexture::TargetCubeMap), mVertexBuf(QOpenGLBuffer::VertexBuffer), mSpeed(0.0f)
 {
 	mFrontImagePath = ":/skybox/front.jpg";
 	mBackImagePath = ":/skybox/back.jpg";
@@ -128,26 +128,10 @@ void SkyBoxGUI::initializeGL()
 	mProgram.release();
 }
 
-
-
 void SkyBoxGUI::paintGL(QMatrix4x4 view, QMatrix4x4 projection)
 {
-
-//	view.lookAt(mLookAt.eye, mLookAt.center, mLookAt.up);
-
-//	projection.setToIdentity();
-//	projection.perspective(mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane);
-
-
 	mProgram.bind();
-
-	//mVertexBuf.bind();
 	mTexture.bind();
-
-//	mProgram.enableAttributeArray(0);
-//	mProgram.setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(QVector3D));
-
-	//projection * view * model * vec4(position, 1.0f);
 	mProgram.setUniformValue("projection", projection);
 	mProgram.setUniformValue("view", view);
 
@@ -155,9 +139,7 @@ void SkyBoxGUI::paintGL(QMatrix4x4 view, QMatrix4x4 projection)
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	vao.release();
 
-//	mVertexBuf.release();
 	mTexture.release();
-//	mProgram.disableAttributeArray(0);
 	mProgram.release();
 }
 
@@ -168,53 +150,4 @@ void SkyBoxGUI::resizeGL(int w, int h)
 	mPerspective.farPlane = 1.0;
 	mPerspective.aspectRatio =
 			static_cast<float>(w) / static_cast<float>(h ? h : 1.0f);
-}
-
-void SkyBoxGUI::mouseMoveEvent(QMouseEvent *event)
-{
-//	mMousePressPosition = QVector2D(event->localPos());
-////	if(event->buttons() & Qt::LeftButton)
-//	{
-//		auto diff = QVector2D(event->localPos()) - mMousePressPosition;
-//		auto n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-//		mSpeed = diff.length() / 100.0f;
-//		if(mSpeed > 1.0f) mSpeed = 1.0f; // speed threshold
-//		mRotationAxis = (mRotationAxis + n * mSpeed).normalized();
-//	}
-}
-
-void SkyBoxGUI::mousePressEvent(QMouseEvent *event)
-{
-//	mTimer.start(10, this);
-}
-
-void SkyBoxGUI::mouseReleaseEvent(QMouseEvent*)
-{
-//	mTimer.stop();
-}
-
-void SkyBoxGUI::timerEvent(QTimerEvent *)
-{
-//	mRotation = QQuaternion::fromAxisAndAngle(mRotationAxis, mSpeed) * mRotation;
-
-//	QMatrix4x4 mat;
-//	mat.setToIdentity();
-//	mat.rotate(mRotation);
-
-//	mLookAt.center = {+0.0f, +0.0f, -1.0f};
-//	mLookAt.center = mLookAt.center * mat;
-
-//	update();
-}
-
-void SkyBoxGUI::wheelEvent(QWheelEvent *event)
-{
-	float delta = event->delta() > 0 ? -5.0f : +5.0f;
-//	mPerspective.verticalAngle += delta;
-//	if(mPerspective.verticalAngle < 10.0f)
-//		mPerspective.verticalAngle = 10.0f;
-//	else if(mPerspective.verticalAngle > 120.0f)
-//		mPerspective.verticalAngle = 120.0f;
-
-//	update();
 }
