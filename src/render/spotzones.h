@@ -23,22 +23,22 @@
 // Qmatrix's size is 68! Not is 64!
 struct InstanceData
 {
-//	QVector4D v0;
-//	QVector4D v1;
-//	QVector4D v2;
-//	QVector4D v3;
-	QMatrix4x4 model;
-//	int val;
+	QVector4D v0;
+	QVector4D v1;
+	QVector4D v2;
+	QVector4D v3;
+//	QMatrix4x4 model;
+	float val;
 	//	int zer1;
 	//	int zer2;
 	InstanceData(QMatrix4x4 matr, int val)
 	{
-		model = matr;
-//		v0 = matr.column(0);
-//		v1 = matr.column(1);
-//		v2 = matr.column(2);
-//		v3 = matr.column(3);
-//		this->val = val;
+//		model = matr;
+		v0 = matr.column(0);
+		v1 = matr.column(1);
+		v2 = matr.column(2);
+		v3 = matr.column(3);
+		this->val = val;
 	}
 };
 

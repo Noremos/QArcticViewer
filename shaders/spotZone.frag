@@ -1,12 +1,16 @@
 #version 330 core
 
-flat in int outColor;
+in float outColor;
 out vec4 fragColor;
 
 void main(void)
 {
-    if (outColor==1)
+    int ds= 1;
+    if (int(round(outColor))==ds)
         fragColor = vec4(0, 1, 0, 0.4);
     else
         fragColor = vec4(1, 0, 0, 0.4);
+
+    // r g b
+//   fragColor = vec4(1-outColor, outColor, 0, 0.4);
 }

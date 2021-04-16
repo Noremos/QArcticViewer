@@ -10,7 +10,7 @@ void SpotZones::addBoundy(boundy &bb,int displayFactor, bool good)
 	matr.translate(bb.x + bb.wid(), bb.endZ + bb.zei(), bb.y + bb.hei());
 	//text bb.x, bb.endZ, bb.y
 	matr.scale(bb.wid(), bb.zei(), bb.hei());
-	boundydata.append(InstanceData(matr, good?1:0));
+	boundydata.append(InstanceData(matr, good ? 1 : 0));
 }
 
 SpotZones::SpotZones() :
@@ -69,9 +69,9 @@ void SpotZones::updateBuffer()
 	mshader.setAttributeBuffer(loc, GL_FLOAT, vec4size * 3,	4, matr4Size);
 	mshader.enableAttributeArray(loc);
 
-//	offloc = mshader.attributeLocation("aColor");
-//	mshader.setAttributeBuffer(offloc, GL_INT, vec4size * 4,1, matr4Size);
-//	mshader.enableAttributeArray(offloc);
+	offloc = mshader.attributeLocation("aColor");
+	mshader.setAttributeBuffer(offloc, GL_FLOAT, vec4size * 4,1, matr4Size);
+	mshader.enableAttributeArray(offloc);
 
 	/*
 	int vertexLocation = program.attributeLocation("a_position");
@@ -89,7 +89,7 @@ void SpotZones::updateBuffer()
 	f->glVertexAttribDivisor(loc - 2, 1);
 	f->glVertexAttribDivisor(loc - 1, 1);
 	f->glVertexAttribDivisor(loc    , 1);
-//	f->glVertexAttribDivisor(offloc , 1);
+	f->glVertexAttribDivisor(offloc , 1);
 
 
 	vao.release();
