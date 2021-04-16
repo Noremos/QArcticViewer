@@ -346,7 +346,7 @@ public:
 	}
 };
 
-template<class T>
+template<class T, class BU>
 class PointerCache : public Cache<T>
 {
 public:
@@ -356,16 +356,20 @@ public:
 	void free(int index) override
 	{
 		auto it = this->cachedData.find(index);
-		delete it->second;
-		it->second = nullptr;
+		BU val = reinterpret_cast<BU>(it->second);
+		if (val)
+		{
+			delete val;
+			it->second = nullptr;
+		}
 	}
 };
 
-template<class T>
+template<class T, class BU>
 class PointerArrayCache : public Cache<T>
 {
 public:
-	PointerArrayCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T*)):
+	PointerArrayCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)):
 		  Cache<T>(maxElemCount, maxCachSize,sizeOfElement)
 	{  }
 
@@ -373,9 +377,10 @@ public:
 	{
 		auto it = this->cachedData.find(index);
 		// TODO Fix It
-		if (it->second)
+		BU val = reinterpret_cast<BU>(it->second);
+		if (val)
 		{
-			delete[](float *) it->second;
+			delete[] val;
 			it->second = nullptr;
 		}
 //		qDebug() << "FREEE!";
@@ -389,18 +394,20 @@ typedef float* rowptr;
 class ImageReader
 {
 public:
-	virtual rowptr getRowData(int ri)=0;
+
 	virtual bool open(const wchar_t *path)=0;
 	virtual void close()=0;
 	virtual ImageType getType()=0;
 	virtual int widght()=0;
 	virtual int height()=0;
-	PointerArrayCache<rowptr> cachedRows;
+	PointerArrayCache<rowptr, uchar*> cachedRows;
 	bool ready = false;
 	bool isTile = true;
 	float max, min;
 
-	rowptr getRow(int i)
+	virtual rowptr getRowData(int ri) = 0;
+
+	rowptr getCachingRow(int i)
 	{
 		rowptr d = nullptr;
 		rowptr data = cachedRows.getData(i, d);
@@ -409,14 +416,11 @@ public:
 		else
 		{
 			data = getRowData(i);
-			cachedRows.storeData(i, reinterpret_cast<rowptr>(data));
+			cachedRows.storeData(i, data);
 			return data;
 		}
 	}
-	virtual ~ImageReader()
-	{
-
-	}
+	virtual ~ImageReader() { cachedRows.clear(); }
 };
 
 class TiffReader: public ImageReader
@@ -426,7 +430,7 @@ class TiffReader: public ImageReader
 	uchar sysByteOredr;
 	uint tilesCount = 0;
 	int compressType = 1;
-	PointerArrayCache<uchar*> cachedTiles;
+	PointerArrayCache<rowptr,uchar*> cachedTiles;
 
 	void convert(uchar *bytes, float &out) { out = toFloat(bytes); }
 	void convert(uchar *bytes, int &out) { out = toInt(bytes);}
@@ -436,23 +440,63 @@ class TiffReader: public ImageReader
 	void convert(uchar* bytes, short& out)	{out = toShort(bytes);}
 	void reorder(uchar *bytes, int size);
 	void **checkTileInCache(int x, int y);
+
+//	void swap(int *a, int *b){
+//		asm("" : "=r" (*a), "=r" (*b) : "1" (*a), "0" (*b));
+//		printf("%d %d\n", *a, *b);
+//	}
+
 	template<class T>
-	T *setData(uchar *in, int len)
+	T *convertRawBytesToRowT(uchar *in, int len)
 	{
-		T *out = new T[len];
+		// bool invert = true;
+		// if (invert)
+		// {
+		// 	int typesize = sizeof(T);
+		// 	size_t total = len * typesize;
+
+		// 	// reverse for 4 elements
+		// 	for (size_t i = 0; i < total; i += typesize)
+		// 	{
+		// 		size_t end = i + typesize;
+		// 		for (size_t j = i, reversEnd = j + typesize/2; j < reversEnd; ++j)
+		// 		{
+		// 			in[j] ^= in[--end];
+		// 			in[end] ^= in[j];
+		// 			in[j] ^= in[end];
+		// 		}
+		// 	}
+		// }
+		
+		T *out =reinterpret_cast<T*>(in);
 		for (int i = 0; i < len; ++i)
 			convert(in + i * sizeof(T), out[i]);
 
-		return out;
+		return reinterpret_cast<T*>(in);
 	}
+
+	rowptr converRawBytesToRow(uchar *bytes);
+
+
+	int getTypeSize()
+	{
+		// { nullptr,     "BYTE",  "ASCII",     "SHORT",  "LONG",
+		//		"RATIONAL",  "SBYTE", "UNDEFINED", "SSHORT", "SLONG",
+		//	"SRATIONAL", "FLOAT", "DOUBLE",    "IFD",    "LONG8",
+		//"SLONG8",    "IFD8" };
+		static const int sizes[]{0, 1, 1, 2, 4, 0, 1, 0, 2, 4, 0, 4, 8, 0, 1, 1, 0};
+		return sizes[(uchar)tiff.StripByteCountsType];
+		//	return type == 4 ? 4 : 2;
+	}
+
 public:
 	TiffTags tiff;
 
 	TiffReader();
+	~TiffReader();
 
 	bool open(const wchar_t *path) override;
 	void close() override;
-	~TiffReader();
 	void printValue(int x, int y);
 	void printIFD(offu64 offset);
 //	std::string dectode(uchar* bf, offu64 len);
@@ -466,17 +510,28 @@ public:
 	void read(uchar* buffer, offu64 offset, offu64 len);
 	void setTitleCacheSize(size_t n);
 	void setRowsCacheSize(size_t n);
-	// ImageReader interface
+
+	size_t getByteSizeFilanlRow()
+	{
+		int sie = getTypeSize();
+		return tiff.ImageWidth * sie;
+	}
+	// RPA if the tile is stored, extravct all tiiles in row and get row
+	rowptr extractTile(int ind);
+
+	// RPA
+	rowptr extractRowData(int ri);
+
+	// RPA
 	rowptr getRowData(int ri) override;
+
 
 	int widght() override;
 	int height() override;
 
 	ImageType getType() override;
 
-	uchar *getTile(int ind);
 	void removeTileFromCache(int ind);
-	rowptr processData(uchar *bytes);
 
 };
 

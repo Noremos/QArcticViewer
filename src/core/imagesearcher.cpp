@@ -78,9 +78,7 @@ Img ImageSearcher::getTile(int tx, int ty)
 				img.data[i] = -9999;
 
 
-			uchar *tile = reader->getTile(ty * tilesInWid + tx);
-
-			float *data = static_cast<float *>(reader->processData(tile));
+			float *data = reader->extractTile(ty * tilesInWid + tx);
 
 			for (int j = 0; j < lenY; ++j)
 			{
@@ -115,7 +113,7 @@ Img ImageSearcher::getTile(int tx, int ty)
 	int lastRow = std::min((ty + 1) * tileHei + diffset, reader->height());
 	for (int rowInDest = 0; firstRow < lastRow; ++firstRow, ++rowInDest)
 	{
-		float *data = reader->getRow(firstRow);
+		float *data = reader->getCachingRow(firstRow);
 		img.setInRow(rowInDest, 0, data + columnNum, len);
 	}
 

@@ -37,7 +37,7 @@ class Obj3d
 	ProcessMode mode = ProcessMode::performance;
 	ImageReader *reader;
 	QString name;
-	float *data[2];
+	const float *data[2];
 #ifdef USE_ROW
 	objoff *currNullRow;
 	objoff *prevNullRow;
@@ -154,15 +154,16 @@ public:
 				currNullRow = temp;
 				memset(currNullRow, 0, sWidth * typeSize);
 #endif
-				if (data[0] != nullptr)
-					delete[] data[0];
+				// It will be delete by cache
+//				if (data[0] != nullptr)
+//					delete[] data[0];
 				data[0] = data[1];
 			}
 
-			data[1] = reinterpret_cast<float *>(reader->getRowData(h));
+			data[1] = reader->getCachingRow(h);
 
 			QString vers;
-			float *dataPointer = data[1];
+			const float *dataPointer = data[1];
 			for (int w = 0; w < width; w += step, dataPointer+=step)
 			{
 				float value = *dataPointer;
@@ -203,10 +204,10 @@ public:
 					objoff i_tr = getIndex(w, 0, h - 1);
 					//00
 					//0*
-#ifndef USE_ROW
-					objoff i_br = (sWidth * h + w - nulls[nulls.size() - 1].second);
-#else
+#ifdef USE_ROW
 					objoff i_br = getIndex(w, 1, h);
+#else
+					objoff i_br = (sWidth * h + w - nulls[nulls.size() - 1].second);
 #endif
 					//*0
 					//00
@@ -261,8 +262,8 @@ public:
 		stream << sw;
 		out.close();
 		sw.clear();
-		delete[] data[0];
-		delete[] data[1];
+//		delete[] data[0];
+//		delete[] data[1];
 #ifdef USE_ROW
 		delete[] prevNullRow;
 		delete[] currNullRow;

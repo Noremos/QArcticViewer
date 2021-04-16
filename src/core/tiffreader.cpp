@@ -98,7 +98,7 @@ void TiffReader::printHeader(uchar* buffer)
 	OUT << "----Header----";
 	OUT << "Byte order:" << buffer[0] << buffer[1]; //“II”(4949.H)“MM” (4D4D.H).
 	OUT << "Version number :" << (toShort(buffer + 2));
-	OUT << "Offset to first IFD:" << (toInt(buffer + 4)) << endl;
+	OUT << "Offset to first IFD:" << (toInt(buffer + 4)) << Qt::endl;
 }
 int TiffReader::getTagIntValue(offu64 offOrValue, offu64 count, char format)
 {
@@ -194,7 +194,7 @@ void TiffReader::printTag(uchar* buffer)
 		OUT << "Number of values:" << count;
 		//	wid = toInt(buffer + 4);
 		//dataOffset = toInt(buffer + 8);
-		OUT << "Tag data or offset to tag data see below:" << value << endl;
+		OUT << "Tag data or offset to tag data see below:" << value << Qt::endl;
 	}
 
 	//In other words, if the tag data is smaller than or equal to 4 bytes, it fits. Otherwise, it is stored elsewhere and pointed to.
@@ -246,36 +246,34 @@ ImageType TiffReader::getType()
 //	return cachedTiles.getData(tileNum, nullptr);
 //}
 
-int getTypeSize(char type)
-{
-	// { nullptr,     "BYTE",  "ASCII",     "SHORT",  "LONG",
-	//		"RATIONAL",  "SBYTE", "UNDEFINED", "SSHORT", "SLONG",
-	//	"SRATIONAL", "FLOAT", "DOUBLE",    "IFD",    "LONG8",
-	//"SLONG8",    "IFD8" };
-	static const int sizes[]{0, 1, 1, 2, 4, 0, 1, 0, 2, 4, 0, 4, 8, 0, 1, 1, 0};
-	return sizes[type];
-//	return type == 4 ? 4 : 2;
-}
 
-uchar* TiffReader::getTile(int ind)
-{
-	uchar *n = nullptr;
 
-	uchar *data = cachedTiles.getData(ind, n);
+rowptr TiffReader::extractTile(int ind)
+{
+	if (tiff.TileWidth == 0)
+	{
+		throw std::exception();
+		return nullptr;
+	}
+
+
+	rowptr null = nullptr;
+
+	rowptr cashedrow = cachedTiles.getData(ind, null);
 	const int bytsInTileWid = tiff.TileWidth * sizeof(float);
 
-	if (data == n)
+	if (cashedrow == null)
 	{
 		//offset tile
 		uchar buffer[4];
 
-		char sie = getTypeSize(tiff.TileOffsetsType);
+		char sie = getTypeSize();
 		read(buffer, tiff.TileOffsets + (ind) * sie, sie);
 		uint off = toInt(buffer);
 		//************
 
 		//Count
-		sie = getTypeSize(tiff.TileOffsetsType);
+		sie = getTypeSize();
 		read(buffer, tiff.TileByteCounts + (ind) * sie, sie);
 		uint count = toInt(buffer);
 		uchar *buff = new uchar[count];
@@ -285,17 +283,17 @@ uchar* TiffReader::getTile(int ind)
 		read(buff, off, count);
 		decorder decod(tiff.Compression);
 
-		vector<uchar> temp;
-		decod.decompress(buff, count, temp); // (rowInTile + 1) * bytsInTileWid
+		size_t ft = bytsInTileWid * tiff.TileLength * getTypeSize();
+
+		uchar *outdata = new uchar[ft];
+		decod.decompress(buff, count, outdata); // (rowInTile + 1) * bytsInTileWid
 		delete[] buff;
 
-		size_t ft = bytsInTileWid * tiff.TileLength;
-		data = new uchar[ft];
-
-		memcpy(data, temp.data(), ft);
-		cachedTiles.storeData(ind, data);
+		cashedrow = converRawBytesToRow(outdata);
+		cachedTiles.storeData(ind, cashedrow);
 	}
-	return data;
+
+	return cashedrow;
 }
 
 void TiffReader::removeTileFromCache(int ind)
@@ -306,67 +304,94 @@ void TiffReader::removeTileFromCache(int ind)
 	}
 }
 
-rowptr TiffReader::processData(uchar* bytes)
+rowptr TiffReader::converRawBytesToRow(uchar* bytes)
 {
+	//bytes and data are the same pointers, no more new memory in this code
 	int len = widght();
-	rowptr data;
 	switch (getType())
 	{
 	case ImageType::float32:
-		data = setData<float>(bytes, len);
+		return convertRawBytesToRowT<float>(bytes, len);
+
+	default:
+		return nullptr;
 	}
-	return data;
 }
 
-rowptr TiffReader::getRowData(int y)
+//read from tiff ONLY rawdatac
+rowptr TiffReader::extractRowData(int y)
 {
-	vector<uchar> ret;
-	ret.reserve(tiff.ImageWidth);
 
 	if (tiff.TileWidth != 0)
 	{
+		throw std::exception();
+		return nullptr;
+	}
+
+	int sie = getTypeSize();
+	uchar buffer[4];
+
+	memset(buffer, 0, 4);
+	read(buffer, tiff.StripOffsets + y * sie, sie);
+	uint off =  sie == 2 ? toShort(buffer) : toInt(buffer);
+
+	memset(buffer, 0, 4);
+	read(buffer, tiff.StripByteCounts + y * sie, sie);
+	uint count =  sie == 2 ? toShort(buffer) : toInt(buffer);
+	uchar *buff = new uchar[count];
+	memset(buff, 0, count);
+
+	read(buff, off, count);
+
+	string st = ""; // dectode(buff, count);
+	decorder decod(tiff.Compression);
+
+	//	uchar * resdata = new uchar[getByteSizeFilanlRow()];
+	rowptr data = new float[widght() + 10];
+	memset(data, 0, getByteSizeFilanlRow());
+	uchar *resdata = reinterpret_cast<uchar *>(data);
+
+//	uchar * resdata = new uchar[getByteSizeFilanlRow()];
+	decod.decompress(buff, count, resdata, getByteSizeFilanlRow() + 10);
+	delete[] buff;
+
+	return converRawBytesToRow(resdata);
+}
+
+//read from tiff row EVEN IF THERE IS TILES
+rowptr TiffReader::getRowData(int y)
+{
+	rowptr data = nullptr;
+	if (tiff.TileWidth != 0)
+	{
 		int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
-//		int TilesDown = (tiff.ImageLength + tiff.TileLength - 1) / tiff.TileLength;
-//		int TilesPerImage = TilesAcross * TilesDown;
-		cachedTiles.setMaxElems(TilesAcross);
+
+		cachedTiles.setMaxElems(TilesAcross + 1); //+1 just in case
 
 		int tileNum = (y / tiff.TileLength) * TilesAcross;
 		int rowInTile = y % tiff.TileLength;
 
-		const int bytsInTileWid = tiff.TileWidth * sizeof(float);
+		const int bytsInTileWid = tiff.TileWidth * getTypeSize();
+
+		data = new float[getByteSizeFilanlRow()];
 		for (int i = 0; i < TilesAcross; ++i)
 		{
-			uchar* data = getTile(tileNum+i);
-			data += rowInTile * bytsInTileWid;
-//			ret.reserve( ret.size() + bytsInTileWid );
+			//every tile vill be cashed
+			rowptr tempdata = extractTile(tileNum + i);
 
-			ret.insert(ret.end(), data, data + bytsInTileWid);
+			// Мы берём только строку из тайла
+			tempdata += rowInTile * tiff.TileWidth;
+
+			// copy to data[column=0][row=i] from tempdata[col=0][row=rowInTile]
+			memcpy(data + tiff.TileWidth * i, tempdata, bytsInTileWid);
 			continue;
 		}
-	}else
-	{
-		uchar buffer[4];
-
-		char sie = getTypeSize(tiff.StripOffsetsType);
-		read(buffer, tiff.StripOffsets + y * sie, sie);
-		uint off =  sie == 2 ? toShort(buffer) : toInt(buffer);
-
-		sie = getTypeSize(tiff.StripByteCountsType);
-		read(buffer, tiff.StripByteCounts + y * sie, sie);
-		uint count =  sie == 2 ? toShort(buffer) : toInt(buffer);
-		uchar *buff = new uchar[count];
-
-		read(buff, off, count);
-
-		string st = ""; // dectode(buff, count);
-		decorder decod(tiff.Compression);
-		decod.decompress(buff, count, ret);
-		delete[] buff;
+		return data;
 	}
-
-	rowptr data = processData(ret.data());
-	ret.clear();
-	return data;
+	else
+	{
+		return extractRowData(y);
+	}
 }
 
 void TiffReader::printIFD(offu64 offset)
@@ -399,10 +424,10 @@ void TiffReader::printIFD(offu64 offset)
 void TiffReader::printValue(int x, int y)
 {
 	uchar buffer[4];
-	read(buffer, tiff.StripOffsets + y * 4, getTypeSize(tiff.StripOffsetsType));
+	read(buffer, tiff.StripOffsets + y * 4, getTypeSize());
 	int off = toInt(buffer);
 
-	read(buffer, tiff.StripByteCounts + y * 4, getTypeSize(tiff.StripByteCountsType));
+	read(buffer, tiff.StripByteCounts + y * 4, getTypeSize());
 	int count = toInt(buffer);
 
 	uchar* buff = new uchar[count];
@@ -410,16 +435,17 @@ void TiffReader::printValue(int x, int y)
 
 
 	string st = "";// dectode(buff, count);
-	vector<uchar> ret;
+	uchar *data = new uchar[getByteSizeFilanlRow()];
 	decorder decod(tiff.Compression);
-	decod.decompress(buff, count, ret);
-
+	decod.decompress(buff, count, data);
+	delete[] buff;
 		//tiff_lzw_decode(buff, count, st);
 	OUT << st.length();
 	//string vals = st.substr(x * 4, 4);
 	//float temp = toFloat((uchar*)vals.c_str());
-	float temp = toFloat(ret.data() +  x*4);
+	float temp = toFloat(data + x * 4);
 
+	delete[] data;
 	int val = (int)round(temp * 10000000);
 	OUT << val;
 	OUT << (val) / 10000000.;
@@ -451,6 +477,7 @@ bool TiffReader::open(const wchar_t* path)
 
 TiffReader::~TiffReader()
 {
+	cachedTiles.clear();
 	close();
 }
 

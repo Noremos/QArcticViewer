@@ -42,7 +42,7 @@ public:
 		// height = {0, 0};
 		// bottomProc = 0;
 		
-		bottomProc = 0.1f;
+		bottomProc = 10;
 		coof = 1.7f;
 		diamert = TRange<int>(10, 400);
 		height = TRange<float>(2, 6);
@@ -137,7 +137,7 @@ class ImageSearcher
 
 	Img getTile(int index);
 
-	PointerCache<Img *> cachedTiles;
+	PointerCache<Img *, Img *> cachedTiles;
 	boundy getBounty(barline<float> *line);
 public:
 	ImageSearcher(TiffReader *reader);

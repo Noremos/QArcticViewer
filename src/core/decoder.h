@@ -9,26 +9,44 @@
 
 using std::cout;
 
-inline long long st(long long st)
-{
-	int step = 1;
-	for (long long i = 1; i <= st; i++)
-		step *= 2;
-	return step;
-}
+#define CHECKRET \
+	if (added + 1 >= maxVal) \
+		{\
+			qDebug() << "Out of tile";\
+			return;\
+		}
 
 class decorder
 {
+	static const int MIN_BITS = 9;
+	static const int CLEAR_CODE = 256; // clear code
+	static const int EOI_CODE = 257; // end of information
+	static const int MAX_BYTELENGTH = 12;
+
+	const int st[MAX_BYTELENGTH+1]{
+		1,//0
+		2,//1
+		4,//2
+		8,//3
+		16,//4
+		32,//5
+		64,//6
+		128,//7
+		256,//8
+		512,//9
+		1024,//10
+		2048,//11
+		4096//12
+	};
+
 	int comprType;
 public:
+	size_t arrLen;
+
 	decorder(int compressType) : comprType(compressType)
 	{
 	}
-	const int MIN_BITS = 9;
-	const int CLEAR_CODE = 256; // clear code
-	const int EOI_CODE = 257; // end of information
-	const int MAX_BYTELENGTH = 12;
-	size_t arrLen;
+
 
 /*	int getByte2(uchar *arry, int pos, int len = 8)
 	{
@@ -113,17 +131,21 @@ public:
 //		return chunks;
 //	}
 
-	void appendReversed(buffer& dest, const buffer& source)
+	ushort getAppedRev(ushort code)
 	{
-		for (int i = (int)source.size() - 1; i >= 0; i--)
-			dest.push_back(source[i]);
-	}
-	void getDictionaryReversed(int n, buffer& rev)
-	{
-		for (int i = n; i != 4096; i = dictionaryIndex[i])
+		size_t len = 0;
+		for (ushort i = code; i != 4096; i = dictionaryIndex[i], ++len)
+			;
+
+		assert(len>0);
+
+		ushort last = dictionaryChar[code];
+		for (ushort i = code; i != 4096; i = dictionaryIndex[i])
 		{
-			rev.push_back(dictionaryChar[i]);
+			result[added++ + --len] = dictionaryChar[i];
 		}
+
+		return last;
 	}
 
 	inline void initDictionary()
@@ -131,16 +153,16 @@ public:
 		dictionaryLength = 258;
 		byteLength = MIN_BITS;
 	}
-	ushort getNext(uchar* arry)
+
+	void getNext()
 	{
 //		if (position == 75953)			qDebug() << "";
 //		const ushort byte2 = getByte(arry, position, byteLength);
-		const ushort byte2 = getByte3(arry);
-//		if (byte2 != byte22)qDebug() << "";
+		code = getByte3(arry);
 		position += byteLength;
-		return byte2;
 	}
-	void addToDictionary(int i, uchar c)
+
+	void addToDictionary(int i, ushort c)
 	{
 		assert(dictionaryLength < 4093); //864689
 //		if (position == 864689)
@@ -149,22 +171,35 @@ public:
 		dictionaryIndex[dictionaryLength++] = i;
 	}
 
-	int dictionaryIndex[4093];
-	short dictionaryChar[4093];
-	int dictionaryLength = 258;
-	int byteLength = MIN_BITS;
-	size_t position = 0;
+	//ushort because index always less than 4096
+	ushort dictionaryIndex[4093];
 
+	// short because code can be more than 256
+	ushort dictionaryChar[4093];
+
+	ushort dictionaryLength = 258;
+	int byteLength = MIN_BITS;
+	size_t position = 0, added = 0, maxSize= 0;
+
+	uchar *result;
+	uchar *arry;
+	ushort code;
 public:
-	void decompress(uchar* input, offu64 size, buffer& result, size_t maxVal = UINT64_MAX)
+
+	void decompress(uchar* input, offu64 size, uchar* output, size_t maxVal = UINT64_MAX)
 	{
 		if (comprType == 1)
 		{
-			result.insert(result.begin(), input, input + size);
+			output = input;
 			return;
 		}
 
-		memset(&dictionaryIndex, 0, 4093 * 4);
+		this->result = output;
+		arry = input;
+
+		maxSize = maxVal;
+
+		memset(&dictionaryIndex, 0, 4093 * 2);
 		memset(&dictionaryChar, 0, 4093  * 2);
 		arrLen = size;
 		position = 0;
@@ -173,20 +208,19 @@ public:
 			dictionaryIndex[i] = 4096;
 			dictionaryChar[i] = i;
 		}
-		size_t added = result.size();
+		added = 0;
 		initDictionary();
-		uchar* arry = input;
-		ushort code = getNext(arry);
+		getNext();
 		ushort oldCode = 0;
 		while (code != EOI_CODE)
 		{
 			if (code == CLEAR_CODE)
 			{
 				initDictionary();
-				code = getNext(arry);
+				getNext();
 				while (code == CLEAR_CODE)
 				{
-					code = getNext(arry);
+					getNext();
 				}
 
 				if (code == EOI_CODE)
@@ -199,47 +233,29 @@ public:
 				}
 				else
 				{
-					buffer val;
-					getDictionaryReversed(code, val);
-					appendReversed(result, val);
-					added += val.size();
-					if (result.size() - added >= maxVal)
-						return;
-
+					getAppedRev(code);
+					CHECKRET
 					oldCode = code;
 				}
 			}
 			else if (code < dictionaryLength)
 			{
-				buffer val;
-				getDictionaryReversed(code, val);
-				appendReversed(result, val);
-				added += val.size();
-				if (result.size() - added >= maxVal)
-					return;
-
-				addToDictionary(oldCode, val[val.size() - 1]);
+				ushort last = getAppedRev(code);
+				addToDictionary(oldCode, last);
+				CHECKRET
 				oldCode = code;
 			}
 			else
 			{
-				buffer oldVal;
-				getDictionaryReversed(oldCode, oldVal);
+				ushort last = getAppedRev(code);
 
-				if (oldVal.empty())
-				{
-					throw std::exception();//"Bogus entry.Not in dictionary, ${ oldCode } / ${ dictionaryLength }, position: ${ position }");
-				}
-				appendReversed(result, oldVal);
-				result.push_back(oldVal[oldVal.size() - 1]);
-				if (result.size() - ++added >= maxVal)
-					return;
-
-				addToDictionary(oldCode, oldVal[oldVal.size() - 1]);
+				result[added++] = last;//oldVal[oldVal.size() - 1];
+				CHECKRET
+				addToDictionary(oldCode, last);
 				oldCode = code;
 			}
 
-			if (dictionaryLength + 1 >= st(byteLength))
+			if (dictionaryLength + 1 >= st[byteLength])
 			{
 				if (byteLength == MAX_BYTELENGTH)
 				{
@@ -250,7 +266,267 @@ public:
 					byteLength++;
 				}
 			}
-			code = getNext(arry);
+			getNext();
 		}
+	}
+};
+
+class Decoder2
+{
+	int comprType;
+
+public:
+	Decoder2(int compressType) : comprType(compressType) {}
+	const int MIN_BITS = 9;
+	const int CLEAR_CODE = 256; // clear code
+	const int EOI_CODE = 257; // end of information
+	const int MAX_BYTELENGTH = 12;
+	size_t arrLen;
+
+
+	enum {
+		dictionarySize = 4095, // maximum number of entries defined for the dictionary (2^12 = 4096)
+		codeLength = 12, // the codes which are taking place of the substrings
+		maxValue = dictionarySize - 1
+	};
+
+	/*
+ * A singly linked list serving as a dictionary.
+ *
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+	enum {
+		emptyPrefix = -1 // empty prefix for ASCII characters
+	};
+
+	// the "string" in the dictionary consists of the last byte of the string and an index to a prefix for that string
+	struct DictNode
+	{
+		int value; // the position in the list
+		int prefix; // prefix for byte > 255
+		int character; // the last byte of the string
+		struct DictNode *next;
+	};
+
+	//void dictionaryInit();
+	//void appendNode(struct DictNode *node);
+	//void dictionaryDestroy();
+	//int dictionaryLookup(int prefix, int character);
+	//int dictionaryPrefix(int value);
+	//int dictionaryCharacter(int value);
+	//void dictionaryAdd(int prefix, int character, int value);
+
+	// the dictionary
+	struct DictNode *dictionary, *tail;
+
+	// initialize the dictionary of ASCII characters @12bits
+	void dictionaryInit()
+	{
+		int i;
+		struct DictNode *node;
+		for (i = 0; i < 256; i++)
+		{ // ASCII
+			node = (struct DictNode *) malloc(sizeof(struct DictNode));
+			node->prefix = emptyPrefix;
+			node->character = i;
+			appendNode(node);
+		}
+	}
+
+	// add node to the list
+	void appendNode(struct DictNode *node)
+	{
+		if (dictionary != NULL)
+			tail->next = node;
+		else
+			dictionary = node;
+		tail = node;
+		node->next = NULL;
+	}
+
+	// destroy the whole dictionary down to NULL
+	void dictionaryDestroy()
+	{
+		while (dictionary != NULL)
+		{
+			dictionary = dictionary->next; /* the head now links to the next element */
+		}
+	}
+
+	// is prefix + character in the dictionary?
+	int dictionaryLookup(int prefix, int character)
+	{
+		struct DictNode *node;
+		for (node = dictionary; node != NULL; node = node->next)
+		{ // ...traverse forward
+			if (node->prefix == prefix && node->character == character)
+				return node->value;
+		}
+		return emptyPrefix;
+	}
+
+	int dictionaryPrefix(int value)
+	{
+		struct DictNode *node;
+		for (node = dictionary; node != NULL; node = node->next)
+		{ // ...traverse forward
+			if (node->value == value)
+				return node->prefix;
+		}
+		return -1;
+	}
+
+	int dictionaryCharacter(int value)
+	{
+		struct DictNode *node;
+		for (node = dictionary; node != NULL; node = node->next)
+		{ // ...traverse forward
+			if (node->value == value)
+			{
+				//printf("\nNODE %i %i %i\n", node->value, node->prefix, node->character);
+				return node->character;
+			}
+		}
+		return -1;
+	}
+
+	// add prefix + character to the dictionary
+	void dictionaryAdd(int prefix, int character, int value)
+	{
+		struct DictNode *node;
+		node = (struct DictNode *) malloc(sizeof(struct DictNode));
+		node->value = value;
+		node->prefix = prefix;
+		node->character = character;
+		//printf("\n(%i) = (%i) + (%i)\n", node->value, node->prefix, node->character);
+		appendNode(node);
+	}
+
+
+
+	int leftover = 0;
+	int leftoverBits;
+
+	size_t readed = 0, tsize = 0;
+	int readBinary(uchar *input)
+	{
+		uchar code = input[readed++];
+		if (readed == tsize)
+			return 0;
+
+		if (leftover > 0)
+		{
+			code = (leftoverBits << 8) + code;
+
+			leftover = 0;
+		}
+		else
+		{
+			uchar nextCode = input[readed++];
+
+			leftoverBits = nextCode & 0xF; // save leftover, the last 00001111
+			leftover = 1;
+
+			code = (code << 4) + (nextCode >> 4);
+		}
+		return code;
+	}
+
+	size_t writed = 0;
+	//int decode(int code, FILE *outputFile);
+
+	// decompression
+	// to reconstruct a string from an index we need to traverse the dictionary strings backwards, following each
+	//   successive prefix index until this prefix index is the empty index
+	void decompress(uchar *inputSrc, offu64 size, uchar *result/*, size_t maxVal = UINT64_MAX*/)
+	{
+		//		result.reserve()
+		readed = 0;
+		writed = 0;
+		this->tsize = size;
+		uchar *inputCur = inputSrc;
+		// int prevcode, currcode
+		int previousCode;
+		int currentCode;
+		int nextCode = 256; // start with the same dictionary of 256 characters
+
+		int firstChar;
+
+		// prevcode = read in a code
+		previousCode = readBinary(inputCur);
+		if (previousCode == 0)
+		{
+			return;
+		}
+		result[writed++] = previousCode;
+
+		// while (there is still data to read)
+		while ((currentCode = readBinary(inputCur)) > 0)
+		{ // currcode = read in a code
+
+			if (currentCode >= nextCode)
+			{
+				firstChar = decode(previousCode, result);
+				result[writed++] = firstChar;
+			}
+			else
+			{
+				firstChar = decode(currentCode, result); // first character returned! [1.]
+			}
+			// add a new code to the string table
+			if (nextCode < dictionarySize)
+				dictionaryArrayAdd(previousCode, firstChar, nextCode++);
+
+			// prevcode = currcode
+			previousCode = currentCode;
+		}
+		//printf("\n");
+	}
+
+
+
+	typedef struct
+	{
+		int prefix; // prefix for byte > 255
+		int character; // the last byte of the string
+	} DictElement;
+
+	//void dictionaryArrayAdd(int prefix, int character, int value);
+	//int dictionaryArrayPrefix(int value);
+	//int dictionaryArrayCharacter(int value);
+
+	DictElement dictionaryArray[4095];
+
+	// add prefix + character to the dictionary
+	void dictionaryArrayAdd(int prefix, int character, int value)
+	{
+		dictionaryArray[value].prefix = prefix;
+		dictionaryArray[value].character = character;
+	}
+
+	int dictionaryArrayPrefix(int value) { return dictionaryArray[value].prefix; }
+
+	int dictionaryArrayCharacter(int value) { return dictionaryArray[value].character; }
+
+	int decode(int code, uchar *outputFile)
+	{
+		int character;
+		int temp;
+
+		if (code > 255)
+		{ // decode
+			character = dictionaryArrayCharacter(code);
+			temp = decode(dictionaryArrayPrefix(code), outputFile); // recursion
+		}
+		else
+		{
+			character = code; // ASCII
+			temp = code;
+		}
+		outputFile[writed++] = character;
+		return temp;
 	}
 };
