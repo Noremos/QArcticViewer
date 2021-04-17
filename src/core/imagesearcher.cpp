@@ -1,4 +1,5 @@
 #include "imagesearcher.h"
+#include "src/core/project.h"
 
 ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
 {
@@ -19,6 +20,7 @@ ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
     tilesInHei = (uint)reader->height() / tileHei;
 	qDebug() << tilesInWid * tilesInHei;
 	cachedTiles.setMaxSize(10);
+
 //	settings->bottomProc = 0.1f;
 //	settings->coof= 1.7f;
 //	settings->diamert = TRange<int>(10,300);
@@ -42,6 +44,15 @@ Img ImageSearcher::getTile(int tx, int ty)
 
 	if (tx<0 || tx>=tilesInWid || ty<0 || ty>= tilesInHei)
 		return nullptr;
+
+	int index = ty * tilesInWid + tx;
+#ifdef IMPPART
+	if (Project::getProject()->isTileCached(index))
+	{
+		return importBeafData(Project::getProject()->getTilePath(index));
+	}
+#endif
+
 
 	if (reader->tiff.TileWidth != 0)
 	{
@@ -88,6 +99,9 @@ Img ImageSearcher::getTile(int tx, int ty)
 				img.setInRow(istY + j, istX, data + fromdataOff, lenX);
 			}
 		}
+#ifdef IMPPART
+		exportDataAsBeaf(Project::getProject()->getTilePath(index), img.wid, img.hei, img.data);
+#endif
 //load 9
 // * * *
 // * * *
@@ -118,6 +132,10 @@ Img ImageSearcher::getTile(int tx, int ty)
 		float *data = reader->getRow(firstRow);
 		img.setInRow(rowInDest, 0, data + columnNum, len);
 	}
+
+#ifdef IMPPART
+	exportDataAsBeaf(Project::getProject()->getTilePath(index), img.wid, img.hei, img.data);
+#endif
 
 	return img;
 }
@@ -188,6 +206,10 @@ void check(void *ptr)
 }
 #include "fstream"
 
+#include <QColor>
+#include <QImage>
+#include <QPixmap>
+
 size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 							   int start, int len, int bottom,
 							   volatile bool &valStop)
@@ -198,7 +220,6 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 //	tileHei = reader->height();
 	//!!!!!!!!!!!!!!!!!!!!!
 
-	reader->setRowsCacheSize(tileHei + diffset + 10);
 	this->bottomLevel = bottom;
 //	start = 0;//519;
 //	start = 519;
@@ -213,10 +234,6 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		int wid = img.wid, hei = img.hei;
 
 		bc::BarcodeCreator<float> creator;
-
-
-//		SaveRawData("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/outbig.bf", wid, hei, img.data);
-
 
 		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem<float> *item = bars->getItem(0);
@@ -364,17 +381,79 @@ bool ImageSearcher::checkCircle(boundy &bb, float eps)
 	return (t1 <= eps && t2 <= eps && t3 <= eps && t4 <= eps);
 }
 
-void SaveRawData(const std::string &path, int wid, int hei, float *data)
+void exportDataAsBeaf(const QString &path, int wid, int hei, float *data)
 {
 	//		 EXPOT AS RAW
-	std::ofstream fout;
-	//"D:/Programs/QT/ArctivViewer/ArcticViewer/temp/outbig.bf"
-	fout.open(path, std::ios::binary | std::ios::out | std::ios::trunc);
+	QFile out(path);
+	if (out.exists())
+		out.remove();
+
+	if (!out.open(QFile::WriteOnly | QFile::Truncate))
+		return;
+
 	int size[] = {wid, hei};
 	char *byteArr = reinterpret_cast<char *>(size);
-	fout.write("b", 1);
-	fout.write(byteArr, 2*sizeof(int));
+	out.write("b", 1);
+	out.write(byteArr, 2*sizeof(int));
 
-	fout.write((char *)data,wid * hei * sizeof(float));
-	fout.close();
+	out.write((char *)data, wid * hei * sizeof(float));
+	out.close();
+}
+
+void exportDataAsPng(const QString &path, bc::BarImg<float> &bimg)
+{
+	//SAVE PNG
+	QImage imggray(bimg.wid(), bimg.hei(), QImage::Format::Format_Grayscale8);
+
+	float max = bimg.max();
+	float min = bimg.min();
+	float maxmin = max - min;
+	for (int y = 0; y < bimg.hei(); ++y)
+	{
+		for (int x = 0; x < bimg.wid(); ++x)
+		{
+			int grayVal = 255 * ((bimg.get(x, y)-min) / maxmin);
+			grayVal = MAX(0, MIN(255, grayVal));
+			imggray.setPixelColor(x, y, QColor(grayVal));
+		}
+	}
+	imggray.save(path);
+}
+
+union conv
+{
+	char data[4];
+	float val;
+	int ival;
+};
+
+
+Img importBeafData(const QString &path)
+{
+	QFile file(path);
+
+	file.open(QFile::OpenModeFlag::ReadOnly | QFile::OpenModeFlag::ExistingOnly);
+
+	QByteArray arr = file.readAll();
+
+	char type[8];
+	file.read(type, 1);
+	int w = 60, h = 60;
+	if (type[0] == 'b')
+	{
+		conv con1;
+
+		file.read(type, 8);
+		memcpy(con1.data, type, 4);
+
+		w = con1.ival;
+
+		memcpy(con1.data, type + 4, 4);
+		h = con1.ival;
+	}
+	char *flaotData = new char[w * h + 1];
+	file.read(flaotData, w * h);
+	Img ret((float*)flaotData, w, h);
+
+	return ret;
 }

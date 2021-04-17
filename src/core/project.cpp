@@ -34,6 +34,12 @@ bool Project::saveProject()
 	write(gameObject);
 	QJsonDocument saveDoc(gameObject);
 	saveFile.write(saveDoc.toJson());
+
+	QString pas = getPath(BackPath::tiles);
+	if (!QDir(pas).exists())
+	{
+		QDir().mkdir(pas);
+	}
 	return true;
 }
 
@@ -72,6 +78,8 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	start = min(start, imgsrch.getMaxTiles()-1);
 	end = min(end, imgsrch.getMaxTiles()-1);
 	qDebug() << start << end;
+
+	imgsrch.setFillTileRowCache();
 	//1000/18
 	for (int ind = start; ind <= end; ++ind)
 	{
@@ -124,10 +132,11 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 	}
 
 	//!###############################SETS##########################
-	bool checkSyrcl = false;
 	bool exportImg = false;
+
 	bool checkBoundy = true;
-	bool checkBar3d = false;
+	bool checkBar3d = true;
+	bool checkSyrcl = true;
 
 
 
@@ -150,6 +159,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
+	imgsrch.setFillTileRowCache();
+
 	//!###############################КРУГ############################
 
 
@@ -200,6 +211,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 	if (pbCallback.cbSetMax)
 		pbCallback.cbSetMax(imgsrch.getMaxTiles()-1);
 
+	Img tile;
 	while (stream.readLineInto(&line))
 	{
 		++l;
@@ -215,6 +227,13 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 			if (pbCallback.cbIncrValue)
 				pbCallback.cbIncrValue(1);
+
+			if (checkBar3d || checkBoundy)
+			{
+				QStringList listw = line.split(" ");
+				int tileindex = listw[1].toInt();
+				tile = imgsrch.getTile(tileindex);
+			}
 //			l = 0;
 			continue;
 		}
@@ -235,41 +254,25 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 		{
 			if (!checkBounty(bb.bb))
 			{
-//				spotZones->addBoundy(bb.bb,displayFactor, false);
+//				spotZones->addBoundy(bb.bb,displayFactor, 0);
 				continue;
 			}
 		}
 
-		if (checkSyrcl)
+
+		Img img;
+
+		if (checkBar3d || checkBoundy)
 		{
-			if (!imgsrch.checkCircle(bb.bb))
-				continue;
+			 tile.getRect(bb.bb, img);
 		}
 
 		if (checkBar3d)
 		{
-			Img img = imgsrch.getRect(bb.bb);
+
 			bc::BarImg<float> bimg(img.wid, img.hei, 1, reinterpret_cast<uchar *>(img.data), false, false);
 
-//			qDebug() << bimg.wid() << bimg.hei() << bimg.get(0, 0) << bimg.get(1, 0);
-//			qDebug() << "Line num:" << l;S
-
-			//SAVE PNG
-//			QImage imggray(bimg.wid(), bimg.hei(), QImage::Format::Format_Grayscale8);
-
-//			float max = bimg.max();
-//			float min = bimg.min();
-//			float maxmin = max - min;
-//			for (int y = 0; y < bimg.hei(); ++y)
-//			{
-//				for (int x = 0; x < bimg.wid(); ++x)
-//				{
-//					int grayVal = 255 * ((bimg.get(x, y)-min) / maxmin);
-//					grayVal = MAX(0, MIN(255, grayVal));
-//					imggray.setPixelColor(x, y, QColor(grayVal));
-//				}
-//			}
-//			imggray.save("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/out.png");
+//			exportDataAsPng("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/out.png", bimg);
 
 			if (exportImg)
 				painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
@@ -279,7 +282,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 			baritem->removePorog(3);
 
 			delete retf;
-			img.release();
 
 			float maxRet = 0;
 			for (auto *bas : etalons)
@@ -290,14 +292,30 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 			delete baritem;
 			qDebug() <<"max:" <<  maxRet;
 			if (maxRet < POROG)
+			{
+				spotZones->addBoundy(bb.bb,displayFactor, 2);
+				img.release();
 				continue;
+			}
+		}
+
+		if (checkSyrcl)
+		{
+			if (!imgsrch.checkCircle(bb.bb))
+			{
+				spotZones->addBoundy(bb.bb,displayFactor, 3);
+				img.release();
+				continue;
+			}
 		}
 		//			l = 0;
 
 		// xScale -- восколько у нас уменьшина карта. Сейчас у нас рельные пиксельные размеры
 		// И чтобы их корректно отобразить, надо поделить всё на процент уменьшения.
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
-		spotZones->addBoundy(bb.bb, displayFactor, true);
+
+		img.release();
+		spotZones->addBoundy(bb.bb, displayFactor, 1);
 		text->addText(bb.bb);
 		//			model->boundydata.append(bb);
 		k++;

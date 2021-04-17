@@ -15,8 +15,9 @@ using namespace bc;
 #include "fstream"
 
 
-static void SaveRawData(const std::string &path,  int wid, int hei, float *data);
-
+static Img importBeafData(const QString &path);
+static void exportDataAsBeaf(const QString &path,  int wid, int hei, float *data);
+static void exportDataAsPng(const QString &path, bc::BarImg<float> &bimg);
 
 class SeachingSettings : public QObject
 {
@@ -135,26 +136,31 @@ class ImageSearcher
 	// Процент отсечения снизу
 	int bottomLevel = 0;
 
-	Img getTile(int index);
 
 	PointerCache<Img *> cachedTiles;
 	boundy getBounty(barline<float> *line);
 public:
 	ImageSearcher(TiffReader *reader);
 
-    uint getTilesInWid()
+	uint getTilesInWid()
     {
 		return tilesInWid;
 	}
-    uint getTilesInHei()
+	uint getTilesInHei()
     {
 		return tilesInHei;
-    }
+	}
 	int getMaxTiles();
 	size_t findROIs(FileBuffer &bounds, FileBuffer &bars, int start, int len, int bottom, volatile bool &valStop);
 
+	void setFillTileRowCache()
+	{
+		reader->setRowsCacheSize(tileHei + diffset + 10);
+	}
+
 	bool checkCircle(boundy &bb, float eps  = 5);
 
+	Img getTile(int index);
 	Img getTile(int tx, int ty);
 	Img getRect(boundy &bb)
 	{
