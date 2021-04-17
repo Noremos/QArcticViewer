@@ -224,31 +224,31 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 		// data
 		QStringList list = line.split(" ");
-		InstInfo* bb = new InstInfo(
+		InstInfo bb(
 			list[0].toInt(), list[1].toInt(), list[2].toFloat(),
 			list[3].toInt(), list[4].toInt(), list[5].toFloat());
 
-		if (bb->bb.endZ==9999 || bb->bb.z==9999)
+		if (bb.bb.endZ==9999 || bb.bb.z==9999)
 			continue;
 
 		if (checkBoundy)
 		{
-			if (!checkBounty(bb->bb))
+			if (!checkBounty(bb.bb))
 			{
-				spotZones->addBoundy(bb->bb,displayFactor, false);
+//				spotZones->addBoundy(bb.bb,displayFactor, false);
 				continue;
 			}
 		}
 
 		if (checkSyrcl)
 		{
-			if (!imgsrch.checkCircle(bb->bb))
+			if (!imgsrch.checkCircle(bb.bb))
 				continue;
 		}
 
 		if (checkBar3d)
 		{
-			Img img = imgsrch.getRect(bb->bb);
+			Img img = imgsrch.getRect(bb.bb);
 			bc::BarImg<float> bimg(img.wid, img.hei, 1, reinterpret_cast<uchar *>(img.data), false, false);
 
 //			qDebug() << bimg.wid() << bimg.hei() << bimg.get(0, 0) << bimg.get(1, 0);
@@ -272,7 +272,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 //			imggray.save("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/out.png");
 
 			if (exportImg)
-				painter->drawRect(bb->bb.x*xfactor,bb->bb.y*yfactor, bb->bb.wid()*xfactor, bb->bb.hei()*yfactor);
+				painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
 
 			auto *retf = creator.createBarcode(&bimg, constr);
 			auto *baritem = retf->exractItem(0);
@@ -297,8 +297,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 		// xScale -- восколько у нас уменьшина карта. Сейчас у нас рельные пиксельные размеры
 		// И чтобы их корректно отобразить, надо поделить всё на процент уменьшения.
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
-		spotZones->addBoundy(bb->bb, displayFactor, true);
-		text->addText(bb->bb);
+		spotZones->addBoundy(bb.bb, displayFactor, true);
+		text->addText(bb.bb);
 		//			model->boundydata.append(bb);
 		k++;
 	}
