@@ -21,7 +21,8 @@ enum class BackPath
 	project,
 	barlist,
 	roilist,
-	heimap
+	heimap,
+	tiles
 };
 
 struct PrjgBarCallback
@@ -169,12 +170,25 @@ private:
 
 		return true;
 	}
+
 public:
+	bool isTileCached(int ind)
+	{
+		QString path = getTilePath(ind);
+		return QFile::exists(path);
+	}
+	QString getTilePath(int ind)
+	{
+		return getPath(BackPath::tiles) + QString::number(ind);
+	}
 
 	QString getPath(BackPath pathI)
 	{
 		switch (pathI)
 		{
+		case BackPath::tiles:
+			return projectPath + "tiles/";
+			break;
 		case BackPath::project:
 			return projectPath + "proj.qwr";
 		case BackPath::barlist:

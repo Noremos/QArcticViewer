@@ -56,7 +56,8 @@ public:
 	QOpenGLExtraFunctions *f;
 
 	size_t boundySize = 0;
-	void addBoundy(boundy &bb, int displayFactor, bool good = true);
+	// type: 0=bad;1=good; 2= more good, 3=more bad
+	void addBoundy(boundy &bb, int displayFactor, int type = 1);
 	SpotZones();
 
 	void updateBuffer();

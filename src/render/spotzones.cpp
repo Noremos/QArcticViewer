@@ -2,7 +2,8 @@
 #include <src/core/project.h>
 #include "spotzones.h"
 
-void SpotZones::addBoundy(boundy &bb,int displayFactor, bool good)
+
+void SpotZones::addBoundy(boundy &bb,int displayFactor, int type)
 {
 	bb.divStep(displayFactor);
 	QMatrix4x4 matr;
@@ -11,7 +12,7 @@ void SpotZones::addBoundy(boundy &bb,int displayFactor, bool good)
 	matr.translate(bb.x + bb.wid()/2, bb.z + bb.zei()/2, bb.y + bb.hei()/2);
 
 	matr.scale(bb.wid()/2, bb.zei()/2, bb.hei()/2);
-	boundydata.append(InstanceData(matr, good ? 1 : 0));
+	boundydata.append(InstanceData(matr, type));
 }
 
 SpotZones::SpotZones() :

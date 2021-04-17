@@ -40,6 +40,7 @@ HEADERS += \
     src/core/project.h \
     src/core/tiffreader.h \
     src/render/text2d.h \
+    src/types/img.h \
     src/types/instinfo.h \
     src/types/types.h \
     terrarian/cameragui.h \
