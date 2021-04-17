@@ -221,7 +221,6 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 			camera->Up = QVector3D(0,1,0);
 			camera->Yaw = 56;
 			camera->Pitch = -32.25;
-			update();
 		}
 	}
 //	if (!useTimer)
@@ -327,7 +326,6 @@ void MainWidget::paintGL()
 	{
 		// Update rotation
 		rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
-		update();
 	}
 
 	const qreal zNear = 0.1, zFar = 10000.0, fov = 60.0;
