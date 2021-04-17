@@ -198,7 +198,7 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 //	tileHei = reader->height();
 	//!!!!!!!!!!!!!!!!!!!!!
 
-
+	reader->setRowsCacheSize(tileHei + diffset + 10);
 	this->bottomLevel = bottom;
 //	start = 0;//519;
 //	start = 519;
