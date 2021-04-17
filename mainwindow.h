@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QAbstractSpinBox>
+#include <QBasicTimer>
 #include <QFutureWatcher>
 #include <QMainWindow>
 #include <QSpinBox>
@@ -24,6 +25,8 @@ public:
 	volatile bool stopAction = false;
 
 
+	QBasicTimer timer;
+
 	// for async
 	QFutureWatcher<void> *watcher;
 	QFuture<void> future1;
@@ -45,6 +48,8 @@ signals:
 	void signalProgressValueChawnged(int);
 
 private slots:
+
+	void StartTheTimer() { timer.start(12, this); }
 
 	void findROIsAsyncEnd();
 	void findByParamsAsyncEnd();
@@ -87,5 +92,11 @@ private:
 	Project* proj;
 
 	bool opened = false;
+
+	// QPaintDevice interface
+public:
+	// QObject interface
+protected:
+	void timerEvent(QTimerEvent *event) override;
 };
 #endif // MAINWINDOW_H

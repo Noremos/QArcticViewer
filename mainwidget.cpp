@@ -86,28 +86,6 @@ MainWidget::~MainWidget()
 }
 
 //! [1]
-void MainWidget::timerEvent(QTimerEvent * /*ev*/)
-{
-    // Decrease angular speed (friction)
-	angularSpeed *= 0.99;
-
-	// Stop rotation when speed goes below threshold
-	if (angularSpeed < 0.01)
-	{
-		angularSpeed = 0.0;
-	}
-	else
-	{
-		// Update rotation
-		rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
-
-		// Request an update
-		// if (useTimer)
-//		if(pressed!=0)
-			update();
-	}
-}
-//! [1]
 
 void MessageCallback( GLenum /*source*/,
 					 GLenum type,
@@ -166,6 +144,7 @@ void MainWidget::initializeGL()
 	zones->initGL();
 	text->initGL();
 
+	emit startTimer();
 //		terra->readfile("D:\2.obj");
 //	terra->readfile("D:\\2_.OBJ");
 //	drawTerra = true;
@@ -176,9 +155,6 @@ void MainWidget::initializeGL()
 	// terra->displayTexture(0);
 
 
-//
-	timer.start(20, this);
-	update();
 }
 
 //! [0]
@@ -341,6 +317,19 @@ double timediff(timeType &t1, timeType &t2)
 }
 void MainWidget::paintGL()
 {
+	angularSpeed *= 0.99;
+
+	if (angularSpeed < 0.01)
+	{
+		angularSpeed = 0.0;
+	}
+	else
+	{
+		// Update rotation
+		rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
+		update();
+	}
+
 	const qreal zNear = 0.1, zFar = 10000.0, fov = 60.0;
 
 	timeType currentFrame = std::chrono::steady_clock::now();

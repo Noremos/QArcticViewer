@@ -49,6 +49,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(this, &MainWindow::signalProgressValueChawnged, this, &MainWindow::slotSetProgressValue);
 	connect(this, &MainWindow::signalProgressMaxChanged, this, &MainWindow::slotSetProgressMax);
+	connect(this, &MainWindow::signalProgressMaxChanged, this, &MainWindow::slotSetProgressMax);
+
+	connect(ui->glWidget, &MainWidget::startTimer, this, &MainWindow::StartTheTimer);
 
 	watcher = nullptr;
 	//	connect(ui->pbFindByParams, &QPushButton::click, proj, .)
@@ -374,4 +377,9 @@ void MainWindow::on_chShowFinded_stateChanged(int /*arg1*/)
 void MainWindow::on_pbStopButton_clicked()
 {
 	stopAction = true;
+}
+
+void MainWindow::timerEvent(QTimerEvent */*event*/)
+{
+	ui->glWidget->update();
 }
