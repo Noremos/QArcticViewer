@@ -108,7 +108,7 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 #include <fstream>
 
 
-void Project::filterROIs(const PrjgBarCallback &pbCallback)
+void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj,bool useCycle, float eps, int maxTile )
 {
 	if (block)return;
 
@@ -135,12 +135,16 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 	bool exportImg = false;
 
 	bool checkBoundy = true;
-	bool checkBar3d = true;
-	bool checkSyrcl = true;
+    bool checkBar3d = false;
+    bool checkSyrcl = false;
 
+    checkBoundy = useBoundyChec;
+    checkBar3d = useBarcoed;
+    checkSyrcl = useCycle;
 
+    float POROG = minBarShooj;
 
-	// qDebug() << image.width();
+    // qDebug() << image.width();
 
 	//!###############################EXPORT##########################
 	QPixmap image;
@@ -157,6 +161,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 		painter->setPen(pen);
 	}
 
+//    closeReader();
 	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 	imgsrch.setFillTileRowCache();
@@ -165,7 +170,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 
 	//!###############################BARCODE############################
-	float POROG = 0.3;
 	QVector<Baritem<float> *> etalons;
 	int maxetalcount = 5;
 	bc::BarcodeCreator<float> creator;
@@ -173,11 +177,11 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 	if (checkBar3d)
 	{
 		constr.addStructure(ProcType::f0t255, ColorType::gray, ComponentType::Component);
-		constr.returnType = ReturnType::barcode3d;
+        constr.returnType = ReturnType::barcode2d;
 		constr.createBinayMasks = false;
 		constr.createGraph = false;
 
-		QDir directory("D:/Programs/Python/barcode/experements/geo/imgs_one");
+		QDir directory("D:/Progs/QT/QArcticViewer/etalons/imgs_one");
 		QStringList images = directory.entryList(QStringList() << "*.bf", QDir::Files);
 		int sd = 0;
 		foreach (QString filename, images)
@@ -191,8 +195,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 			BarImg<float> fileimg(60, 60, 1, imgdata, false, false);
 
-			auto *ret = creator.createBarcode(&fileimg, constr);
-			auto *item = ret->exractItem(0);
+            bc::Barcontainer<float> *ret = creator.createBarcode(&fileimg, constr);
+            bc::Baritem<float> *item = ret->exractItem(0);
 			item->removePorog(3);
 			etalons.append(item);
 			delete ret;
@@ -211,6 +215,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 	if (pbCallback.cbSetMax)
 		pbCallback.cbSetMax(imgsrch.getMaxTiles()-1);
 
+    int tileindex = 0;
 	Img tile;
 	while (stream.readLineInto(&line))
 	{
@@ -228,10 +233,14 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 			if (pbCallback.cbIncrValue)
 				pbCallback.cbIncrValue(1);
 
-			if (checkBar3d || checkBoundy)
+            QStringList listw = line.split(" ");
+            tileindex = listw[1].toInt();
+
+            if (tileindex == maxTile-1)
+                break;
+
+            if (checkBar3d || checkSyrcl)
 			{
-				QStringList listw = line.split(" ");
-				int tileindex = listw[1].toInt();
 				tile = imgsrch.getTile(tileindex);
 			}
 //			l = 0;
@@ -247,7 +256,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 			list[0].toInt(), list[1].toInt(), list[2].toFloat(),
 			list[3].toInt(), list[4].toInt(), list[5].toFloat());
 
-		if (bb.bb.endZ==9999 || bb.bb.z==9999)
+        if ((int)bb.bb.endZ==9999 || (int)bb.bb.z==9999)
 			continue;
 
 		if (checkBoundy)
@@ -262,9 +271,14 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 		Img img;
 
-		if (checkBar3d || checkBoundy)
+        if (checkBar3d || checkSyrcl)
 		{
-			 tile.getRect(bb.bb, img);
+
+            //bb.x==1054 || startX * tileWid==1000 || startInTile = 54
+            int startInTileX;
+            int startInTileY;
+            imgsrch.getFileOffset(tileindex, bb.bb, startInTileX, startInTileY);
+            tile.getRect(startInTileX,startInTileY, (int)bb.bb.wid(), (int)bb.bb.hei(), img);
 		}
 
 		if (checkBar3d)
@@ -301,7 +315,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 		if (checkSyrcl)
 		{
-			if (!imgsrch.checkCircle(bb.bb))
+            if (!imgsrch.checkCircle(img, eps))
 			{
 				spotZones->addBoundy(bb.bb,displayFactor, 3);
 				img.release();
@@ -324,12 +338,12 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 	if (pbCallback.cbIncrValue)
 		pbCallback.cbIncrValue(imgsrch.getMaxTiles()-1);
 
-//	closeReader();
+//    closeReader();
 	if (exportImg)
 	{
 		painter->save();
 		painter->end();
-		image.save("D:\\rest.jpg");
+        image.save(getPath(BackPath::project) + "rest.jpg");
 		delete painter;
 	}
 

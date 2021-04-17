@@ -153,7 +153,7 @@ public:
 		return enableTraking;
 	}
 	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-	void ProcessMouseMovement(GLfloat xpos, GLfloat ypos, GLboolean constrainPitch = true)
+    void ProcessMouseMovement(GLfloat xpos, GLfloat ypos, float delta, GLboolean constrainPitch = true)
 	{
 		if (!enableTraking)
 			return;
@@ -172,8 +172,8 @@ public:
 		lastY = ypos;
 		//		qDebug() << "mpoused";
 
-		xoffset *= this->MouseSensitivity;
-		yoffset *= this->MouseSensitivity;
+        xoffset *= this->MouseSensitivity * delta * 40;
+        yoffset *= this->MouseSensitivity * delta * 40;
 
 
 		this->Yaw   += invertX ? -xoffset : xoffset;
@@ -196,8 +196,8 @@ public:
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 	void ProcessMouseScroll(GLfloat yoffset, float deltaTime)
 	{
-		GLfloat velocity = 50 * yoffset * deltaTime;
-		this->Position -= this->Front * velocity;
+        GLfloat velocity = 25 * yoffset * deltaTime;
+        this->Position += this->Front * velocity;
 //		if (this->Zoom >= 1.0f && this->Zoom <= 45.0f)
 //			this->Zoom -= yoffset;
 //		if (this->Zoom <= 1.0f)

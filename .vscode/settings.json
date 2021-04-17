@@ -21,6 +21,7 @@
         "mutex": "cpp",
         "ostream": "cpp",
         "ratio": "cpp",
-        "xlocnum": "cpp"
+        "xlocnum": "cpp",
+        "xlocmes": "cpp"
     }
 }

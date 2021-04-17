@@ -37,15 +37,15 @@ MainWindow::MainWindow(QWidget *parent)
 	opened = false;
 	proj = Project::getProject();
 	// side menu
-	connectSettsD(ui->coofSB, &SeachingSettings::setCoof);
+    connectSettsD(ui->coofSB, &SeachingSettings::setCoof)
 
-	connectSettsI(ui->dminSB, &SeachingSettings::setDiametrMin);
-	connectSettsI(ui->dmaxDB, &SeachingSettings::setDiametrMax);
+    connectSettsI(ui->dminSB, &SeachingSettings::setDiametrMin)
+    connectSettsI(ui->dmaxDB, &SeachingSettings::setDiametrMax)
 
-	connectSettsD(ui->minSizeHeiSB, &SeachingSettings::setHeightMin);
-	connectSettsD(ui->maxSizeHeiSB, &SeachingSettings::setHeightMax);
+    connectSettsD(ui->minSizeHeiSB, &SeachingSettings::setHeightMin)
+    connectSettsD(ui->maxSizeHeiSB, &SeachingSettings::setHeightMax)
 
-	connectSettsI(ui->bottomLenSB, &SeachingSettings::setBottomProc);
+    connectSettsI(ui->bottomLenSB, &SeachingSettings::setBottomProc)
 
 	connect(this, &MainWindow::signalProgressValueChawnged, this, &MainWindow::slotSetProgressValue);
 	connect(this, &MainWindow::signalProgressMaxChanged, this, &MainWindow::slotSetProgressMax);
@@ -72,7 +72,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-	openProject("D:\\Programs\\Barcode\\_bar\\p2\\proj.qwr");
+    openProject("D:\\Progs\\temp\\bar\\proj.qwr");
 	//	openProject();
 }
 
@@ -212,7 +212,13 @@ void MainWindow::findByParamsAsync()
 	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
 	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
 
-	proj->filterROIs(callback);
+    proj->filterROIs(callback,
+                     ui->cbUseRegion->isChecked(),
+                     ui->cbUseBarcode->isChecked(),
+                     ui->barShoj->value(),
+                     ui->cbUseCycle->isChecked(),
+                     ui->cirlceShoj->value(),
+                     ui->endProc->value());
 }
 
 void MainWindow::findByParamsAsyncEnd()
@@ -382,4 +388,11 @@ void MainWindow::on_pbStopButton_clicked()
 void MainWindow::timerEvent(QTimerEvent */*event*/)
 {
 	ui->glWidget->update();
+}
+
+
+void MainWindow::on_cbUseRegion_stateChanged(int arg1)
+{
+    ui->gbZones->setEnabled(ui->chShowFinded->checkState() == Qt::CheckState::Checked);
+
 }

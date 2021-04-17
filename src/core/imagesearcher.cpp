@@ -294,72 +294,38 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 	return totalAdded;
 }
 
-Img ImageSearcher::getRect(boundy &bb, int &maxX, int &maxY)
+bool ImageSearcher::checkCircle(Img& ret, float eps)
 {
-	int startX = bb.x / tileWid;
-	int endX = bb.endX / tileWid;
-	int startY = bb.y / tileHei;
-	int endY = bb.endY / tileHei;
-
-	if (startX != endX || startY != endY)
-		return nullptr;
-
-
-	int index = getTid(startX, startY, tilesInWid);
-
-	Img *null = nullptr;
-	Img *g = this->cachedTiles.getData(index, null);
-	if (g == null)
-	{
-		Img tg = getTile(startX, startY);
-		g = new Img(tg.data, tg.wid, tg.hei);
-		cachedTiles.storeData(index, g);
-	}
-
-	Img ret(bb.wid(), bb.hei());
-
-	//bb.x==1054 || startX * tileWid==1000 || startInTile = 54
-	int startInTileX = bb.x - startX * tileWid;
-	int startInTileY = bb.y - startY * tileHei;
-
-
-	float maxval = -9999;
-
-	for (uint j = 0; j < bb.hei(); ++j)
-	{
-		for (uint i = 0; i < bb.wid(); ++i)
-		{
-			float d = g->getSafe(startInTileX + i, startInTileY + j);
-			ret.set(i, j, d);
-
-			if (d > maxval)
-			{
-				maxX = i;
-				maxY = j;
-				maxval = d;
-			}
-		}
-	}
-	ret.maxVal = maxval;
-
-	return ret;
-}
-
-bool ImageSearcher::checkCircle(boundy &bb, float eps)
-{
-	int xc=0, yc=0;
-	Img ret = getRect(bb, xc,yc);
+    int xc=0, yc=0;
 
 	float sum = 0;
 	int radius = 20;
 	int total = 0;
+
+
+    float maxval = -9999;
+    for (uint j = 0; j < ret.hei; ++j)
+    {
+        for (uint i = 0; i < ret.wid; ++i)
+        {
+            float d =ret.get(i,j);
+            if (d > maxval)
+            {
+                xc = i;
+                yc = j;
+                maxval = d;
+            }
+        }
+    }
+
+
 	for (int var = 0; var < 40; ++var)
 	{
 		int xst = xc - radius + var;
 		int yreal = sqrt(radius * radius - (xst - xc) * (xst - xc));
 
-		xst = MAX(0, MIN(xst, ret.wid));
-		yreal = MAX(0, MIN(yreal, ret.hei));
+        xst = MAX(0, MIN(xst, ret.wid));
+        yreal = MAX(0, MIN(yreal, ret.hei));
 
 		float val1 = ret.getSafe(xst, yreal), val2;
 		if (yreal > yc)
@@ -371,14 +337,14 @@ bool ImageSearcher::checkCircle(boundy &bb, float eps)
 		total += 2;
 	}
 
-	sum /= total;
+    sum /= (float)total;
 
-	float t1 = abs(sum - ret.getSafe(xc - radius, yc));
-	float t2 = abs(sum - ret.getSafe(xc, yc - radius));
-	float t3 = abs(sum - ret.getSafe(xc - radius, yc - radius));
-	float t4 = abs(sum - ret.getSafe(xc + radius, yc + radius));
-
-	return (t1 <= eps && t2 <= eps && t3 <= eps && t4 <= eps);
+    float t1 = abs(sum - ret.getSafe(xc - radius, yc));
+    float t2 = abs(sum - ret.getSafe(xc, yc - radius));
+    float t3 = abs(sum - ret.getSafe(xc + radius, yc));
+    float t4 = abs(sum - ret.getSafe(xc, yc + radius));
+    qDebug() << "Eps:" << t1 << t2<< t3<< t4;
+    return (t1 <= eps && t2 <= eps && t3 <= eps && t4 <= eps);
 }
 
 void exportDataAsBeaf(const QString &path, int wid, int hei, float *data)

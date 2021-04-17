@@ -87,6 +87,8 @@ private slots:
 
 	void on_pbStopButton_clicked();
 
+    void on_cbUseRegion_stateChanged(int arg1);
+
 private:
 	Ui::MainWindow *ui;
 	Project* proj;

@@ -10,9 +10,9 @@ void main(void)
     if (type==1)
         fragColor = vec4(0, 1, 0, 0.4);
     else if(type==2)
-        fragColor = vec4(0, 0.5, 0, 0.4);
+        fragColor = vec4(0.54, 0.0, 0.5, 0.4);
     else if(type==3)
-        fragColor = vec4(0.0, 0.0, 0.7, 0.4);
+        fragColor = vec4(0.0, 0.3, 0.7, 0.4);
     else
         fragColor = vec4(1, 0, 0, 0.4);
 

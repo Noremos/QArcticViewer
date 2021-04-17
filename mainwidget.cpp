@@ -186,7 +186,7 @@ void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
 //	sky->mouseMoveEvent(event);
-	camera->ProcessMouseMovement(event->localPos().x(), event->localPos().y());
+    camera->ProcessMouseMovement(event->localPos().x(), event->localPos().y(), deltaTime);
 
 //	if (!useTimer && camera->isEnableTraking())
 //		update();

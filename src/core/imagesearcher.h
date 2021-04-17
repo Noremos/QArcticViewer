@@ -158,16 +158,22 @@ public:
 		reader->setRowsCacheSize(tileHei + diffset + 10);
 	}
 
-	bool checkCircle(boundy &bb, float eps  = 5);
+	bool checkCircle(Img &ret, float eps  = 5);
 
 	Img getTile(int index);
-	Img getTile(int tx, int ty);
-	Img getRect(boundy &bb)
-	{
-		int a, b;
-		return getRect(bb, a, b);
-	}
-	Img getRect(boundy &bb, int &maxX, int &maxY);
+    Img getTile(int tx, int ty);
+
+    void getFileOffset(int index, boundy bb, int& x, int &y)
+    {
+        // diffset 100
+        int startX = index % tilesInWid;
+//        int endX = bb.endX / tileWid;
+        int startY = index / tilesInWid;
+//        int endY = bb.endY / tileHei;
+
+       x = (int)bb.x - startX * tileWid;
+       y = (int)bb.y - startY * tileHei;
+    }
 };
 
 #endif // IMAGESEARCHER_H

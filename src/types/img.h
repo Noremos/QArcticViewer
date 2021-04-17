@@ -67,19 +67,19 @@ struct Img
 	}
 
 
-	void getRect(boundy& bb, Img& ret)
+    void getRect(int x, int y, int wid, int hei, Img& ret)
 	{
-		ret.wid = bb.wid();
-		ret.hei = bb.hei();
+        ret.wid = wid;
+        ret.hei = hei;
 		ret.release();
 
 		ret.data = new float[ret.wid * ret.hei];
-		memset(ret.data, 0 ,ret.wid * ret.hei);
+        memset(ret.data, 0 ,ret.wid * ret.hei* sizeof(float));
 
-		for (uint j = 0; j < bb.hei(); ++j)
+        for (int j = 0; j < ret.hei; ++j)
 		{
-			uint rs = minmaxX(bb.x);
-			uint re = minmaxX(bb.x + bb.wid());
+            uint rs = minmaxX(x);
+            uint re = minmaxX(x + wid);
 
 			uchar *dsa = reinterpret_cast<uchar *>(ret.data + j * ret.wid);
 			uchar *src = reinterpret_cast<uchar *>(this->data + j * this->wid + rs);

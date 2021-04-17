@@ -188,7 +188,6 @@ public:
 		{
 		case BackPath::tiles:
 			return projectPath + "tiles/";
-			break;
 		case BackPath::project:
 			return projectPath + "proj.qwr";
 		case BackPath::barlist:
@@ -210,7 +209,7 @@ public:
 	
 	void findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int end);
 
-	void filterROIs(const PrjgBarCallback &pbCallback);
+	void filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj, bool useCycle, float eps, int maxTile);
 
 
 	void loadImage(QString path, int step, int type);
