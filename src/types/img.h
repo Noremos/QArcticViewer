@@ -1,6 +1,9 @@
 #ifndef IMG_H
 #define IMG_H
 #include "src/base.h"
+#include  <cstring>
+
+#include "types.h"
 
 struct Img
 {
@@ -15,6 +18,15 @@ struct Img
 	{}
 	float get(int x, int y) const { return data[y * wid + x]; }
 
+	uint minmaxX(int x)
+	{
+		return MAX(0, MIN(x, wid-1));
+	}
+
+	uint minmaxY(int x)
+	{
+		return MAX(0, MIN(x, hei-1));
+	}
 	float getSafe(int x, int y) const
 	{
 		x = MAX(0, MIN(x, wid-1));
@@ -47,7 +59,33 @@ struct Img
 	}
 	inline void release()
 	{
-		delete[] data;
+		if (data)
+		{
+			delete[] data;
+			data = nullptr;
+		}
+	}
+
+
+	void getRect(boundy& bb, Img& ret)
+	{
+		ret.wid = bb.wid();
+		ret.hei = bb.hei();
+		ret.release();
+
+		ret.data = new float[ret.wid * ret.hei];
+		memset(ret.data, 0 ,ret.wid * ret.hei);
+
+		for (uint j = 0; j < bb.hei(); ++j)
+		{
+			uint rs = minmaxX(bb.x);
+			uint re = minmaxX(bb.x + bb.wid());
+
+			uchar *dsa = reinterpret_cast<uchar *>(ret.data + j * ret.wid);
+			uchar *src = reinterpret_cast<uchar *>(this->data + j * this->wid + rs);
+			memcpy(dsa, src, (re - rs) * 4);
+		}
+//		ret.maxVal = maxval;
 	}
 };
 #endif // !IMG_H
