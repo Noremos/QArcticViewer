@@ -123,6 +123,7 @@ private:
 	bool keys[1024];
 	int pressed = 0;
 	qreal aspect;
+	QVector3D cameraStartPos;
 
 
 	double deltaTime = 0;

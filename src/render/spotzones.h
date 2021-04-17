@@ -64,6 +64,7 @@ public:
 	void renderGL(QMatrix4x4 view, QMatrix4x4 projection);
 	void initSpotModel();
 
+	float minVal = 9999;
 
 	void printErrors()
 	{

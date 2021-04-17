@@ -7,8 +7,8 @@ uniform mat4 model;
 uniform mat4 projection;
 uniform mat4 view;
 
-uniform float minHei;// = -2.1988;
 uniform int factor;
+uniform float minval;
 
 out vec2 v_texcoord;
 
@@ -16,8 +16,7 @@ out vec2 v_texcoord;
 void main()
 {
     vec3 vp = a_position;
-//    vp.y += (vp.y - minHei) * factor;
-    vp.y *= factor;
+    vp.y += (vp.y - minval) * factor;
 
     gl_Position = projection * view * model  * vec4(vp, 1.0);
     v_texcoord = a_texcoord;

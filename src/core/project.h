@@ -50,6 +50,10 @@ public:
 //	SeachingSettings* getSerchSetts(){return &searchSetts;}
 
 	Project();
+	~Project()
+	{
+		closeReader();
+	}
 public:
 
 	bool block = false;

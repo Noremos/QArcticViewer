@@ -60,8 +60,6 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	if (!barStream.openFileStream(getPath(BackPath::barlist)))
 		return;
 
-	QString sw;
-	QString barjson;
 	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
@@ -96,7 +94,6 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	barStream.close();
 	boundStream.close();
 
-	closeReader();
 }
 
 
@@ -231,6 +228,9 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 			list[0].toInt(), list[1].toInt(), list[2].toFloat(),
 			list[3].toInt(), list[4].toInt(), list[5].toFloat());
 
+		// if (bb->bb.endZ==9999 || bb->bb.z==9999)
+		// 	continue;
+
 		if (checkBoundy)
 		{
 			if (!checkBounty(bb->bb))
@@ -253,24 +253,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 
 //			qDebug() << bimg.wid() << bimg.hei() << bimg.get(0, 0) << bimg.get(1, 0);
 //			qDebug() << "Line num:" << l;S
-
-
-
-			// EXPOT AS RAW
-//			std::ofstream fout;
-//			fout.open("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/out.fd", std::ios::binary | std::ios::out | std::ios::trunc);
-//			char wid[] = {(char) bimg.wid(), (char) bimg.hei()};
-//			fout.write(wid, 2);
-//			fout.write((char *) bimg.getData(), bimg.wid() * bimg.hei() * 4);
-//			fout.close();
-
-			//			QFile file("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/out.fd");
-			//			file.open(QIODevice::WriteOnly);
-			//			QDataStream out(&file); // we will serialize the data into the file
-			//			out << (uchar) bimg.wid(); // serialize a string
-			//			out << (uchar) bimg.hei(); // serialize an integer
-			//			out.writeBytes((char *) bimg.getData(), bimg.wid() * bimg.hei() * 4);
-			//			file.close();
 
 			//SAVE PNG
 //			QImage imggray(bimg.wid(), bimg.hei(), QImage::Format::Format_Grayscale8);
@@ -324,7 +306,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 	if (pbCallback.cbIncrValue)
 		pbCallback.cbIncrValue(imgsrch.getMaxTiles()-1);
 
-	closeReader();
+//	closeReader();
 	if (exportImg)
 	{
 		painter->save();
@@ -375,7 +357,7 @@ void Project::loadImage(QString path, int step, int type)
 	notifySettings();
 	saveProject();
 	
-	closeReader();
+//	closeReader();
 }
 
 bool Project::loadProject(QString path)

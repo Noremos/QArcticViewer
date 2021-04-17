@@ -59,8 +59,10 @@
 
 MainWidget::MainWidget(QWidget */*parent*/)
 {
+	cameraStartPos = QVector3D(-25, 551, -159);
+	
 	sky = new SkyBoxGUI();//58.25 -34.25 -24.4309 573.158 -205.05
-	camera = new CameraGui(QVector3D(-25, 551, -159), QVector3D(0,1,0), 56, -32.25);
+	camera = new CameraGui(cameraStartPos, QVector3D(0,1,0), 56, -32.25);
 	terra = new Terrain();
 	zones = new SpotZones();
 	text = new Text2d();
@@ -236,6 +238,15 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 //		{
 //			++pressed;
 //		}
+
+		if (key==Qt::Key::Key_R)
+		{
+			camera->Position = cameraStartPos;
+			camera->Up = QVector3D(0,1,0);
+			camera->Yaw = 56;
+			camera->Pitch = -32.25;
+			update();
+		}
 	}
 //	if (!useTimer)
 //		update();

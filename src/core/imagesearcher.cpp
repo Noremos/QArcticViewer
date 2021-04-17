@@ -135,6 +135,8 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 	auto &points = line->matr;
 	int minX = points[0].getX(), maxX = points[0].getX();
 	int minY = points[0].getY(), maxY = points[0].getY();
+	// f255t0: end is the top, start is a bottom, e.g. [st,end]=[255,3]
+	// float minT = line->end(), maxT = line->start;
 	float minT = line->start, maxT = line->end();
 
 	if (minT > maxT)

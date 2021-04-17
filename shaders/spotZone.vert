@@ -7,7 +7,8 @@ layout (location = 1) in mat4 instanceMatrix; //vec[0]
 layout (location = 5) in float aColor;
 
 uniform int factor;
-//uniform int minHei;
+uniform float minval;
+
 uniform mat4 projection;
 uniform mat4 view;
 
@@ -18,7 +19,7 @@ void main()
     outColor = aColor;
     //aColor;
     vec3 vp = aPos;
-    vp.y *= factor;
+    vp.y += (vp.y - minval) * factor;
 //    vec2 offset = offsets[gl_InstanceID];
     //    gl_Position = vec4(aPos + offset, 0.0, 1.0);
     gl_Position = projection * view * instanceMatrix  * vec4(vp, 1.0);

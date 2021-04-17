@@ -53,6 +53,7 @@ public:
 	inline float zei() const
 	{
 		return endZ > z? endZ - z : z - endZ;
+		// return/* endZ > z? */endZ - z /*: z - endZ*/;
 	}
 	void addXoffset(int off)
 	{
@@ -66,12 +67,13 @@ public:
 	}
 	inline void divStep(float step)
 	{
+		// we sacle all the verts
 		x /= step;
 		y /= step;
-//		z /= step;
+		// z /= step;
 		endX /= step;
 		endY /= step;
-//		endZ /= step;
+		// endZ /= step;
 	}
 	inline QString getStr()
 	{
