@@ -228,8 +228,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 			list[0].toInt(), list[1].toInt(), list[2].toFloat(),
 			list[3].toInt(), list[4].toInt(), list[5].toFloat());
 
-		// if (bb->bb.endZ==9999 || bb->bb.z==9999)
-		// 	continue;
+		if (bb->bb.endZ==9999 || bb->bb.z==9999)
+			continue;
 
 		if (checkBoundy)
 		{
@@ -323,7 +323,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback)
 		}
 	}
 
-	qDebug() << "Done: " << k << "/" << l;
+	qDebug() << "Found: " << k << " from " << l;
 
 	saveProject();
 }

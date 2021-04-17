@@ -7,13 +7,11 @@ void SpotZones::addBoundy(boundy &bb,int displayFactor, bool good)
 	bb.divStep(displayFactor);
 	QMatrix4x4 matr;
 	matr.setToIdentity();
-	matr.translate(bb.x + bb.wid()/2, bb.z + bb.zei()/2, bb.y + bb.hei()/2);
-	//text bb.x, bb.endZ, bb.y
-	matr.scale(bb.wid()/2, 0.5, bb.hei()/2);
-	boundydata.append(InstanceData(matr, good ? 1 : 0));
 
-	if (bb.z < minVal)
-		minVal = bb.z;
+	matr.translate(bb.x + bb.wid()/2, bb.z + bb.zei()/2, bb.y + bb.hei()/2);
+
+	matr.scale(bb.wid()/2, bb.zei()/2, bb.hei()/2);
+	boundydata.append(InstanceData(matr, good ? 1 : 0));
 }
 
 SpotZones::SpotZones() :
@@ -105,7 +103,6 @@ void SpotZones::updateBuffer()
 	indexBuf.release();
 	mshader.release();
 
-	minVal = 9999;
 	boundydata.clear();
 }
 
@@ -118,7 +115,6 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
 	mshader.setUniformValue("factor", factor);
-	mshader.setUniformValue("minval", Project::getProject()->getImgMinVal()/ Project::getProject()->displayFactor);
 
 	vao.bind();
 	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 24, boundySize);

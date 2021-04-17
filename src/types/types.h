@@ -41,12 +41,12 @@ public:
 			endY = iy;
 	}
 
-	inline uint wid() const
+	inline float wid() const
 	{
 		return endX - x;
 	}
 
-	inline uint hei() const
+	inline float hei() const
 	{
 		return endY - y;
 	}
