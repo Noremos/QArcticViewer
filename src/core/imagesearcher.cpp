@@ -304,9 +304,9 @@ bool ImageSearcher::checkCircle(Img& ret, float eps)
 
 
     float maxval = -9999;
-    for (uint j = 0; j < ret.hei; ++j)
+    for (int j = 0; j < ret.hei; ++j)
     {
-        for (uint i = 0; i < ret.wid; ++i)
+        for (int i = 0; i < ret.wid; ++i)
         {
             float d =ret.get(i,j);
             if (d > maxval)
@@ -317,6 +317,9 @@ bool ImageSearcher::checkCircle(Img& ret, float eps)
             }
         }
     }
+
+//    if (xc==0) xc = ret.wid/2;
+//    if (yc==0) yc = ret.hei/2;
 
 
 	for (int var = 0; var < 40; ++var)

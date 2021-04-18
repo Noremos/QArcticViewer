@@ -22,6 +22,11 @@
         "ostream": "cpp",
         "ratio": "cpp",
         "xlocnum": "cpp",
-        "xlocmes": "cpp"
+        "xlocmes": "cpp",
+        "filesystem": "cpp",
+        "queue": "cpp",
+        "stack": "cpp",
+        "xlocinfo": "cpp",
+        "xtree": "cpp"
     }
 }

@@ -181,7 +181,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		constr.createBinayMasks = false;
 		constr.createGraph = false;
 
-		QDir directory("D:/Progs/QT/QArcticViewer/etalons/imgs_one");
+        QDir directory("D:/Progs/QT/QArcticViewer/etalons/imgs_orginal");
 		QStringList images = directory.entryList(QStringList() << "*.bf", QDir::Files);
 		int sd = 0;
 		foreach (QString filename, images)
@@ -197,7 +197,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
             bc::Barcontainer<float> *ret = creator.createBarcode(&fileimg, constr);
             bc::Baritem<float> *item = ret->exractItem(0);
-			item->removePorog(3);
+//			item->removePorog(3);
+            item->relen();
 			etalons.append(item);
 			delete ret;
 			file.close();
@@ -218,7 +219,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
     int tileindex = 0;
 	Img tile;
 	while (stream.readLineInto(&line))
-	{
+    {
 		++l;
 //		if (l!=685584)
 //			continue;
@@ -293,7 +294,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 			auto *retf = creator.createBarcode(&bimg, constr);
 			auto *baritem = retf->exractItem(0);
-			baritem->removePorog(3);
+//			baritem->removePorog(3);
+            baritem->relen();
 
 			delete retf;
 

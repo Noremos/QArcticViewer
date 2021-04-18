@@ -148,8 +148,8 @@ void MainWindow::findROIs()
 	if (watcher)
 		delete watcher;
 	watcher = new QFutureWatcher<void>(this);
-	watcher->setFuture(future1);
 	connect(watcher, SIGNAL(finished()), this, SLOT(findROIsAsyncEnd()));
+    watcher->setFuture(future1);
 }
 
 void MainWindow::findROIsAsyncEnd()
@@ -197,8 +197,8 @@ void MainWindow::findByParams()
 	if (watcher)
 		delete watcher;
 	watcher = new QFutureWatcher<void>(this);
-	watcher->setFuture(future1);
 	connect(watcher, SIGNAL(finished()), this, SLOT(findByParamsAsyncEnd()));
+    watcher->setFuture(future1);
 
 	// delete the watcher when finished too
 	//	connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
