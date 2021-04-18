@@ -198,7 +198,9 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
             bc::Barcontainer<float> *ret = creator.createBarcode(&fileimg, constr);
             bc::Baritem<float> *item = ret->exractItem(0);
 //			item->removePorog(3);
-            item->relen();
+			item->relen();
+			item->normalize();
+
 			etalons.append(item);
 			delete ret;
 			file.close();
@@ -296,6 +298,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			auto *baritem = retf->exractItem(0);
 //			baritem->removePorog(3);
             baritem->relen();
+			baritem->normalize();
 
 			delete retf;
 
