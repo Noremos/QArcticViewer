@@ -9,52 +9,44 @@
 
 using std::cout;
 
-inline long long st(long long st)
-{
-	int step = 1;
-	for (long long i = 1; i <= st; i++)
-		step *= 2;
-	return step;
-}
+#define CHECKRET \
+	if (added + 1 >= maxSize) \
+		{\
+			qDebug() << "Out of tile";\
+			return;\
+		}
 
 class decorder
 {
+	static const int MIN_BITS = 9;
+	static const int CLEAR_CODE = 256; // clear code
+	static const int EOI_CODE = 257; // end of information
+	static const int MAX_BYTELENGTH = 12;
+
+	const int st[MAX_BYTELENGTH+1]{
+		1,//0
+		2,//1
+		4,//2
+		8,//3
+		16,//4
+		32,//5
+		64,//6
+		128,//7
+		256,//8
+		512,//9
+		1024,//10
+		2048,//11
+		4096//12
+	};
+
 	int comprType;
 public:
+	size_t arrLen;
+
 	decorder(int compressType) : comprType(compressType)
 	{
 	}
-	const int MIN_BITS = 9;
-	const int CLEAR_CODE = 256; // clear code
-	const int EOI_CODE = 257; // end of information
-	const int MAX_BYTELENGTH = 12;
-	size_t arrLen;
 
-/*	int getByte2(uchar *arry, int pos, int len = 8)
-	{
-		//9 bit
-		int k = pos / 8;
-		int l = pos % 8;
-		int r = 0;
-		int lnm = len / 8;
-		int mask = 0;
-		for (uchar cs = 0; cs <= lnm; ++cs)
-		{
-			r |= arry[k + cs] << (lnm - cs) * 8;
-			mask |= 255 << (lnm - cs) * 8;
-		}
-		lnm += 1;
-//		int r = int(arry[k] << 8 | arry[k + 1]);
-		char ds = lnm * 8 - len - l;
-		if (ds < 0)
-		{
-			cout << ("ran off the end of the buffer before finding EOI_CODE (end on input code)");
-			return EOI_CODE;
-		}
-		r = (r << l) & mask;
-		r = r >> (ds + l);
-		return r;
-	}*/
 	ushort getByte3(uchar *arry)
 	{
 		//9 bit
@@ -80,38 +72,46 @@ public:
 			return ushort(r);
 		}
 	}
-//	ushort getByte(uchar* arry, const int length)
-//	{
-//		const int d = position % 8;// bit start pos
-//		const int a = position / 8;// byte start pos
-//		const int de = 8 - d;// bits in byte that needs
-//		const int ef = (position + length) - ((a + 1) * 8);// bits to reed?
-//		int fg = (8 * (a + 2)) - (position + length);// start offset from second byte
-//		const int dg = ((a + 2) * 8) - position;//need to reeds?
-//		fg = max(0, fg);
-//		if (a >= arrLen)
-//		{
-//			cout << ("ran off the end of the buffer before finding EOI_CODE (end on input code)");
-//			return EOI_CODE;
-//		}
 
-//		int chunk1 = arry[a] & (st(8 - d) - 1);
-//		chunk1 = chunk1 << (length - de);
-//		int chunks = chunk1;//get bits from first byte
-//		if (a + 1 < arrLen)
-//		{
-//			int chunk2 = arry[a + 1] >> fg;
-//			chunk2 <<= max(0, (length - dg));
-//			chunks += chunk2;
-//		}
-//		if (ef > 8 && a + 2 < arrLen)
-//		{
-//			const int hi = ((a + 3) * 8) - (position + length);
-//			const int chunk3 = arry[a + 2] >> hi;
-//			chunks += chunk3;
-//		}
-//		return chunks;
-//	}
+	// void swap(uchar&a, uchar&b)
+	// {
+	// 	uchar temp =a;
+	// 	a =b;
+	// 	b = temp;
+	// }
+ 	buffer rev;
+
+    uchar getAppedRev(ushort cod2e)
+	{
+		// size_t srclen = this->result->size();
+		
+		// buffer rev;
+        // for (int i = code; i != 4096; i = dictionaryIndex[i])
+		// {
+		// 	this->result->push_back(dictionaryChar[i]);
+		// }
+        // uchar last = this->result->at(this->result->size()-1);
+
+        // size_t curlen = this->result->size();
+
+        // size_t diff = (curlen-srclen) / 2;
+		// for (size_t i = 0; i < diff / 2; ++i)
+		// {
+        //     swap( this->result->at(srclen + i), this->result->at(curlen -1 -i));
+		// }
+		
+		// return last;
+
+
+		rev.clear();
+        for (int i = cod2e; i != 4096; i = dictionaryIndex[i])
+		{
+			rev.push_back(dictionaryChar[i]);
+		}
+		for (int i = (int)rev.size() - 1; i >= 0; i--)
+			this->result->push_back(rev[i]);
+		return rev[rev.size() - 1];
+	}
 
 	void appendReversed(buffer& dest, const buffer& source)
 	{
@@ -126,21 +126,22 @@ public:
 		}
 	}
 
+
 	inline void initDictionary()
 	{
 		dictionaryLength = 258;
 		byteLength = MIN_BITS;
 	}
-	ushort getNext(uchar* arry)
+
+	void getNext()
 	{
 //		if (position == 75953)			qDebug() << "";
 //		const ushort byte2 = getByte(arry, position, byteLength);
-		const ushort byte2 = getByte3(arry);
-//		if (byte2 != byte22)qDebug() << "";
+		code = getByte3(arry);
 		position += byteLength;
-		return byte2;
 	}
-	void addToDictionary(int i, uchar c)
+
+    void addToDictionary(int i, ushort c)
 	{
 		assert(dictionaryLength < 4093); //864689
 //		if (position == 864689)
@@ -149,44 +150,61 @@ public:
 		dictionaryIndex[dictionaryLength++] = i;
 	}
 
+	//ushort because index always less than 4096
 	int dictionaryIndex[4093];
-	short dictionaryChar[4093];
-	int dictionaryLength = 258;
-	int byteLength = MIN_BITS;
-	size_t position = 0;
 
+	// short because code can be more than 256
+	short dictionaryChar[4093];
+
+	ushort dictionaryLength = 258;
+	int byteLength = MIN_BITS;
+	size_t position = 0, added = 0, maxSize= 0;
+
+	buffer* result;
+	// uchar *result;
+	uchar *arry;
+	short code;
 public:
+
 	void decompress(uchar* input, offu64 size, buffer& result, size_t maxVal = UINT64_MAX)
 	{
 		if (comprType == 1)
 		{
-			result.insert(result.begin(), input, input + size);
+            result.insert(result.begin(), input, input + size);
+//			output = input;
 			return;
 		}
 
+        this->result = &result;
+		this->arry = input;
+
+		this->maxSize = maxVal;
+		this->arrLen = size;
+		this->position = 0;
+		this->added = 0;
+
 		memset(&dictionaryIndex, 0, 4093 * 4);
 		memset(&dictionaryChar, 0, 4093  * 2);
-		arrLen = size;
-		position = 0;
-		for (int i = 0; i <= 257; i++)
+        for (ushort i = 0; i <= 257; i++)
 		{
 			dictionaryIndex[i] = 4096;
 			dictionaryChar[i] = i;
 		}
-		size_t added = result.size();
 		initDictionary();
-		uchar* arry = input;
-		ushort code = getNext(arry);
-		ushort oldCode = 0;
+		getNext();
+        short oldCode = 0;
+
+		buffer val;
+
 		while (code != EOI_CODE)
 		{
 			if (code == CLEAR_CODE)
 			{
 				initDictionary();
-				code = getNext(arry);
+				getNext();
 				while (code == CLEAR_CODE)
 				{
-					code = getNext(arry);
+					getNext();
 				}
 
 				if (code == EOI_CODE)
@@ -199,7 +217,10 @@ public:
 				}
 				else
 				{
-					buffer val;
+					// getAppedRev(code);
+					// CHECKRET
+
+					val.clear();
 					getDictionaryReversed(code, val);
 					appendReversed(result, val);
 					added += val.size();
@@ -211,7 +232,7 @@ public:
 			}
 			else if (code < dictionaryLength)
 			{
-				buffer val;
+				val.clear();
 				getDictionaryReversed(code, val);
 				appendReversed(result, val);
 				added += val.size();
@@ -219,27 +240,39 @@ public:
 					return;
 
 				addToDictionary(oldCode, val[val.size() - 1]);
+
+				// ushort last = getAppedRev(code);
+				// addToDictionary(oldCode, last);
+				// CHECKRET
 				oldCode = code;
 			}
 			else
 			{
-				buffer oldVal;
-				getDictionaryReversed(oldCode, oldVal);
+				val.clear();
+				getDictionaryReversed(oldCode, val);
 
-				if (oldVal.empty())
+				if (val.empty())
 				{
 					throw std::exception();//"Bogus entry.Not in dictionary, ${ oldCode } / ${ dictionaryLength }, position: ${ position }");
 				}
-				appendReversed(result, oldVal);
-				result.push_back(oldVal[oldVal.size() - 1]);
+				appendReversed(result, val);
+				result.push_back(val[val.size() - 1]);
 				if (result.size() - ++added >= maxVal)
 					return;
 
-				addToDictionary(oldCode, oldVal[oldVal.size() - 1]);
+				addToDictionary(oldCode, val[val.size() - 1]);
+
+				// ushort last = getAppedRev(code);
+
+				// this->result->push_back(last);
+				// CHECKRET
+
+				// // result[added++] = last;//oldVal[oldVal.size() - 1];
+				// addToDictionary(oldCode, last);
 				oldCode = code;
 			}
 
-			if (dictionaryLength + 1 >= st(byteLength))
+			if (dictionaryLength + 1 >= st[byteLength])
 			{
 				if (byteLength == MAX_BYTELENGTH)
 				{
@@ -250,7 +283,7 @@ public:
 					byteLength++;
 				}
 			}
-			code = getNext(arry);
+			getNext();
 		}
 	}
 };
