@@ -572,7 +572,7 @@ background-color: &quot;#d4d1d1&quot;;
           <double>0.000000000000000</double>
          </property>
          <property name="maximum">
-          <double>0.400000000000000</double>
+          <double>1.000000000000000</double>
          </property>
          <property name="singleStep">
           <double>0.100000000000000</double>
@@ -887,7 +887,7 @@ border.width:3</string>
      <x>0</x>
      <y>0</y>
      <width>1051</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
