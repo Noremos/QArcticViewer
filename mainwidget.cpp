@@ -204,7 +204,7 @@ void MainWidget::wheelEvent(QWheelEvent *event)
 void MainWidget::keyPressEvent(QKeyEvent *event)
 {
 	shitfp = event->modifiers() & Qt::ShiftModifier;
-	auto key = event->key();
+	auto key = event->nativeVirtualKey();
 	if (key >= 0 && key < 1024)
 	{
 //		bool jg = keys[key];
