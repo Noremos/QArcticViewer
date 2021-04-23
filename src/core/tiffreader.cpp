@@ -53,6 +53,24 @@ struct increnenter
 	}
 };
 
+template<class T>
+struct increnenterBytes
+{
+	increnenterBytes(uchar *bytes, int st, int ed, bool reverse)
+	{
+		this->bytes = bytes;
+		rev = reverse;
+		i = rev ? ed : st;
+	}
+	uchar *bytes;
+	bool rev;
+	int i = 0;
+	T v(int off)
+	{
+		return (T)bytes[(rev ? i-- : i++)] << off;
+	}
+};
+
 float TiffReader::toFloat(uchar* bytes)
 {
 	tofloat conv;
@@ -83,6 +101,13 @@ uint TiffReader::toInt(uchar* bytes)
 	return int((unsigned char)(bytes[t.v()]) << 24 | (bytes[t.v()]) << 16 | (bytes[t.v()]) << 8 | (bytes[t.v()]));
 }
 
+long long TiffReader::toInt64(uchar *bytes)
+{
+	//alternative int* y; y = reinterpret_cast<int*>(bytes); return *y;
+	increnenterBytes<long long> t(bytes, 0, 7, imgByteOrder != sysByteOredr);
+	return t.v(56) |t.v(48) |t.v(40) |t.v(32) |t.v(24) | t.v(16) | t.v(8) | t.v(0);
+}
+
 
 void TiffReader::reorder(uchar* bytes, int size)
 {
@@ -93,51 +118,104 @@ void TiffReader::reorder(uchar* bytes, int size)
 	}
 }
 
-void TiffReader::printHeader(uchar* buffer)
+int TiffReader::printHeader(uchar* buffer)
 {
 	OUT << "----Header----";
 	OUT << "Byte order:" << buffer[0] << buffer[1]; //“II”(4949.H)“MM” (4D4D.H).
+
+	short versNum = toShort(buffer + 2);
 	OUT << "Version number :" << (toShort(buffer + 2));
-	OUT << "Offset to first IFD:" << (toInt(buffer + 4)) << endl;
-}
-int TiffReader::getTagIntValue(offu64 offOrValue, offu64 count, char format)
-{
-	if (count > 4)
+	if (versNum == 42)
 	{
-		uchar buffer[4]{ 0,0,0,0 };
-		read(buffer, offOrValue, format == 4 ? 4 : 2);
-		return toInt(buffer);
+		// Standart tiff
+		OUT << "Offset to first IFD:" << (toInt(buffer + 4));
 	}
 	else
-		return offOrValue;
+	{
+		// BigTiff
+		OUT << "Bytesize of offsets :" << (toShort(buffer + 4));
+
+		OUT << "Constant :" << (toShort(buffer + 6));
+	}
+
+	return versNum;
 }
-void TiffReader::printTag(uchar* buffer)
+size_t TiffReader::getTagIntValue(size_t offOrValue, size_t count, char format, bool is64)
+{
+	if (is64)
+	{
+		if (count > 8)
+		{
+			uchar buffer[8]{ 0,0,0,0,0,0,0,0 };
+			read(buffer, offOrValue, format == 4 ? 4 : format == 8 ? 8 : 2);
+			return toInt64(buffer);
+		}
+		else
+			return offOrValue;
+	}
+	else
+	{
+		if (count > 4)
+		{
+			uchar buffer[4]{ 0,0,0,0 };
+			read(buffer, offOrValue, format == 4 ? 4 : 2);
+			return toInt(buffer);
+		}
+		else
+			return offOrValue;
+	}
+}
+
+#include "side-src/fast_float/fast_float.h"
+
+
+float TiffReader::getFloatFromAscii(size_t offOrValue, size_t count, char format, bool is64)
+{
+	uchar *buffer = new uchar[count];
+	memset(buffer, 0, count);
+
+	read(buffer, offOrValue, count);
+
+	std::string s;
+	s.append((char *) buffer, count);
+	for (size_t i = 0; i < s.length(); ++i)
+	{
+		if (s[i] == ',')
+			s[i] = '.';
+	}
+	float val = std::stof(s);
+//	fast_float::from_chars((const char*)buffer, (const char*)(buffer + count), val);
+	return val;
+}
+
+template <class T>
+void TiffReader::printTag(uchar* buffer, bool is64)
 {
 //	OUT << "----Tag data----";
 	ushort tag = toShort(buffer);
 	ushort type = toShort(buffer + 2);
-	offu64 count = toInt(buffer + 4);
-	offu64 value = toInt(buffer + 8);
+	T count = is64 ? toInt64(buffer+4) : toInt(buffer + 4);
+	T value = is64 ? toInt64(buffer+12) : toInt(buffer + 8);
 
 	bool print = true;
 	switch ((Tags)tag)
 	{
 	case Tags::TileWidth:
-		this->tiff.TileWidth = getTagIntValue(value, count, type);
+		this->tiff.TileWidth = getTagIntValue(value, count, type, is64);
 		break;
 	case Tags::TileLength:
-		this->tiff.TileLength = getTagIntValue(value, count, type);
+		this->tiff.TileLength = getTagIntValue(value, count, type, is64);
 		break;
 	case Tags::ImageWidth:
-		this->tiff.ImageWidth = getTagIntValue(value, count, type);
+		this->tiff.ImageWidth = getTagIntValue(value, count, type, is64);
 		OUT << "ImageWidth";
 		break;
 	case Tags::ImageLength:
-		this->tiff.ImageLength = getTagIntValue(value, count, type);
+		this->tiff.ImageLength = getTagIntValue(value, count, type, is64);
 		OUT << "ImageLength";
 		break;
 	case Tags::PlanarConfiguration:
-		this->tiff.PlanarConfiguration = getTagIntValue(value, count, type);
+		this->tiff.PlanarConfiguration = getTagIntValue(value, count, type, is64);
 		OUT << "PlanarConfiguration";
 		break;
 	case Tags::TileOffsets:
@@ -170,18 +248,21 @@ void TiffReader::printTag(uchar* buffer)
 		break;
 
 	case Tags::BitsPerSample:
-		this->tiff.BitsPerSample = getTagIntValue(value, count, type);
+		this->tiff.BitsPerSample = getTagIntValue(value, count, type, is64);
 		OUT << "BitsPerSample";
 		break;
 	case Tags::SamplesPerPixel:
-		this->tiff.SamplesPerPixel = getTagIntValue(value, count, type);
+		this->tiff.SamplesPerPixel = getTagIntValue(value, count, type, is64);
 		OUT << "SamplesPerPixel";
 		break;
 	case Tags::Compression:
-		this->tiff.Compression = getTagIntValue(value, count, type);
+		this->tiff.Compression = getTagIntValue(value, count, type, is64);
 		OUT << "Compression";
 		break;
-
+	case Tags::NoData:
+	{
+		this->tiff.NoDataValue = getFloatFromAscii(value, count, type, is64);
+	}
 	default:
 		print = false;
 		break;
@@ -194,11 +275,12 @@ void TiffReader::printTag(uchar* buffer)
 		OUT << "Number of values:" << count;
 		//	wid = toInt(buffer + 4);
 		//dataOffset = toInt(buffer + 8);
-		OUT << "Tag data or offset to tag data see below:" << value << endl;
+		OUT << "Tag data or offset to tag data see below:" << value;
 	}
 
 	//In other words, if the tag data is smaller than or equal to 4 bytes, it fits. Otherwise, it is stored elsewhere and pointed to.
 }
+
 void TiffReader::read(uchar* buffer, offu64 offset, offu64 len)
 {
 #ifdef _MSC_VER
@@ -246,38 +328,72 @@ ImageType TiffReader::getType()
 //	return cachedTiles.getData(tileNum, nullptr);
 //}
 
-int getTypeSize(char type)
+int getTypeSize(uchar type)
 {
-	// { nullptr,     "BYTE",  "ASCII",     "SHORT",  "LONG",
-	//		"RATIONAL",  "SBYTE", "UNDEFINED", "SSHORT", "SLONG",
-	//	"SRATIONAL", "FLOAT", "DOUBLE",    "IFD",    "LONG8",
-	//"SLONG8",    "IFD8" };
-	static const int sizes[]{0, 1, 1, 2, 4, 0, 1, 0, 2, 4, 0, 4, 8, 0, 1, 1, 0};
+	//https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf
+	//  0			 1		  2			   3		 4
+	//  nullptr,     "BYTE",  "ASCII",     "SHORT",  "LONG",
+	//  5			 6		  7			   8		 9
+	//	"RATIONAL",  "SBYTE", "UNDEFINED", "SSHORT", "SLONG",
+	//  10			 11		  12		   13		 14
+	//	"SRATIONAL", "FLOAT", "DOUBLE",    "IFD",    0,
+	//  15			 16		  17		   18
+	//  0,			 "LONG8", "SLONG8",    "IFD8"
+	static const int sizes[]{0, 1, 1, 2, 4,/**/
+							 0, 1, 0, 2, 4,/**/
+							 0, 4, 8, 0, 0,/**/
+							 0, 8, 8, 0};
 	return sizes[type];
 //	return type == 4 ? 4 : 2;
 }
 
-uchar* TiffReader::getTile(int ind)
+int getAddnl(int main, int minor)
 {
-	uchar *n = nullptr;
+	return (main / minor) + (main % minor == 0 ? 0 : 1);
+}
 
-	uchar *data = cachedTiles.getData(ind, n);
-	const int bytsInTileWid = tiff.TileWidth * sizeof(float);
+int TiffReader::getTileWid(int x)
+{
+	//tiff.ImageWidth = 1001
+	//tiff.TileWidth = 100
+	//rowNum = 10
+	//(1001 - 100*10) = 0001 < 100 = 1
+	//(1001 - 100*5) = 501 > 100= 10
+	size_t widleft = (tiff.ImageWidth - tiff.TileWidth * x);
+	return widleft < tiff.TileWidth ? widleft : tiff.TileWidth;
+}
 
-	if (data == n)
+//Offsets are ordered left-to-right and top-to-bottom.
+rowptr TiffReader::getTile(int x, int y)
+{
+	int TilesInWid = getAddnl(tiff.ImageWidth, tiff.TileWidth);
+	//	int TilesInHei = getAddnl(tiff.ImageLength, tiff.TileLength);
+	int tileNum = y * TilesInWid + x;
+	return getTile(tileNum);
+}
+
+
+rowptr TiffReader::getTile(int ind)
+{
+	rowptr null = nullptr;
+
+	rowptr data = cachedTiles.getData(ind, null);
+//	const int bytsInTileWid = tiff.TileWidth * sizeof(float);
+
+	if (data == null)
 	{
 		//offset tile
-		uchar buffer[4];
+		uchar buffer[8];
 
 		char sie = getTypeSize(tiff.TileOffsetsType);
 		read(buffer, tiff.TileOffsets + (ind) * sie, sie);
-		uint off = toInt(buffer);
+		size_t off = (sie==4? toInt(buffer) : toInt64(buffer));
 		//************
 
 		//Count
 		sie = getTypeSize(tiff.TileOffsetsType);
 		read(buffer, tiff.TileByteCounts + (ind) * sie, sie);
-		uint count = toInt(buffer);
+		size_t count = (sie==4? toInt(buffer) : toInt64(buffer));
 		uchar *buff = new uchar[count];
 		//*****
 
@@ -289,12 +405,11 @@ uchar* TiffReader::getTile(int ind)
 		decod.decompress(buff, count, temp); // (rowInTile + 1) * bytsInTileWid
 		delete[] buff;
 
-		size_t ft = bytsInTileWid * tiff.TileLength;
-		data = new uchar[ft];
-
-		memcpy(data, temp.data(), ft);
+//		size_t ft = bytsInTileWid * tiff.TileLength;
+		data = processData(temp.data(), tiff.TileWidth* tiff.TileLength);
 		cachedTiles.storeData(ind, data);
 	}
+
 	return data;
 }
 
@@ -306,45 +421,70 @@ void TiffReader::removeTileFromCache(int ind)
 	}
 }
 
-rowptr TiffReader::processData(uchar* bytes)
+rowptr TiffReader::processData(uchar* bytes, int len)
 {
-	int len = widght();
 	rowptr data;
-	switch (getType())
-	{
-	case ImageType::float32:
+//	switch (getType())
+//	{
+//	case ImageType::float32:
 		data = setData<float>(bytes, len);
-	}
+//	}
 	return data;
 }
 
 rowptr TiffReader::getRowData(int y)
 {
-	vector<uchar> ret;
-	ret.reserve(tiff.ImageWidth + 10);
-
 	if (tiff.TileWidth != 0)
 	{
-		int TilesAcross = (tiff.ImageWidth + tiff.TileWidth - 1) / tiff.TileWidth;
+		//Offsets are ordered left-to-right and top-to-bottom.
+
+		// Сначала вычисляет в каком тайле есть нужная строка,
+		//
+		int TilesInRow = getAddnl(tiff.ImageWidth, tiff.TileWidth);
 //		int TilesDown = (tiff.ImageLength + tiff.TileLength - 1) / tiff.TileLength;
 //		int TilesPerImage = TilesAcross * TilesDown;
-		cachedTiles.setMaxElems(TilesAcross);
+		cachedTiles.setMaxElems(TilesInRow+2);
 
-		int tileNum = (y / tiff.TileLength) * TilesAcross;
-		int rowInTile = y % tiff.TileLength;
+		//	    col0  col1  col2
+		//row0	/\ /\ /\ /\ /\
+		//		\/ \/ \/ \/ \/
+		//row1	/\ /\ /\ /\ /\
+		//		\/ \/ \/ \/ \/
+		//row2	/\ /\ /\ /\ /\
+		//		\/ \/ \/ \/ \/
 
-		const int bytsInTileWid = tiff.TileWidth * sizeof(float);
-		for (int i = 0; i < TilesAcross; ++i)
+
+		//|------|------$-x----|-----|----|-----
+		//-------------rowTileNum----
+
+		//Номер тайла Y
+		int colTileNum = (y / tiff.TileLength);
+
+		// Строка в тайле row == widht
+		int rowInTileas = y % tiff.TileLength;
+
+		rowptr imageRow = new float[tiff.ImageWidth];
+		for (int i = 0; i < TilesInRow; ++i)
 		{
-			uchar* data = getTile(tileNum+i);
-			data += rowInTile * bytsInTileWid;
-//			ret.reserve( ret.size() + bytsInTileWid );
+			float* data = getTile(i, colTileNum) + rowInTileas * tiff.TileWidth;
+			// Add to row
+			//			ret.reserve( ret.size() + bytsInTileWid );
+			const unsigned long currentTileWid = getTileWid(i);
+			const unsigned long rowOffset = i * tiff.TileWidth;
 
-			ret.insert(ret.end(), data, data + bytsInTileWid);
-			continue;
+			if (rowOffset + currentTileWid > tiff.ImageWidth)
+				assert(false);
+
+			memcpy(imageRow + rowOffset, data, currentTileWid * sizeof (float));
 		}
-	}else
+		return imageRow;
+
+	}
+	else
 	{
+		vector<uchar> ret;
+		ret.reserve(tiff.ImageWidth + 10);
+
 		uchar buffer[4];
 
 		char sie = getTypeSize(tiff.StripOffsetsType);
@@ -362,11 +502,8 @@ rowptr TiffReader::getRowData(int y)
 		decorder decod(tiff.Compression);
 		decod.decompress(buff, count, ret);
 		delete[] buff;
+		return processData(ret.data(), widght());
 	}
-
-	rowptr data = processData(ret.data());
-	ret.clear();
-	return data;
 }
 
 void TiffReader::printIFD(offu64 offset)
@@ -377,23 +514,59 @@ void TiffReader::printIFD(offu64 offset)
 
 	read((uchar*)temp, offset, 2);
 	ushort tagNums = toShort(temp);
-
-
 	//OUT << "Number of tags in IFD:" << tagNums << endl;
 
-	buffer = new uchar[12 * tagNums + 6];
-	read(buffer, offset, 12 * tagNums + 6);
+	//--- after all entries 2+n*12	32-bit	offset to next directory or zero
+	// 2 for tagNums and 4 for offset to next directory or zero
+
+	buffer = new uchar[12 * tagNums + 4];
+	read(buffer, offset + 2, 12 * tagNums + 4);
 
 	for (int i = 0; i < tagNums; ++i)
 	{
-		printTag(buffer + 2 + 12 * i);
+		printTag<uint>(buffer + 12 * i, false);
 	}
-	uint oofset = toInt(buffer + tagNums * 12 + 2);
+	uint oofset = toInt(buffer + tagNums * 12);
 
 	delete[] buffer;
 
 	if (oofset != 0)
 		printIFD(oofset);
+}
+
+void TiffReader::printBigIFD(size_t offset)
+{
+	//OUT << "----IDF----";
+	uchar *buffer;
+	uchar temp[8];
+
+	// number of directory entries
+	read((uchar *) temp, offset, 8);
+	size_t tagNums = toInt64(temp);
+	//OUT << "Number of tags in IFD:" << tagNums << endl;
+
+
+	//--- after all entries
+	// 8+n*20	64-bit	offset to next directory or zero
+	int TAG_SIZE = 20;
+	int OFFSET_TO_FIRST_TEG = 8;
+	int SIZE_OF_NEXT_IFD = 8;
+
+	const int toReadCount = TAG_SIZE * tagNums + SIZE_OF_NEXT_IFD;
+
+	buffer = new uchar[toReadCount];
+	read(buffer, offset + OFFSET_TO_FIRST_TEG, toReadCount);
+
+	for (size_t i = 0; i < tagNums; ++i)
+	{
+		printTag<long long>(buffer + TAG_SIZE * i, true);
+	}
+	size_t oofset = toInt64(buffer + tagNums * TAG_SIZE);
+
+	delete[] buffer;
+
+	if (oofset != 0)
+		printBigIFD(oofset);
 }
 
 void TiffReader::printValue(int x, int y)
@@ -427,7 +600,7 @@ void TiffReader::printValue(int x, int y)
 
 bool TiffReader::open(const wchar_t* path)
 {
-	uchar buffer[16];
+	uchar buffer[8];
 	ready = false;
 	isTile = false;
 
@@ -441,9 +614,22 @@ bool TiffReader::open(const wchar_t* path)
 	{
 		read(buffer, 0, 8);
 		imgByteOrder = buffer[0];
-		printHeader(buffer);
-		uint idfOffset = toInt(buffer + 4);
-		printIFD(idfOffset);
+		int verNum = printHeader(buffer);
+		if (verNum==42)
+		{
+			// Standart tiff
+			uint idfOffset = toInt(buffer + 4);
+			printIFD(idfOffset);
+		}
+		else
+		{
+			read(buffer, 8, 8);
+			size_t idfOffset = toInt64(buffer);
+			OUT << "Offset to first IFD:" << idfOffset;
+
+			// BigTiff tiff
+			printBigIFD(idfOffset);
+		}
 	}
 	ready = true;
 	return true;

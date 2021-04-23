@@ -43,16 +43,25 @@ public:
 	void bindSetPorogBarMax(int maxVal);
 	void bindIncementProgBarVal(int incr = 1);
 
+	void openProject(QString path);
+	void openProject();
+	void openProjectAsync();
+
+	void importDTM();
+	void importDTMAsync(QString fileName);
+
 signals:
 	void signalProgressMaxChanged(int);
 	void signalProgressValueChawnged(int);
 
 private slots:
 
-	void StartTheTimer() { timer.start(12, this); }
+	void StartTheTimer();
 
 	void findROIsAsyncEnd();
 	void findByParamsAsyncEnd();
+	void openProjectAsyncEnd();
+	void importDTMAsyncEnd();
 
 	//Progress
 
@@ -66,9 +75,7 @@ private slots:
 
 	void on_textureLoder_clicked();
 
-	void importDTM();
-	void openProject();
-	void openProject(QString path);
+
 	void saveSettings();
 
 	void on_pbOpenProject_clicked();

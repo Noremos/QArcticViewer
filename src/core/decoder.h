@@ -108,15 +108,18 @@ public:
 		{
 			rev.push_back(dictionaryChar[i]);
 		}
-		for (int i = (int)rev.size() - 1; i >= 0; i--)
+		for (int i = (int)rev.size() - 1; i >= 0; --i)
 			this->result->push_back(rev[i]);
 		return rev[rev.size() - 1];
 	}
 
-	void appendReversed(buffer& dest, const buffer& source)
+	void appendReversed(const buffer& source)
 	{
-		for (int i = (int)source.size() - 1; i >= 0; i--)
-			dest.push_back(source[i]);
+		for (int i = (int) source.size() - 1; i >= 0; --i)
+		{
+			uchar v = source[i];
+			result->push_back(v);
+		}
 	}
 	void getDictionaryReversed(int n, buffer& rev)
 	{
@@ -209,10 +212,12 @@ public:
 
 				if (code == EOI_CODE)
 				{
+					val.clear();
 					break;
 				}
 				else if (code > CLEAR_CODE)
 				{
+					val.clear();
 					throw std::exception();//"corrupted code at scanline ${ code }");
 				}
 				else
@@ -220,21 +225,20 @@ public:
 					// getAppedRev(code);
 					// CHECKRET
 
-					val.clear();
 					getDictionaryReversed(code, val);
-					appendReversed(result, val);
+					appendReversed(val);
 					added += val.size();
 					if (result.size() - added >= maxVal)
 						return;
 
+					val.clear();
 					oldCode = code;
 				}
 			}
 			else if (code < dictionaryLength)
 			{
-				val.clear();
 				getDictionaryReversed(code, val);
-				appendReversed(result, val);
+				appendReversed(val);
 				added += val.size();
 				if (result.size() - added >= maxVal)
 					return;
@@ -244,18 +248,18 @@ public:
 				// ushort last = getAppedRev(code);
 				// addToDictionary(oldCode, last);
 				// CHECKRET
+				val.clear();
 				oldCode = code;
 			}
 			else
 			{
-				val.clear();
 				getDictionaryReversed(oldCode, val);
 
 				if (val.empty())
 				{
 					throw std::exception();//"Bogus entry.Not in dictionary, ${ oldCode } / ${ dictionaryLength }, position: ${ position }");
 				}
-				appendReversed(result, val);
+				appendReversed(val);
 				result.push_back(val[val.size() - 1]);
 				if (result.size() - ++added >= maxVal)
 					return;
@@ -269,6 +273,7 @@ public:
 
 				// // result[added++] = last;//oldVal[oldVal.size() - 1];
 				// addToDictionary(oldCode, last);
+				val.clear();
 				oldCode = code;
 			}
 

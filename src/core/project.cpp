@@ -17,7 +17,7 @@ Project *Project::proj = nullptr;
 
 Project::Project()
 {
-	projectPath = "D:\\Programs\\Barcode\\_bar\\";
+	projectPath = "D:\\Programs\\Barcode\\_bar\\_p2\\";
 }
 
 bool Project::saveProject()
@@ -171,17 +171,17 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 	//!###############################BARCODE############################
 	QVector<Baritem<float> *> etalons;
-	int maxetalcount = 5;
+	int maxetalcount = 30;
 	bc::BarcodeCreator<float> creator;
 	BarConstructor<float> constr;
 	if (checkBar3d)
 	{
-		constr.addStructure(ProcType::f0t255, ColorType::gray, ComponentType::Component);
+		constr.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
         constr.returnType = ReturnType::barcode2d;
 		constr.createBinayMasks = false;
 		constr.createGraph = false;
 
-        QDir directory("D:/Progs/QT/QArcticViewer/etalons/imgs_orginal");
+		QDir directory("D:/Programs/Python/barcode/experements/geo/imgs_orginal");
 		QStringList images = directory.entryList(QStringList() << "*.bf", QDir::Files);
 		int sd = 0;
 		foreach (QString filename, images)
@@ -206,6 +206,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			file.close();
 			if (++sd >= maxetalcount)
 				break;
+
 			//do whatever you need to do
 		}
 	}
@@ -235,6 +236,9 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 			if (pbCallback.cbIncrValue)
 				pbCallback.cbIncrValue(1);
+
+			if (pbCallback.stopAction)
+				break;
 
             QStringList listw = line.split(" ");
             tileindex = listw[1].toInt();
@@ -365,7 +369,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	saveProject();
 }
 
-void Project::loadImage(QString path, int step, int type)
+void Project::loadImage(const PrjgBarCallback &pbCallback, QString path, int step, int type, int start, int end)
 {
 //	int imgtype = 0;
 //	switch (imgtype)
@@ -378,6 +382,7 @@ void Project::loadImage(QString path, int step, int type)
 	this->modelPath = "map.obj";
 	this->heimapPath = path;
 
+	closeReader();
 	openReader();
 	if (!reader->ready)
 		return ;
@@ -385,7 +390,7 @@ void Project::loadImage(QString path, int step, int type)
 	Obj3d object(reader);
 	object.setMode((ProcessMode) type);
 	object.setStep(step);
-	object.write(getPath(BackPath::object), 0, 0);
+	object.write(pbCallback, getPath(BackPath::object), start, end);
 
 	this->imgMinVal = reader->min;
 	this->imgMaxVal = reader->max;

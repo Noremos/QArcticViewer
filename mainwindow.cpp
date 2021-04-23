@@ -72,21 +72,36 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-    openProject("D:\\Progs\\temp\\bar\\proj.qwr");
+    openProject("D:\\Programs\\Barcode\\_bar\\p4\\proj.qwr");
 	//	openProject();
 }
 
+void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
+{
+	connect(boxMin, qOverload<int>(&QSpinBox::valueChanged), boxMax, &QSpinBox::setMinimum);
+	//	connect(boxMax, qOverload<int>(&QSpinBox::valueChanged), boxMin, &QSpinBox::setMaximum);
+}
+
+void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
+{
+	connect(boxMin, qOverload<double>(&QDoubleSpinBox::valueChanged), boxMax, &QDoubleSpinBox::setMinimum);
+}
+
+
+// #################### OPEN PROJECT ASYNC ##########################
 void MainWindow::openProject()
 {
 	QString projName = QFileDialog::getOpenFileName(0, "Открыть проект", QString(), tr("AW prject (*.qwr)"));
 	openProject(projName);
 }
 
+
 void MainWindow::openProject(QString projName)
 {
 
 	if (projName.length() == 0)
 		return;
+
 	proj->loadProject(projName);
 
 	ui->coofSB->setValue(proj->searchSetts.coof);
@@ -98,15 +113,25 @@ void MainWindow::openProject(QString projName)
 
 	ui->glWidget->makeCurrent();
 	ui->glWidget->terra->clearTextures();
-	ui->glWidget->terra->readfile(proj->getPath(BackPath::object));
-
-	ui->glWidget->terra->setTexture(0, proj->getPath(BackPath::texture1));
-	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
-	ui->glWidget->terra->displayTexture(0);
-	ui->glWidget->drawTerra = true;
 	ui->glWidget->doneCurrent();
 
-	ui->glWidget->update();
+
+	// ASYNC
+	ui->progressBar->reset();
+	ui->leftMenu->setEnabled(false);
+	ui->topMenu->setEnabled(false);
+	ui->pbStopButton->setEnabled(true);
+
+	stopAction = false;
+	future1 = QtConcurrent::run(this, &MainWindow::openProjectAsync); // Thread 1
+
+	if (watcher)
+		delete watcher;
+	watcher = new QFutureWatcher<void>(this);
+	connect(watcher, SIGNAL(finished()), this, SLOT(openProjectAsyncEnd()));
+	watcher->setFuture(future1);
+
+
 
 
 	//	proj->searchSetts.coof = ui->coofSB->value();
@@ -117,21 +142,40 @@ void MainWindow::openProject(QString projName)
 	//	proj->searchSetts.bottomProc = ui->bottomLenSB->value();
 }
 
-
-
-
-void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
+void MainWindow::openProjectAsync()
 {
-	connect(boxMin, qOverload<int>(&QSpinBox::valueChanged), boxMax, &QSpinBox::setMinimum);
-//	connect(boxMax, qOverload<int>(&QSpinBox::valueChanged), boxMin, &QSpinBox::setMaximum);
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+
+	ui->glWidget->terra->readfile(callback, proj->getPath(BackPath::object));
 }
 
-void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
+void MainWindow::openProjectAsyncEnd()
 {
-	connect(boxMin, qOverload<double>(&QDoubleSpinBox::valueChanged), boxMax, &QDoubleSpinBox::setMinimum);
+	ui->glWidget->makeCurrent();
+	ui->glWidget->terra->initArrays();
+	ui->glWidget->terra->setTexture(0, proj->getPath(BackPath::texture1));
+	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
+	ui->glWidget->terra->displayTexture(0);
+	ui->glWidget->drawTerra = true;
+	ui->glWidget->doneCurrent();
+
+	ui->glWidget->update();
+
+	ui->topMenu->setEnabled(true);
+	ui->leftMenu->setEnabled(true);
+	ui->pbStopButton->setEnabled(false);
+
+	delete watcher;
+	watcher = nullptr;
 }
 
-// FIND ROI AND BARS
+//####################
+
+
+// ############################ FIND ROI AND BARS ASYNC ##################################
 void MainWindow::findROIs()
 {
 	ui->progressBar->reset();
@@ -152,6 +196,17 @@ void MainWindow::findROIs()
     watcher->setFuture(future1);
 }
 
+
+void MainWindow::findROIsAsync()
+{
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+
+	proj->findROIsOnHiemap(callback, ui->startProc->value(), ui->endProc->value());
+}
+
 void MainWindow::findROIsAsyncEnd()
 {
 	qDebug() << "ROI done";
@@ -166,15 +221,6 @@ void MainWindow::findROIsAsyncEnd()
 	watcher = nullptr;
 }
 
-void MainWindow::findROIsAsync()
-{
-	using std::placeholders::_1;
-	PrjgBarCallback callback(stopAction);
-	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
-	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
-
-	proj->findROIsOnHiemap(callback, ui->startProc->value(), ui->endProc->value());
-}
 
 //#####################
 
@@ -223,7 +269,6 @@ void MainWindow::findByParamsAsync()
 
 void MainWindow::findByParamsAsyncEnd()
 {
-	qDebug() << "Update beffers";
 	ui->glWidget->makeCurrent();
 
 	proj->spotZones->updateBuffer();
@@ -244,6 +289,7 @@ void MainWindow::findByParamsAsyncEnd()
 	delete watcher;
 	watcher = nullptr;
 }
+
 //#####################
 
 
@@ -260,15 +306,63 @@ void MainWindow::importDTM()
 		QString projName = QFileDialog::getSaveFileName(0, "Куда сохранить проект", QString(), tr("AW prject (*.qwr)"));
 		if (projName.length()==0)
 			return;
+
+		ui->progressBar->reset();
+		//	ui->pbFindByParams->setEnabled(false);
+		ui->leftMenu->setEnabled(false);
+		ui->topMenu->setEnabled(false);
+		ui->pbStopButton->setEnabled(true);
+
+		stopAction = false;
+
 		proj->setProjectPath(projName);
-		opened = true;
+
+		future1 = QtConcurrent::run(this, &MainWindow::importDTMAsync, fileName); // Thread 1
+
+		if (watcher)
+			delete watcher;
+		watcher = new QFutureWatcher<void>(this);
+		connect(watcher, SIGNAL(finished()), this, SLOT(importDTMAsyncEnd()));
+		watcher->setFuture(future1);
+
 	}
 
-	proj->loadImage(fileName, ui->simpithithion->value(), 0);
-	proj->saveProject();
-
-	ui->glWidget->drawTerra = true;
+//	openProject(proj->getPath(BackPath::project));
 	//	fileDialog.setLabelText("Выберите файл, пожалуйста");
+}
+
+void MainWindow::importDTMAsync(QString fileName)
+{
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+
+	proj->loadImage(callback, fileName, ui->simpithithion->value(), 0, ui->startProc->value(), ui->endProc->value());
+	if (callback.stopAction)
+		return;
+	callback.cbSetMax(1);
+	ui->glWidget->terra->readfile(callback, proj->getPath(BackPath::object));
+
+	opened = true;
+}
+
+
+void MainWindow::importDTMAsyncEnd()
+{
+	if (opened)
+	{
+		ui->glWidget->terra->initArrays();
+		proj->saveProject();
+		ui->glWidget->drawTerra = true;
+	}
+
+	ui->pbStopButton->setEnabled(false);
+	ui->topMenu->setEnabled(true);
+	ui->leftMenu->setEnabled(true);
+
+	delete watcher;
+	watcher = nullptr;
 }
 
 
@@ -276,6 +370,8 @@ void MainWindow::bindIncementProgBarVal(int incr)
 {
 	emit signalProgressValueChawnged(incr);
 }
+
+void MainWindow::StartTheTimer() { timer.start(12, this); }
 
 void MainWindow::bindSetPorogBarMax(int maxVal)
 {
@@ -285,7 +381,16 @@ void MainWindow::bindSetPorogBarMax(int maxVal)
 
 void MainWindow::slotSetProgressMax(int maxVal)
 {
-	ui->progressBar->setMaximum(maxVal);
+	if (maxVal==0)
+	{
+		ui->progressBar->setMaximum(1);
+		ui->progressBar->setValue(1);
+	}
+	else
+	{
+		ui->progressBar->setValue(0);
+		ui->progressBar->setMaximum(maxVal);
+	}
 }
 
 void MainWindow::slotSetProgressValue(int incr)

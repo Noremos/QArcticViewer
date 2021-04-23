@@ -6,6 +6,7 @@
 
 void Text2d::addText(boundy &bb)
 {
+	return;
 	float factor = 10;
 	QString text = "";
 	text.append(" L: ");
@@ -45,6 +46,8 @@ Text2d::Text2d() : arrBuf(QOpenGLBuffer::Type::VertexBuffer), modelsBuf(QOpenGLB
 
 void Text2d::updateBuffer()
 {
+	return;
+
 	vao.bind();
 
 	mshader.bind();
@@ -97,6 +100,8 @@ void Text2d::updateBuffer()
 
 void Text2d::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 {
+	return;
+
 	// draw meteorites
 	mshader.bind();
 	texture->bind();
@@ -161,8 +166,10 @@ void Text2d::initSpotModel()
 
 void Text2d::initGL()
 {
-	initializeOpenGLFunctions();
+	initializeOpenGLFunctions();	
 	f = QOpenGLContext::currentContext()->extraFunctions();
+
+	return;
 
 	glinstanse::initShader(mshader, ":/shaders/text.vert", ":/shaders/text.frag");
 

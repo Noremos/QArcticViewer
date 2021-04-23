@@ -37,4 +37,16 @@ namespace
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 #endif
 
+
+#include  <functional>
+
+struct PrjgBarCallback
+{
+	std::function<void(int)> cbIncrValue;
+	std::function<void(int)> cbSetMax;
+	volatile bool &stopAction;
+	PrjgBarCallback(volatile bool &stopAction):stopAction(stopAction)
+	{}
+};
+
 #endif // BASE_H

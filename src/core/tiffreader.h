@@ -7,7 +7,7 @@ typedef unsigned char uchar;
 typedef unsigned int uint;
 typedef unsigned short ushort;
 
-enum class Tags {
+enum class Tags : ushort {
 	//A general indication of the kind of data contained in this subfile.
 	NewSubfileType = 254,
 
@@ -120,130 +120,134 @@ enum class Tags {
 	TileLength = 323,
 	TileOffsets = 324,
 
-	TileByteCounts = 325
+	TileByteCounts = 325,
+
+	NoData = 42113
 };
 
 
 struct TiffTags
 {
 	//A general indication of the kind of data contained in this subfile.
-	uint NewSubfileType = 0;
+	size_t NewSubfileType = 0;
 
 	//A general indication of the kind of data contained in this subfile.
-	uint SubfileType = 0;
+	size_t SubfileType = 0;
 
 	//The number of columns in the image, i.e., the number of pixels per row.
-	uint ImageWidth = 0;
+	size_t ImageWidth = 0;
 
 	//The number of rows of pixels in the image.
-	uint ImageLength = 0;
+	size_t ImageLength = 0;
 
 	//Number of bits per component.
-	uint BitsPerSample = 0;
+	size_t BitsPerSample = 0;
 
 	//Compression scheme used on the image data.
-	uint Compression = 0;
+	size_t Compression = 0;
 
 	//The color space of the image data.
-	uint PhotometricInterpretation = 0;
+	size_t PhotometricInterpretation = 0;
 
 	//For black and white TIFF files that represent shades of gray, the technique used to convert from gray to black and white pixels.
-	uint Threshholding = 0;
+	size_t Threshholding = 0;
 
 	//The width of the dithering or halftoning matrix used to create a dithered or halftoned bilevel file.
-	uint CellWidth = 0;
+	size_t CellWidth = 0;
 
 	//The length of the dithering or halftoning matrix used to create a dithered or halftoned bilevel file.
-	uint CellLength = 0;
+	size_t CellLength = 0;
 
 	//The logical order of bits within a byte.
-	uint FillOrder = 0;
+	size_t FillOrder = 0;
 
 	//A string that describes the subject of the image.
-	uint ImageDescription = 0;
+	size_t ImageDescription = 0;
 
 	//The scanner manufacturer.
-	uint Make = 0;
+	size_t Make = 0;
 
 	//The scanner model name or number.
-	uint Model = 0;
+	size_t Model = 0;
 
 	//For each strip, the byte offset of that strip.
-	uint StripOffsets = 0;
+	size_t StripOffsets = 0;
 	char StripOffsetsType = 0;
 	//The orientation of the image with respect to the rows and columns.
-	uint Orientation = 0;
+	size_t Orientation = 0;
 
 	//The number of components per pixel.
-	uint SamplesPerPixel = 0;
+	size_t SamplesPerPixel = 0;
 
 	//The number of rows per strip.
-	uint RowsPerStrip = 0;
+	size_t RowsPerStrip = 0;
 
 	//For each strip, the number of bytes in the strip after compression.
-	uint StripByteCounts = 0;
+	size_t StripByteCounts = 0;
 	char StripByteCountsType = 0;
 
 	//The minimum component value used.
-	uint MinSampleValue = 0;
+	size_t MinSampleValue = 0;
 
 	//The maximum component value used.
-	uint MaxSampleValue = 0;
+	size_t MaxSampleValue = 0;
 
 	//The number of pixels per ResolutionUnit in the ImageWidth direction.
-	uint XResolution = 0;
+	size_t XResolution = 0;
 
 	//The number of pixels per ResolutionUnit in the ImageLength direction.
-	uint YResolution = 0;
+	size_t YResolution = 0;
 
 	//How the components of each pixel are stored.
-	uint PlanarConfiguration = 0;
+	size_t PlanarConfiguration = 0;
 
 	//For each string of contiguous unused bytes in a TIFF file, the byte offset of the string.
-	uint FreeOffsets = 0;
+	size_t FreeOffsets = 0;
 
 	//For each string of contiguous unused bytes in a TIFF file, the number of bytes in the string.
-	uint FreeByteCounts = 0;
+	size_t FreeByteCounts = 0;
 
 	//The precision of the information contained in the GrayResponseCurve.
-	uint GrayResponseUnit = 0;
+	size_t GrayResponseUnit = 0;
 
 	//For grayscale data, the optical density of each possible pixel value.
-	uint GrayResponseCurve = 0;
+	size_t GrayResponseCurve = 0;
 
 	//The unit of measurement for XResolution and YResolution.
-	uint ResolutionUnit = 0;
+	size_t ResolutionUnit = 0;
 
 	//Name and version number of the software package(s) used to create the image.
-	uint Software = 0;
+	size_t Software = 0;
 
 	//Date and time of image creation.
-	uint DateTime = 0;
+	size_t DateTime = 0;
 
 	//Person who created the image.
-	uint Artist = 0;
+	size_t Artist = 0;
 
 	//The computer and/or operating system in use at the time of image creation.
-	uint HostComputer = 0;
+	size_t HostComputer = 0;
 
 	//A color map for palette color images.
-	uint ColorMap = 0;
+	size_t ColorMap = 0;
 
 	//Description of extra components.
-	uint ExtraSamples = 0;
+	size_t ExtraSamples = 0;
 
 	//Copyright notice.
-	uint Copyright = 0;
+	size_t Copyright = 0;
 
-	uint TileWidth = 0;
+	size_t TileWidth = 0;
 
-	uint TileLength = 0;
+	size_t TileLength = 0;
 
-	uint TileOffsets = 0;
+	size_t TileOffsets = 0;
 	char TileOffsetsType = 0;
 
-	uint TileByteCounts = 0;
+	size_t TileByteCounts = 0;
 	char TileByteCountsType = 0;
+
+	float NoDataValue = -9999;
 
 };
 
@@ -400,6 +404,7 @@ public:
 	bool isTile = true;
 	float max, min;
 
+	virtual float getNullValue() = 0;
 	rowptr getRow(int i)
 	{
 		rowptr d = nullptr;
@@ -426,7 +431,7 @@ class TiffReader: public ImageReader
 	uchar sysByteOredr;
 	uint tilesCount = 0;
 	int compressType = 1;
-	PointerArrayCache<uchar*> cachedTiles;
+	PointerArrayCache<rowptr> cachedTiles;
 
 	void convert(uchar *bytes, float &out) { out = toFloat(bytes); }
 	void convert(uchar *bytes, int &out) { out = toInt(bytes);}
@@ -455,14 +460,17 @@ public:
 	~TiffReader();
 	void printValue(int x, int y);
 	void printIFD(offu64 offset);
+	void printBigIFD(size_t offset);
 //	std::string dectode(uchar* bf, offu64 len);
-	void printHeader(uchar *buffer);
-	int getTagIntValue(offu64 offOrValue, offu64 count, char format);
+	int printHeader(uchar *buffer);
+	size_t getTagIntValue(size_t offOrValue, size_t count, char format, bool is64);
 	ushort toShort(uchar *mbytes);
 	uint toInt(uchar *bytes);
 	float toFloat(uchar* bytes);
 	double toDouble(uchar *bytes);
-	void printTag(uchar *buffer);
+
+	template<class T>
+	void printTag(uchar *buffer, bool is64);
 	void read(uchar* buffer, offu64 offset, offu64 len);
 	void setTitleCacheSize(size_t n);
 	void setRowsCacheSize(size_t n);
@@ -474,10 +482,19 @@ public:
 
 	ImageType getType() override;
 
-	uchar *getTile(int ind);
+	rowptr getTile(int x, int y);
+	rowptr getTile(int ind);
 	void removeTileFromCache(int ind);
-	rowptr processData(uchar *bytes);
+	rowptr processData(uchar *bytes, int len);
 
+	long long toInt64(uchar *bytes);
+	
+	virtual float getNullValue() override
+	{
+		return tiff.NoDataValue;
+	}
+	float getFloatFromAscii(size_t offOrValue, size_t count, char format, bool is64);
+	int getTileWid(int rowNum);
 };
 
 

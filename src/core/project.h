@@ -25,14 +25,6 @@ enum class BackPath
 	tiles
 };
 
-struct PrjgBarCallback
-{
-	std::function<void(int)> cbIncrValue;
-	std::function<void(int)> cbSetMax;
-	volatile bool &stopAction;
-	PrjgBarCallback(volatile bool &stopAction):stopAction(stopAction)
-	{}
-};
 
 class Project : public QObject
 {
@@ -212,7 +204,7 @@ public:
 	void filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj, bool useCycle, float eps, int maxTile);
 
 
-	void loadImage(QString path, int step, int type);
+	void loadImage(const PrjgBarCallback &pbCallback, QString path, int step, int type, int start =0, int end=0);
 	float getImgMaxVal() const;
 
 	float getImgMinVal() const;

@@ -33,7 +33,6 @@ enum class ProcessMode{
 class Obj3d
 {
 	int width, height;
-	float NAN_VALUE = -9999;
 	ProcessMode mode = ProcessMode::performance;
 	ImageReader *reader;
 	QString name;
@@ -68,6 +67,7 @@ class Obj3d
 #endif
 
 	int step = 1;
+	float NAN_VALUE = -9999;
 public:
 	void setStep(int step) { this->step = step; }
 
@@ -86,6 +86,7 @@ public:
 		width = reader->widght();
 		height =reader->height();
 
+
 		//		data = new float *[hei];
 	}
 	bool checkSuper(objoff w)
@@ -97,7 +98,7 @@ public:
 	}
 
 	bool check(objoff face[3]) { return face[0] != 0 && face[1] != 0 && face[2] != 0; }
-	void write(QString path, int startRow, int lastRow)
+	void write(const PrjgBarCallback &pbCallback, QString path, int startRow, int lastRow)
 	{
 		QFile out(path);
 		if (out.exists())
@@ -115,9 +116,11 @@ public:
 		sw.append("o Main");
 		sw.append(nl);
 
-		float min = 99999;
-		float max = -99999;
+		float min = 9999;
+		float max = -9999;
 		int k = 0;
+
+		NAN_VALUE = reader->getNullValue();
 
 		data[0] = nullptr;
 		const objoff sWidth = width / this->step;
@@ -131,18 +134,33 @@ public:
 		objoff counter = 0;
 		const objoff typeSize = sizeof(objoff);
 
-		prevNullRow = new objoff[sWidth];
-		currNullRow = new objoff[sWidth];
+		prevNullRow = new objoff[sWidth + 1];
+		currNullRow = new objoff[sWidth + 1];
 
-		memset(prevNullRow, 0, sWidth * typeSize);
-		memset(currNullRow, 0, sWidth * typeSize);
+		const objoff cursize = sWidth * typeSize + 1;
+
+		memset(prevNullRow, 0, cursize);
+		memset(currNullRow, 0, cursize);
 #endif
 
 		float scale = 1.f / step;
 //		objoff offset = 0;
-		qDebug() << startRow << " " << (lastRow==0?height: lastRow+1);
-		for (int h = (startRow==0?0:startRow-1); h < (lastRow==0?height:lastRow+1); h += step)
+		int ends = (lastRow == 0 ? height : lastRow + 1);
+
+		ends = MIN(ends, width);
+		startRow = MIN(0, width - 1);
+		pbCallback.cbSetMax(ends/50);
+		qDebug() << startRow << " " << ends;
+
+		for (int h = (startRow==0?0:startRow-1); h < ends; h += step)
 		{
+			if (h % 50==0)
+			{
+				pbCallback.cbIncrValue(1);
+				if (pbCallback.stopAction)
+					break;
+			}
+
 			if (h != 0)
 			{
 #ifndef USE_ROW
@@ -152,14 +170,14 @@ public:
 				objoff *temp = prevNullRow;
 				prevNullRow = currNullRow;
 				currNullRow = temp;
-				memset(currNullRow, 0, sWidth * typeSize);
+				memset(currNullRow, 0, cursize);
 #endif
 				if (data[0] != nullptr)
 					delete[] data[0];
 				data[0] = data[1];
 			}
-
-			data[1] = reinterpret_cast<float *>(reader->getRowData(h));
+			// not cached row, allocated memory, need to delete
+			data[1] =reader->getRowData(h);
 
 			QString vers;
 			float *dataPointer = data[1];
@@ -167,7 +185,7 @@ public:
 			{
 				float value = *dataPointer;
 
-				if (value == -9999)
+				if (value == NAN_VALUE)
 				{
 #ifndef USE_ROW
 					++nullCounter;
@@ -193,6 +211,7 @@ public:
 				sw.append("vt " + QString::number((float)w/width) + " " + QString::number(1.f - (float)h/height) + nl);
 
 #ifdef USE_ROW
+
 				currNullRow[w/step] = ++counter;
 #endif
 
@@ -261,8 +280,8 @@ public:
 		stream << sw;
 		out.close();
 		sw.clear();
-		delete[] data[0];
-		delete[] data[1];
+		if (data[0]) delete[] data[0];
+		if (data[1]) delete[] data[1];
 #ifdef USE_ROW
 		delete[] prevNullRow;
 		delete[] currNullRow;

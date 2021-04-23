@@ -324,7 +324,7 @@ void parceFace(const char *str, unsigned int &f)
 
 #include <filesystem>
 
-void Terrain::readfile(QString path)
+void Terrain::readfile(const PrjgBarCallback &pbCallback, QString path)
 {
 	QFile fin(path);
 	//	std::string s;
@@ -342,11 +342,22 @@ void Terrain::readfile(QString path)
 	std::stringstream errss;
 	std::string name;
 
+	const int ADD_STEP = 2000;
 	char rawtoken[500];
 	const char *token;
+	int readed = 0;
+	pbCallback.cbSetMax(fin.size() / ADD_STEP);
 	while (!fin.atEnd())
 	{
+		if (readed  >= ADD_STEP)
+		{
+			pbCallback.cbIncrValue(readed / ADD_STEP);
+			if (pbCallback.stopAction)
+				break;
+			readed = 0;
+		}
 		int size = fin.readLine(rawtoken, 500);
+		readed += size;
 		token = rawtoken;
 		lines++;
 
@@ -372,7 +383,7 @@ void Terrain::readfile(QString path)
 			len = getWord(token);
 			fast_float::from_chars(token, token + len, v.z);
 
-			fin.readLine(rawtoken, 500);
+			readed += fin.readLine(rawtoken, 500);
 			token = rawtoken;
 
 			lines++;
@@ -416,6 +427,8 @@ void Terrain::readfile(QString path)
 			continue;
 		}
 	}
+	pbCallback.cbIncrValue(fin.size() / ADD_STEP);
+
 	fin.close();
 	qDebug() << "Readed " << lines << " lines";
 	qDebug() << "Vs: " << vetexes.size();
@@ -431,7 +444,6 @@ void Terrain::readfile(QString path)
 
 	//	QString sds = QString::fromLocal8Bit((const char*)ssda);
 	//	qDebug() << sds;
-	initArrays();
 	return;
 }
 

@@ -89,9 +89,7 @@ Img ImageSearcher::getTile(int tx, int ty)
 				img.data[i] = -9999;
 
 
-			uchar *tile = reader->getTile(ty * tilesInWid + tx);
-
-			float *data = static_cast<float *>(reader->processData(tile));
+			float *data = reader->getTile(index);
 
 			for (int j = 0; j < lenY; ++j)
 			{
@@ -317,6 +315,20 @@ bool ImageSearcher::checkCircle(Img& ret, float eps)
             }
         }
     }
+
+	for (int j = 0; j < ret.hei; ++j)
+	{
+		for (int i = 0; i < ret.wid; ++i)
+		{
+			float d =ret.get(i,j);
+			if (d > maxval)
+			{
+				xc = i;
+				yc = j;
+				maxval = d;
+			}
+		}
+	}
 
 //    if (xc==0) xc = ret.wid/2;
 //    if (yc==0) yc = ret.hei/2;

@@ -129,6 +129,7 @@ public:
 
 	void clearTextures()
 	{
+		vao.bind();
 		for (int var = 0; var < textures.size(); ++var)
 		{
 			if (textures[var] != nullptr)
@@ -138,7 +139,9 @@ public:
 				textures[var] = nullptr;
 			}
 		}
-//		textures.clear();
+		vao.release();
+		vao.destroy();
+		//		textures.clear();
 //		textures.append(nullptr);
 //		textures.append(nullptr);
 	}
@@ -172,10 +175,10 @@ private:
 
 
 
-	void initArrays();
 	void draw();
 public:
-	void readfile(QString path);
+	void initArrays();
+	void readfile(const PrjgBarCallback &pbCallback, QString path);
 	void drawFull(QMatrix4x4 &view, QMatrix4x4 &projection);
 	void setTexture(int num, QString path);
 };

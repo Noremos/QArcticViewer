@@ -226,7 +226,7 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 //	if (!useTimer)
 //		update();
 }
-//! [4]
+
 void MainWidget::keyReleaseEvent(QKeyEvent *event)
 {
 	shitfp = event->modifiers() & Qt::ShiftModifier;
