@@ -85,10 +85,10 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	{
 		int size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc, pbCallback.stopAction);
 
-		if (ind != end)
-			barStream.writeLine(",");
-		else
-			barStream.writeLine();
+		// if (ind != end)
+		// 	barStream.writeLine(",");
+		// else
+		// 	barStream.writeLine();
 
 		if (pbCallback.cbIncrValue)
 			pbCallback.cbIncrValue(1);

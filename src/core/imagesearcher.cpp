@@ -226,7 +226,7 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 	{
 		QString tileNumstr = QString::number(i);
 		boundsOut.writeLine("t " + tileNumstr);
-		barsOut.writeLine("{num:" + tileNumstr + ", barcodes:");
+		// barsOut.writeLine("{num:" + tileNumstr + ", barcodes:");
 
 		Img img = getTile(i);
 		int wid = img.wid, hei = img.hei;
@@ -236,8 +236,8 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem<float> *item = bars->getItem(0);
 
-		barsOut.writeLine("{");
-		barsOut.write("bars:[ ");
+		// barsOut.writeLine("{");
+		// barsOut.write("bars:[ ");
 
 
 		// delete data and delete pointer on it
@@ -267,19 +267,19 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 			boundsOut.writeLine(b.getStr());
 
 
-			line->getJsonObject(out);
-			out += ",";
+			// line->getJsonObject(out);
+			// out += ",";
 		}
-		out[out.length() - 1] = ']';
+		// out[out.length() - 1] = ']';
 
-		QString swr = QString::fromStdString(out);
-		swr += nl;
-		if (i != totalTiles - 1)
-			swr += "},";
-		else
-			swr += "}";
+		// QString swr = QString::fromStdString(out);
+		// swr += nl;
+		// if (i != totalTiles - 1)
+		// 	swr += "},";
+		// else
+		// 	swr += "}";
 
-		barsOut.writeLine(swr);
+		// barsOut.writeLine(swr);
 
 		totalAdded += item->barlines.size();
 
