@@ -78,12 +78,17 @@ struct Img
 
         for (int j = 0; j < ret.hei; ++j)
 		{
-            uint rs = minmaxX(x);
-            uint re = minmaxX(x + wid);
+			uint cs = minmaxX(x);
+			uint ce = minmaxX(x + wid);
 
-			uchar *dsa = reinterpret_cast<uchar *>(ret.data + j * ret.wid);
-			uchar *src = reinterpret_cast<uchar *>(this->data + j * this->wid + rs);
-			memcpy(dsa, src, (re - rs) * 4);
+			//j = row/y in dest;
+			//j * ret.wid = float pointer start at row 'j' = ret[:,j]
+
+			//y + j  = row/y in source;
+			//(y + j) * this->wid + cs
+			uchar *dsa = reinterpret_cast<uchar *>(ret.data + j * ret.wid);// ret[:,j]
+			uchar *src = reinterpret_cast<uchar *>(this->data + (y + j) * this->wid + cs);// ret[cs:,(y+j)]
+			memcpy(dsa, src, (ce - cs) * 4);
 		}
 //		ret.maxVal = maxval;
 	}
