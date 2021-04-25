@@ -14,10 +14,17 @@ using namespace bc;
 
 #include "fstream"
 
-
-static Img importBeafData(const QString &path);
-static void exportDataAsBeaf(const QString &path,  int wid, int hei, float *data);
-static void exportDataAsPng(const QString &path, bc::BarImg<float> &bimg);
+class Beaf
+{
+public:
+	static bc::BarImg<float> getFromRawData(int wid, int hei, float *data);
+	static Img importBeafData(const QString &path);
+	static void exportDataAsBeaf(const QString &path,  int wid, int hei, float *data);
+	static void exportDataAsPng(const QString &path, bc::BarImg<float> &bimg);
+	static void exportHeightAsPng(const QString &path, const bc::BarImg<float> &bimg, bool vert);
+	static void exportHeightAsPngInner(const QString &path, bc::BarImg<float> &bimg);
+	static void exportDataAsPngInner(const QString &path, int wid, int hei, float *data);
+};
 
 class SeachingSettings : public QObject
 {

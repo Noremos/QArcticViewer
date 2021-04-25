@@ -296,9 +296,7 @@ bool ImageSearcher::checkCircle(Img& ret, float eps)
 {
     int xc=0, yc=0;
 
-	float sum = 0;
 	int radius = 20;
-	int total = 0;
 
 
     float maxval = -9999;
@@ -313,56 +311,55 @@ bool ImageSearcher::checkCircle(Img& ret, float eps)
                 yc = j;
                 maxval = d;
             }
-        }
-    }
+		}
+	}
 
+
+	//    if (xc==0) xc = ret.wid/2;
+	//    if (yc==0) yc = ret.hei/2;
+
+	radius = MIN(xc, ret.wid - xc);
+	radius = MIN(radius, MIN(yc, ret.hei - yc));
+
+	int radius2 = radius * radius;
+	float avgInside = 0;
+	float avgOutside = 0;
+	size_t insideCount = 0;
+	size_t outsideCount = 0;
+	//	for (int j = yc - radius; j < yc + radius; ++j)
 	for (int j = 0; j < ret.hei; ++j)
 	{
 		for (int i = 0; i < ret.wid; ++i)
+//		for (int i = xc - radius; i < xc + radius; ++i)
 		{
-			float d =ret.get(i,j);
-			if (d > maxval)
+//			int xi = i - xc;
+//			int yj = j - yc;
+			int xi = i - xc;
+			int yj = j - yc;
+			bool inside = (radius2 - xi * xi - yj * yj) >= 0;
+			float d = ret.get(i, j);
+
+			if (inside)
 			{
-				xc = i;
-				yc = j;
-				maxval = d;
+				avgInside += d;
+				++insideCount;
+			}
+			else
+			{
+				avgOutside += d;
 			}
 		}
 	}
 
-//    if (xc==0) xc = ret.wid/2;
-//    if (yc==0) yc = ret.hei/2;
+	outsideCount = ret.wid * ret.hei - insideCount;
 
+	avgInside =  roundf(1000 * avgInside / insideCount);
+	avgOutside = roundf(1000 * avgOutside / outsideCount);
 
-	for (int var = 0; var < 40; ++var)
-	{
-		int xst = xc - radius + var;
-		int yreal = sqrt(radius * radius - (xst - xc) * (xst - xc));
-
-        xst = MAX(0, MIN(xst, ret.wid));
-        yreal = MAX(0, MIN(yreal, ret.hei));
-
-		float val1 = ret.getSafe(xst, yreal), val2;
-		if (yreal > yc)
-			val2 = ret.getSafe(xst, yreal - (yreal - yc) * 2);
-		else //(yreal < yc)
-			val2 = ret.getSafe(xst, yreal + (yc - yreal) * 2);
-
-		sum += val1 + val2;
-		total += 2;
-	}
-
-    sum /= (float)total;
-
-    float t1 = abs(sum - ret.getSafe(xc - radius, yc));
-    float t2 = abs(sum - ret.getSafe(xc, yc - radius));
-    float t3 = abs(sum - ret.getSafe(xc + radius, yc));
-    float t4 = abs(sum - ret.getSafe(xc, yc + radius));
-    qDebug() << "Eps:" << t1 << t2<< t3<< t4;
-    return (t1 <= eps && t2 <= eps && t3 <= eps && t4 <= eps);
+	return avgInside > avgOutside;
 }
 
-void exportDataAsBeaf(const QString &path, int wid, int hei, float *data)
+void Beaf::exportDataAsBeaf(const QString &path, int wid, int hei, float *data)
 {
 	//		 EXPOT AS RAW
 	QFile out(path);
@@ -381,7 +378,7 @@ void exportDataAsBeaf(const QString &path, int wid, int hei, float *data)
 	out.close();
 }
 
-void exportDataAsPng(const QString &path, bc::BarImg<float> &bimg)
+void Beaf::exportDataAsPng(const QString &path, bc::BarImg<float> &bimg)
 {
 	//SAVE PNG
 	QImage imggray(bimg.wid(), bimg.hei(), QImage::Format::Format_Grayscale8);
@@ -401,6 +398,44 @@ void exportDataAsPng(const QString &path, bc::BarImg<float> &bimg)
 	imggray.save(path);
 }
 
+void Beaf::exportHeightAsPng(const QString &path, const bc::BarImg<float> &bimg, bool vert)
+{
+	int wids = bimg.wid();
+	int heis = bimg.hei();
+
+
+	float max = bimg.max();
+	float min = bimg.min();
+	float maxmin = max - min;
+
+	heis = maxmin * 100  + 1;
+
+	QImage imggray(wids, heis, QImage::Format::Format_Grayscale8);
+	imggray.fill(QColor(0,0,0));
+
+	for (int y = 0; y < bimg.hei(); ++y)
+	{
+		for (int x = 0; x < bimg.wid(); ++x)
+		{
+			int grayVal = (maxmin - (bimg.get(x, y) - min)) * 100;
+
+			QRgb val = imggray.pixel(x, grayVal);
+			QColor col(val);
+			col.setRed( col.red() + 1);
+			col.setRed( 255);
+			imggray.setPixelColor(x, grayVal, col);
+		}
+	}
+	imggray.save(path);
+}
+
+
+void Beaf::exportDataAsPngInner(const QString &path, int wid, int hei, float *data)
+{
+	bc::BarImg<float> bimg(wid, hei, 1, (uchar *) data, false, false);
+	exportDataAsPng(path, bimg);
+}
+
 union conv
 {
 	char data[4];
@@ -409,7 +444,12 @@ union conv
 };
 
 
-Img importBeafData(const QString &path)
+bc::BarImg<float> Beaf::getFromRawData(int wid, int hei, float *data)
+{
+	return bc::BarImg<float>(wid, hei, 1, (uchar *) data, false, false);
+}
+
+Img Beaf::importBeafData(const QString &path)
 {
 	QFile file(path);
 
@@ -438,3 +478,4 @@ Img importBeafData(const QString &path)
 
 	return ret;
 }
+
