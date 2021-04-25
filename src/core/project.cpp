@@ -198,7 +198,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
             bc::Barcontainer<float> *ret = creator.createBarcode(&fileimg, constr);
             bc::Baritem<float> *item = ret->exractItem(0);
 //			item->removePorog(3);
-			item->relen();
+//			item->relen();
 			item->normalize();
 
 			etalons.append(item);
@@ -286,6 +286,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
             int startInTileY;
             imgsrch.getFileOffset(tileindex, bb.bb, startInTileX, startInTileY);
             tile.getRect(startInTileX,startInTileY, (int)bb.bb.wid(), (int)bb.bb.hei(), img);
+//			Beaf::exportDataAsPngInner("D:\\re.png", img.wid, img.hei, img.data);
+//			Beaf::exportHeightAsPng("D:\\rw.png", Beaf::getFromRawData(img.wid, img.hei, img.data), true);
 		}
 
 		if (checkBar3d)
@@ -293,7 +295,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 			bc::BarImg<float> bimg(img.wid, img.hei, 1, reinterpret_cast<uchar *>(img.data), false, false);
 
-//			exportDataAsPng("D:/Programs/QT/ArctivViewer/ArcticViewer/temp/out.png", bimg);
+			Beaf::exportDataAsPng("D:/out.png", bimg);
 
 			if (exportImg)
 				painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
@@ -301,7 +303,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			auto *retf = creator.createBarcode(&bimg, constr);
 			auto *baritem = retf->exractItem(0);
 //			baritem->removePorog(3);
-            baritem->relen();
+//            baritem->relen();
 			baritem->normalize();
 
 			delete retf;
