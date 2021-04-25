@@ -17,6 +17,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
+
 #include "../types/types.h"
 #include "../types/glinstanse.h"
 
@@ -41,6 +42,7 @@ struct InstanceData
 		this->val = val;
 	}
 };
+class Project;
 
 class SpotZones :protected QOpenGLFunctions
 {
@@ -67,6 +69,7 @@ public:
 
 	float minVal = 9999;
 
+	Project * proj;
 	void printErrors()
 	{
 		GLenum err;

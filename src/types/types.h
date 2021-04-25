@@ -15,6 +15,10 @@ public:
 
 	inline boundy(uint x, uint y, float z, uint endX, uint endY, float endZ): x(x), y(y), endX(endX), endY(endY), z(z), endZ(endZ)
 	{
+		if (endZ < z)
+		{
+			std::swap(endZ, z);
+		}
 	}
 
 	inline void setXifLess(uint ix)
@@ -70,10 +74,10 @@ public:
 		// we sacle all the verts
 		x /= step;
 		y /= step;
-		// z /= step;
+		 z /= step;
 		endX /= step;
 		endY /= step;
-		// endZ /= step;
+		 endZ /= step;
 	}
 	inline QString getStr()
 	{

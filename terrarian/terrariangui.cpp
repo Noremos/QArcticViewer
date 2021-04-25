@@ -167,7 +167,7 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 	model.translate(0, 0, 0);
 
 	curshader->setUniformValue("factor", factor);
-	curshader->setUniformValue("minval", proj->getImgMinVal()/ proj->displayFactor);
+	curshader->setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
 
 	curshader->setUniformValue("projection", projection);
 	curshader->setUniformValue("view", view);
@@ -346,6 +346,7 @@ void Terrain::readfile(const PrjgBarCallback &pbCallback, QString path)
 	char rawtoken[500];
 	const char *token;
 	int readed = 0;
+	float min = 9999;
 	pbCallback.cbSetMax(fin.size() / ADD_STEP);
 	while (!fin.atEnd())
 	{
@@ -379,6 +380,9 @@ void Terrain::readfile(const PrjgBarCallback &pbCallback, QString path)
 			len = getWord(token);
 			fast_float::from_chars(token, token + len, v.y);
 			token += len + 1;
+
+			if (v.y < min)
+				min = v.y;
 
 			len = getWord(token);
 			fast_float::from_chars(token, token + len, v.z);
@@ -433,6 +437,7 @@ void Terrain::readfile(const PrjgBarCallback &pbCallback, QString path)
 	qDebug() << "Readed " << lines << " lines";
 	qDebug() << "Vs: " << vetexes.size();
 	qDebug() << "Fs: " << faces.size();
+	qDebug() << "Min: " << min;
 
 //	for (int i = 0; i < 50; ++i)
 //	{

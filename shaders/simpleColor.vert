@@ -15,10 +15,15 @@ out vec2 v_texcoord;
 //! [0]
 void main()
 {
+    mat4 rmat = model;
     vec3 vp = a_position;
-//    vp.y += (vp.y - minHei) * factor;
-    vp.y *= factor;
 
-    gl_Position = projection * view * model  * vec4(vp, 1.0);
+    vp.y = minHei + (vp.y - minHei) * factor;
+//    vp.y *= factor;
+
+//    rmat[1][1] *= factor;
+
+    gl_Position = projection * view * rmat  * vec4(vp, 1.0);
+
     v_texcoord = a_texcoord;
 }

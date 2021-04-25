@@ -71,3 +71,4 @@ Thumbs.db
 *.dll
 *.exe
 
+src/render/static const GLfloat g_vertex_buffer_dat.cpp

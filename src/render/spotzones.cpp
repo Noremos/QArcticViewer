@@ -9,9 +9,9 @@ void SpotZones::addBoundy(boundy &bb,int displayFactor, int type)
 	QMatrix4x4 matr;
 	matr.setToIdentity();
 
-	matr.translate(bb.x + bb.wid()/2, bb.z + bb.zei()/2, bb.y + bb.hei()/2);
-
+	matr.translate(bb.x + bb.wid()/2, bb.z - bb.zei(), bb.y + bb.hei()/2);
 	matr.scale(bb.wid()/2, bb.zei()/2, bb.hei()/2);
+
 	boundydata.append(InstanceData(matr, type));
 }
 
@@ -21,7 +21,8 @@ SpotZones::SpotZones() :
 	  indexBuf(QOpenGLBuffer::Type::IndexBuffer)
 //	  ,goodBuff(QOpenGLBuffer::Type::VertexBuffer)
 {
-	Project::getProject()->spotZones = this;
+	proj = Project::getProject();
+	proj->spotZones = this;
 }
 
 void SpotZones::updateBuffer()
@@ -116,6 +117,7 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
 	mshader.setUniformValue("factor", factor);
+	mshader.setUniformValue("minHei", proj->getImgMinVal()/ proj->displayFactor);
 
 	vao.bind();
 	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 24, boundySize);
@@ -127,33 +129,34 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 void SpotZones::
 	initSpotModel()
 {
+	const float MaxTop = 40.0f;
 	static const GLfloat g_vertex_buffer_data[] = {
 		-1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
 		-1.0f,-1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f, // Треугольник 1 : конец
-		1.0f, 1.0f,-1.0f, // Треугольник 2 : начало
+		-1.0f, MaxTop, 1.0f, // Треугольник 1 : конец
+		1.0f, MaxTop,-1.0f, // Треугольник 2 : начало
 		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f,-1.0f, // Треугольник 2 : конец
+		-1.0f, MaxTop,-1.0f, // Треугольник 2 : конец
 //		1.0f,-1.0f, 1.0f,//
 //		-1.0f,-1.0f,-1.0f,
 //		1.0f,-1.0f,-1.0f,//
-		1.0f, 1.0f,-1.0f,//
+		1.0f, MaxTop,-1.0f,//
 		1.0f,-1.0f,-1.0f,
 		-1.0f,-1.0f,-1.0f,//
 		-1.0f,-1.0f,-1.0f,//
-		-1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f,-1.0f,//
+		-1.0f, MaxTop, 1.0f,
+		-1.0f, MaxTop,-1.0f,//
 //		1.0f,-1.0f, 1.0f,
 //		-1.0f,-1.0f, 1.0f,
 //		-1.0f,-1.0f,-1.0f,
-		-1.0f, 1.0f, 1.0f,
+		-1.0f, MaxTop, 1.0f,
 		-1.0f,-1.0f, 1.0f,
 		1.0f,-1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
+		1.0f, MaxTop, 1.0f,
 		1.0f,-1.0f,-1.0f,
-		1.0f, 1.0f,-1.0f,
+		1.0f, MaxTop,-1.0f,
 		1.0f,-1.0f,-1.0f,
-		1.0f, 1.0f, 1.0f,
+		1.0f, MaxTop, 1.0f,
 		1.0f,-1.0f, 1.0f,
 //		1.0f, 1.0f, 1.0f,
 //		1.0f, 1.0f,-1.0f,
@@ -161,8 +164,8 @@ void SpotZones::
 //		1.0f, 1.0f, 1.0f,
 //		-1.0f, 1.0f,-1.0f,
 //		-1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		-1.0f, 1.0f, 1.0f,
+		1.0f, MaxTop, 1.0f,
+		-1.0f, MaxTop, 1.0f,
 		1.0f,-1.0f, 1.0f
 	};
 //	vao.bind();
