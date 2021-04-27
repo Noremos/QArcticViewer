@@ -342,17 +342,18 @@ void Terrain::readfile(const PrjgBarCallback &pbCallback, QString path)
 	std::stringstream errss;
 	std::string name;
 
-	const int ADD_STEP = 2000;
 	char rawtoken[500];
 	const char *token;
-	int readed = 0;
+    size_t readed = 0;
 	float min = 9999;
-	pbCallback.cbSetMax(fin.size() / ADD_STEP);
+    const size_t ADD_STEP = 10;
+    const size_t BYTES_COUNT =  static_cast<size_t>(fin.size()) / ADD_STEP;
+    pbCallback.cbSetMax(100);
 	while (!fin.atEnd())
 	{
-		if (readed  >= ADD_STEP)
+        if (readed  >= BYTES_COUNT)
 		{
-			pbCallback.cbIncrValue(readed / ADD_STEP);
+            pbCallback.cbIncrValue(ADD_STEP);
 			if (pbCallback.stopAction)
 				break;
 			readed = 0;
@@ -431,7 +432,7 @@ void Terrain::readfile(const PrjgBarCallback &pbCallback, QString path)
 			continue;
 		}
 	}
-	pbCallback.cbIncrValue(fin.size() / ADD_STEP);
+    pbCallback.cbIncrValue(ADD_STEP);
 
 	fin.close();
 	qDebug() << "Readed " << lines << " lines";

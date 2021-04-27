@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
 
 	QApplication app(argc, argv);
 	MainWindow w;
-	w.show();
-	qDebug() << QCoreApplication::applicationDirPath() + QDir::separator() + "qt.conf";
+    w.show();
 	return app.exec();
 }

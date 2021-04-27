@@ -162,14 +162,14 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 		maxT = temp;
 	}
 // если поставить 10, то слипшийся покажется
-	float bottomLvl = minT + (maxT - minT) / bottomLevel;
+    float bottomPorog = (maxT - minT) / bottomLevel;
 
 	for (size_t i = 0, total = points.size(); i < total; ++i)
 	{
 		barvalue<float> &val = points[i];
-		if(val.value < bottomLvl)
+        if(abs(val.value) < bottomPorog)
 			continue;
-//		if (maxT - val.second >= 2)
+//		Wif (maxT - val.second >= 2)
 //			continue;
 
 		if (minX > val.getX())

@@ -72,18 +72,19 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	--start;
 	--end;
 
-	if (pbCallback.cbSetMax)
-		pbCallback.cbSetMax(end - start+1);
 
 	start = min(start, imgsrch.getMaxTiles()-1);
 	end = min(end, imgsrch.getMaxTiles()-1);
 	qDebug() << start << end;
 
-	imgsrch.setFillTileRowCache();
+    if (pbCallback.cbSetMax)
+        pbCallback.cbSetMax(end - start+1);
+
+    imgsrch.setFillTileRowCache();
 	//1000/18
 	for (int ind = start; ind <= end; ++ind)
 	{
-		int size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc, pbCallback.stopAction);
+        size_t size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc, pbCallback.stopAction);
 
 		// if (ind != end)
 		// 	barStream.writeLine(",");
@@ -149,8 +150,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	//!###############################EXPORT##########################
 	QPixmap image;
 	QPainter *painter;
-	float xfactor = image.width() / 2500.f;
-	float yfactor = image.height() / 2500.f;
+    float xfactor = displayFactor;
+    float yfactor = displayFactor;
 	if (exportImg)
 	{
 		image.load("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
@@ -181,7 +182,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		constr.createBinayMasks = false;
 		constr.createGraph = false;
 
-		QDir directory("D:/Programs/Python/barcode/experements/geo/imgs_orginal");
+		QDir directory("D:/Progs/QT/QArcticViewer/etalons/imgs_orginal");
+		// QDir directory("D:/Programs/Python/barcode/experements/geo/imgs_orginal");
 		QStringList images = directory.entryList(QStringList() << "*.bf", QDir::Files);
 		int sd = 0;
 		foreach (QString filename, images)
@@ -270,7 +272,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		{
 			if (!checkBounty(bb.bb))
 			{
-//				spotZones->addBoundy(bb.bb,displayFactor, 0);
+//                spotZones->addBoundy(bb.bb,displayFactor, 0);
 				continue;
 			}
 		}

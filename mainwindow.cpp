@@ -72,7 +72,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-    openProject("D:\\Programs\\Barcode\\_bar\\p4\\proj.qwr");
+    openProject("D:\\Progs\\temp\\bar\\proj.qwr");
 	//	openProject();
 }
 
