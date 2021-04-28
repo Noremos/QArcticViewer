@@ -130,6 +130,7 @@ void SpotZones::
 	initSpotModel()
 {
 	const float MaxTop = 40.0f;
+	// const float MaxTop = 1.0f;
 	static const GLfloat g_vertex_buffer_data[] = {
 		-1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
 		-1.0f,-1.0f, 1.0f,

@@ -121,6 +121,7 @@ protected:
 
 private:
 	bool shitfp;
+	bool ctrl;
 	bool keys[1024];
 	int pressed = 0;
 	qreal aspect;

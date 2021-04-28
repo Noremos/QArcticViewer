@@ -204,6 +204,7 @@ void MainWidget::wheelEvent(QWheelEvent *event)
 void MainWidget::keyPressEvent(QKeyEvent *event)
 {
 	shitfp = event->modifiers() & Qt::ShiftModifier;
+	ctrl = event->modifiers() & Qt::ControlModifier;
 	auto key = event->nativeVirtualKey();
 	if (key >= 0 && key < 1024)
 	{
@@ -221,7 +222,28 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 			camera->Up = QVector3D(0,1,0);
 			camera->Yaw = 56;
 			camera->Pitch = -32.25;
+			memset(keys, 0, 1024);
+
+
+			// camera->Position = QVector3D(981.52, 29.6308, 271.393);
+			// camera->Up = QVector3D(0.468725, 0.881798, 0.0522446);
+			// camera->Yaw = 6.36;
+			// camera->Pitch = -28.14;
+//			camera->Position = QVector3D(1024.25, 29.6308, 233.794);
+//			camera->Up = QVector3D(0.468725, 0.881798, 0.0522446);
+//			camera->Yaw = 6.36;
+//			camera->Pitch = -28.14;
+			camera->updateCameraVectors();
 		}
+
+		// if (ctrl)
+		// {
+		// 	qDebug() << camera->Position;
+		// 	qDebug() << camera->Up;
+		// 	qDebug() << camera->Yaw;
+		// 	qDebug() << camera->Pitch;
+		// 	memset(keys, 0, 1024);
+		// }
 	}
 //	if (!useTimer)
 //		update();
@@ -230,6 +252,7 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 void MainWidget::keyReleaseEvent(QKeyEvent *event)
 {
 	shitfp = event->modifiers() & Qt::ShiftModifier;
+	ctrl = event->modifiers() & Qt::ControlModifier;
 
 	auto key = event->key();
 	if (key >= 0 && key < 1024)
@@ -413,13 +436,18 @@ void MainWidget::paintGL()
 void MainWidget::Do_Movement()
 {
 	// Camera controls
-	bool isShift = shitfp;
+	float factor = 1.f;
+	if (shitfp)
+		factor = 2.f;
+	if (ctrl)
+		factor = 0.3;
+
 	if(keys[Qt::Key::Key_W])
-		camera->ProcessKeyboard(FORWARD, deltaTime, isShift);
+		camera->ProcessKeyboard(FORWARD, deltaTime, factor);
 	if(keys[Qt::Key::Key_S])
-		camera->ProcessKeyboard(BACKWARD, deltaTime, isShift);
+		camera->ProcessKeyboard(BACKWARD, deltaTime, factor);
 	if(keys[Qt::Key::Key_A])
-		camera->ProcessKeyboard(LEFT, deltaTime, isShift);
+		camera->ProcessKeyboard(LEFT, deltaTime, factor);
 	if(keys[Qt::Key::Key_D])
-		camera->ProcessKeyboard(RIGHT, deltaTime, isShift);
+		camera->ProcessKeyboard(RIGHT, deltaTime, factor);
 }

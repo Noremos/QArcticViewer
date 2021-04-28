@@ -90,11 +90,10 @@ public:
 	{
 		return word<0?-1:1;
 	}
-	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime, bool sift)
+	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime, float factor = 1.f)
 	{
 		GLfloat velocity = this->MovementSpeed * deltaTime;
-		if (sift)
-			velocity *= 2;
+		velocity *= factor;
 
 		QVector3D front;
 		front.setX(cos(qDegreesToRadians(this->Yaw)));
@@ -206,7 +205,6 @@ public:
 //			this->Zoom = 45.0f;
 	}
 
-private:
 	// Calculates the front vector from the Camera's (updated) Eular Angles
 	void updateCameraVectors()
 	{
@@ -222,6 +220,7 @@ private:
 		//Up.y
 //		qDebug() << Front << Right << Up;
 	}
+private:
 };
 
 
