@@ -72,7 +72,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-    openProject("D:\\Progs\\temp\\bar\\proj.qwr");
+    // openProject("D:\\Progs\\temp\\bar\\proj.qwr");
+    openProject("D:\\Programs\\Barcode\\_bar\\bar\\proj.qwr");
 	//	openProject();
 }
 
@@ -264,7 +265,8 @@ void MainWindow::findByParamsAsync()
                      ui->barShoj->value(),
                      ui->cbUseCycle->isChecked(),
                      ui->cirlceShoj->value(),
-                     ui->endProc->value());
+					 ui->startProc->value(),
+					 ui->endProc->value());
 }
 
 void MainWindow::findByParamsAsyncEnd()

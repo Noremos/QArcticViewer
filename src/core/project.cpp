@@ -109,7 +109,7 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 #include <fstream>
 
 
-void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj,bool useCycle, float eps, int maxTile )
+void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj,bool useCycle, float eps, int start, int endT )
 {
 	if (block)return;
 
@@ -245,7 +245,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
             QStringList listw = line.split(" ");
             tileindex = listw[1].toInt();
 
-            if (tileindex == maxTile-1)
+			if (tileindex >= endT-1)
                 break;
 
             if (checkBar3d || checkSyrcl)
@@ -255,6 +255,10 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 //			l = 0;
 			continue;
 		}
+
+
+		if (tileindex<start-1)
+			continue;
 
 		if ((l % 20 == 0) && pbCallback.stopAction)
 			break;
@@ -328,7 +332,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 		if (checkSyrcl)
 		{
-            if (!imgsrch.checkCircle(img, eps))
+			if (!imgsrch.checkCircle2(img, searchSetts.height.start, eps))
 			{
 				spotZones->addBoundy(bb.bb,displayFactor, 3);
 				img.release();

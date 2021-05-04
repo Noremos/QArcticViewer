@@ -201,7 +201,7 @@ public:
 	
 	void findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int end);
 
-	void filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj, bool useCycle, float eps, int maxTile);
+	void filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj, bool useCycle, float eps, int start, int maxTile);
 
 
 	void loadImage(const PrjgBarCallback &pbCallback, QString path, int step, int type, int start =0, int end=0);

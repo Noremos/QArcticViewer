@@ -254,7 +254,7 @@ void MainWidget::keyReleaseEvent(QKeyEvent *event)
 	shitfp = event->modifiers() & Qt::ShiftModifier;
 	ctrl = event->modifiers() & Qt::ControlModifier;
 
-	auto key = event->key();
+	auto key = event->nativeVirtualKey();
 	if (key >= 0 && key < 1024)
 	{
 //		bool jg = keys[key];
