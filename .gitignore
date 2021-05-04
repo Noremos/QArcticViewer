@@ -72,3 +72,5 @@ Thumbs.db
 *.exe
 
 src/render/static const GLfloat g_vertex_buffer_dat.cpp
+side-src/opencv
+side-src/opencv-mingw
