@@ -302,23 +302,58 @@ float sqr(float X)
 	return ((float) (X) * (X));
 }
 
-bool ImageSearcher::checkCircle(Img& ret, float hei, float coof)
+void show(cv::Mat &mat)
+{
+	cv::namedWindow("res", cv::WINDOW_NORMAL);
+	cv::imshow("res", mat);
+	cv::waitKey(1);
+}
+
+
+struct Direction
+{
+	static const int COUNT = 4;
+	Direction() { memset(dirs, 0, COUNT * sizeof(int)); }
+	int dirs[COUNT];
+	void add(int x, int y)
+	{
+		if (x == 0 && y == 0)
+		{
+			qDebug() << "Ass";
+		}
+		//(-1 -1) = 0; (-1 0) = 1; (-1 1) = 2; (0 -1) = 3;
+		//(0 1) = 5; (1 -1) = 6; (1 0) = 7; (1 1) = 8;
+		int off = (y + 1) * 3 + (x + 1);
+		if (off < 4)
+			++dirs[off];
+		else
+			--dirs[off-5];
+	}
+
+	int sums()
+	{
+		int sm = 0;
+		for (int i = 0; i < COUNT; ++i)
+		{
+			sm += dirs[i];
+		}
+		return sm;
+	}
+};
+
+bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 {
 	cv::Mat mat(ret.hei, ret.wid, CV_8UC1);
-    float maxval = -9999;
-	int h = 0, k = 0;
-
-    for (int j = 0; j < ret.hei; ++j)
-    {
-        for (int i = 0; i < ret.wid; ++i)
-        {
-            float d =ret.get(i,j);
-            if (d > maxval)
-            {
-				h = i;
-				k = j;
+	float maxval = -9999;
+	for (int j = 0; j < ret.hei; ++j)
+	{
+		for (int i = 0; i < ret.wid; ++i)
+		{
+			float d = ret.get(i, j);
+			if (d > maxval)
+			{
 				maxval = d;
-            }
+			}
 		}
 	}
 
@@ -328,52 +363,40 @@ bool ImageSearcher::checkCircle(Img& ret, float hei, float coof)
 		for (int i = 0; i < ret.wid; ++i)
 		{
 			float d = ret.get(i, j);
-			mat.at<uchar>(j, i) =  (d > maxval) ? 255 : 0;
+			mat.at<uchar>(j, i) = (d > maxval) ? 255 : 0;
 		}
 	}
 	std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Vec4i> hierarchy;
 	cv::findContours(mat, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
 
-	if (contours.size() != 1)
+	if (contours.size() > 2)
 		return false;
 
-	cv::Point prevc = contours[0][0];
-	int minx = contours[0][0].x, miny = contours[0][0].y, maxx = contours[0][0].x, maxy = contours[0][0].y;
-	for (size_t i = 1; i < contours[0].size(); ++i)
+	int cur = (contours.size() == 2 && contours[1].size() > contours[0].size()) ? 1 : 0;
+	size_t size = contours[cur].size();
+
+	Direction realsum;
+	cv::Point prevc = contours[cur][0];
+	int minx = contours[cur][0].x, miny = contours[cur][0].y, maxx = contours[cur][0].x, maxy = contours[cur][0].y;
+	for (size_t i = 1; i < size; ++i)
 	{
-		auto c = contours[0][i];
+		auto c = contours[cur][i];
 		minx = MIN(minx, c.x);
 		maxx = MAX(maxx, c.x);
 
 		miny = MIN(miny, c.y);
 		maxy = MAX(maxy, c.y);
-//		h += c.x;
-//		k += c.y;
+
+		realsum.add((c.x - prevc.x), (c.y - prevc.y));
+
+		prevc = c;
 	}
 
-//	h /= contours[0].size();
-//	k /= contours[0].size();
-
-	int diamX = maxx - minx + 1;
-	int diamY = maxy - miny + 1;
-	//(x−h)2/r2x+(y−k)2/r2y≤1.(1)
-
-	int correct = 0;
-	for (size_t i = 0; i < contours[0].size(); ++i)
-	{
-		int x = contours[0][i].x;
-		int y = contours[0][i].y;
-
-		float fr = ((sqr(x - h) / 2) / sqr(diamX / 2)) + (sqr(y - k) / sqr(diamY / 2));
-		if (fr >= 0.5f && fr <= 1.0f)
-			++correct;
-	}
-
-	cv::imshow("res", mat);
-	cv::waitKey(1);
-	return correct >= (coof *  contours[0].size());
-//	return coofX >= ds && coofY >= ds;
+	show(mat);
+	float tcoof = 1.0f - (realsum.sums() / size);
+	return tcoof >= coof;
+	//	return coofX >= ds && coofY >= ds;
 }
 #include <math.h>
 
