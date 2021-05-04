@@ -397,28 +397,22 @@ bool ImageSearcher::checkCircle2(Img &ret, float hei, float coof)
 	std::vector<cv::Vec4i> hierarchy;
 	cv::findContours(mat, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
 
-	if (contours.size() != 1)
+	if (contours.size() > 2)
 		return false;
 
-//	cv::namedWindow("res", cv::WINDOW_NORMAL);
-	int step = 3;
-	int correct = 0, totoal = 0;
-	for (size_t i = step; i < contours[0].size(); i += step)
+	cv::namedWindow("res", cv::WINDOW_NORMAL);
+	size_t step = 5;
+	int totoal = 0;
+	float baseAngel = 0;
+
+	float coofPi = 180.f / M_PI;
+	for (size_t i = step*2; i < contours[0].size(); i += step)
 	{
-		auto prev = contours[0][i - step];
-		auto center = contours[0][i - step / 2];
+		auto prev = contours[0][i - step*2];
+		auto center = contours[0][i - step];
 		auto cur = contours[0][i];
 		++totoal;
-//		cv::Mat md;
-//		cv::cvtColor(mat, md, cv::COLOR_GRAY2BGR);
-//		md.at<cv::Vec3b>(prev.y, prev.x)[1] = 0;
-//		md.at<cv::Vec3b>(prev.y, prev.x)[0] = 255;
-//		md.at<cv::Vec3b>(center.y, center.x)[1] = 255;
-//		md.at<cv::Vec3b>(center.y, center.x)[0] = 0;
-//		md.at<cv::Vec3b>(cur.y, cur.x)[1] = 0;
-//		md.at<cv::Vec3b>(cur.y, cur.x)[0] = 255;
-//		cv::imshow("res", md);
-//		cv::waitKey(1);
+
 
 		prev -= center;
 		cur -= center;
@@ -433,21 +427,32 @@ bool ImageSearcher::checkCircle2(Img &ret, float hei, float coof)
 		// |a|·|b|
 		float labl = sqrt(prev.x * prev.x + prev.y * prev.y) * sqrt(cur.x * cur.x + cur.y * cur.y);
 
-		// [0, Pi].
-		float res = std::acos(ab / labl);
-		res = abs(res) * 180 / M_PI;
-		if (res >= 90)
-			res = 180 - res;
-		if (res > 30)
+		// [0, 180].
+		float res = std::acos(ab / labl) * coofPi;
+		if (i != step*2 && (res - baseAngel) > 30)
 		{
-			continue;
-//			cv::waitKey(0);
-//			return false;
+			prev += center;
+			cur += center;
+			cv::Mat md;
+			cv::cvtColor(mat, md, cv::COLOR_GRAY2BGR);
+			md.at<cv::Vec3b>(prev.y, prev.x)[1] = 0;
+			md.at<cv::Vec3b>(prev.y, prev.x)[0] = 255;
+			md.at<cv::Vec3b>(center.y, center.x)[1] = 255;
+			md.at<cv::Vec3b>(center.y, center.x)[0] = 0;
+			md.at<cv::Vec3b>(cur.y, cur.x)[1] = 0;
+			md.at<cv::Vec3b>(cur.y, cur.x)[0] = 255;
+			md.at<cv::Vec3b>(contours[0][i - step*3].y, contours[0][i - step*3].x)[1] = 0;
+			md.at<cv::Vec3b>(contours[0][i - step*3].y, contours[0][i - step*3].x)[0] = 255;
+			cv::imshow("res", md);
+			cv::waitKey(1);
+			return false;
 		}
-		++correct;
-	}
 
-	return correct >= (int)(totoal*coof);
+		baseAngel = res;
+	}
+	cv::imshow("res", mat);
+	cv::waitKey(1);
+	return true;
 }
 
 void Beaf::exportDataAsBeaf(const QString &path, int wid, int hei, float *data)
