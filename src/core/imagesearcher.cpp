@@ -292,13 +292,14 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 	return totalAdded;
 }
 
-bool ImageSearcher::checkCircle(Img& ret, float eps)
+#include <opencv2/opencv.hpp>
+//#include <opencv2/imgproc.hpp>
+
+#include <opencv2/core/mat.hpp>
+
+bool ImageSearcher::checkCircle(Img& ret, float hei, float coof)
 {
-    int xc=0, yc=0;
-
-	int radius = 20;
-
-
+	cv::Mat mat(ret.hei, ret.wid, CV_8UC1);
     float maxval = -9999;
     for (int j = 0; j < ret.hei; ++j)
     {
@@ -307,56 +308,146 @@ bool ImageSearcher::checkCircle(Img& ret, float eps)
             float d =ret.get(i,j);
             if (d > maxval)
             {
-                xc = i;
-                yc = j;
                 maxval = d;
             }
 		}
 	}
 
-
-	//    if (xc==0) xc = ret.wid/2;
-	//    if (yc==0) yc = ret.hei/2;
-
-	radius = MIN(xc, ret.wid - xc);
-	radius = MIN(radius, MIN(yc, ret.hei - yc));
-
-	int radius2 = radius * radius;
-	float avgInside = 0;
-	float avgOutside = 0;
-	size_t insideCount = 0;
-	size_t outsideCount = 0;
-	//	for (int j = yc - radius; j < yc + radius; ++j)
+	maxval -= hei;
 	for (int j = 0; j < ret.hei; ++j)
 	{
 		for (int i = 0; i < ret.wid; ++i)
-//		for (int i = xc - radius; i < xc + radius; ++i)
 		{
-//			int xi = i - xc;
-//			int yj = j - yc;
-			int xi = i - xc;
-			int yj = j - yc;
-			bool inside = (radius2 - xi * xi - yj * yj) >= 0;
 			float d = ret.get(i, j);
+			mat.at<uchar>(j, i) =  (d > maxval) ? 255 : 0;
+		}
+	}
+	std::vector<std::vector<cv::Point>> contours;
+	std::vector<cv::Vec4i> hierarchy;
+	cv::findContours(mat, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
 
-			if (inside)
+	if (contours.size() != 1)
+		return false;
+
+	int realsumX = 0;
+	int realsumY = 0;
+	cv::Point prevc = contours[0][0];
+	int minx = contours[0][0].x, miny = contours[0][0].y, maxx = contours[0][0].x, maxy = contours[0][0].y;
+	for (size_t i = 1; i < contours[0].size(); ++i)
+	{
+		auto c = contours[0][i];
+		minx = MIN(minx, c.x);
+		maxx = MAX(maxx, c.x);
+
+		miny = MIN(miny, c.y);
+		maxy = MAX(maxy, c.y);
+
+		realsumX += abs(c.x - prevc.x);
+		realsumY += abs(c.y - prevc.y);
+
+		prevc = c;
+	}
+
+	//	int diam = ((maxx - minx) + ( maxy - miny)) / 2;//Щедаяшее
+//	int diam = std::max(maxx - minx,  maxy - miny);
+	int diamX = maxx - minx;
+	int diamY = maxy - miny;
+
+	int maxsumX = (diamX - diamX % 2) * 2 + (diamX % 2) * 2;
+	int maxsumY = (diamY - diamY % 2) * 2 + (diamY % 2) * 2;
+
+	float coofX = static_cast<float>(realsumX) / (maxsumX);
+	float coofY = static_cast<float>(realsumY) / (maxsumY);
+
+	float ds = coof;
+
+	return MIN(coofX, coofY) >= ds;
+//	return coofX >= ds && coofY >= ds;
+}
+#include <math.h>
+
+
+bool ImageSearcher::checkCircle2(Img &ret, float hei, float coof)
+{
+	cv::Mat mat(ret.hei, ret.wid, CV_8UC1);
+	float maxval = -9999;
+	for (int j = 0; j < ret.hei; ++j)
+	{
+		for (int i = 0; i < ret.wid; ++i)
+		{
+			float d = ret.get(i, j);
+			if (d > maxval)
 			{
-				avgInside += d;
-				++insideCount;
-			}
-			else
-			{
-				avgOutside += d;
+				maxval = d;
 			}
 		}
 	}
 
-	outsideCount = ret.wid * ret.hei - insideCount;
+	maxval -= hei;
+	for (int j = 0; j < ret.hei; ++j)
+	{
+		for (int i = 0; i < ret.wid; ++i)
+		{
+			float d = ret.get(i, j);
+			mat.at<uchar>(j, i) = (d > maxval) ? 255 : 0;
+//			mat.at<uchar>(j, i) = 255;
+		}
+	}
+	std::vector<std::vector<cv::Point>> contours;
+	std::vector<cv::Vec4i> hierarchy;
+	cv::findContours(mat, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
 
-	avgInside =  roundf(1000 * avgInside / insideCount);
-	avgOutside = roundf(1000 * avgOutside / outsideCount);
+	if (contours.size() != 1)
+		return false;
 
-	return avgInside > avgOutside;
+//	cv::namedWindow("res", cv::WINDOW_NORMAL);
+	int step = 3;
+	int correct = 0, totoal = 0;
+	for (size_t i = step; i < contours[0].size(); i += step)
+	{
+		auto prev = contours[0][i - step];
+		auto center = contours[0][i - step / 2];
+		auto cur = contours[0][i];
+		++totoal;
+//		cv::Mat md;
+//		cv::cvtColor(mat, md, cv::COLOR_GRAY2BGR);
+//		md.at<cv::Vec3b>(prev.y, prev.x)[1] = 0;
+//		md.at<cv::Vec3b>(prev.y, prev.x)[0] = 255;
+//		md.at<cv::Vec3b>(center.y, center.x)[1] = 255;
+//		md.at<cv::Vec3b>(center.y, center.x)[0] = 0;
+//		md.at<cv::Vec3b>(cur.y, cur.x)[1] = 0;
+//		md.at<cv::Vec3b>(cur.y, cur.x)[0] = 255;
+//		cv::imshow("res", md);
+//		cv::waitKey(1);
+
+		prev -= center;
+		cur -= center;
+		/*
+		cos α = a·b
+			  |a|·|b|
+		 */
+
+		//a.b
+		float ab = prev.x * cur.x + prev.y * cur.y;
+
+		// |a|·|b|
+		float labl = sqrt(prev.x * prev.x + prev.y * prev.y) * sqrt(cur.x * cur.x + cur.y * cur.y);
+
+		// [0, Pi].
+		float res = std::acos(ab / labl);
+		res = abs(res) * 180 / M_PI;
+		if (res >= 90)
+			res = 180 - res;
+		if (res > 30)
+		{
+			continue;
+//			cv::waitKey(0);
+//			return false;
+		}
+		++correct;
+	}
+
+	return correct >= (int)(totoal*coof);
 }
 
 void Beaf::exportDataAsBeaf(const QString &path, int wid, int hei, float *data)

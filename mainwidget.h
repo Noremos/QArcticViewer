@@ -99,8 +99,6 @@ public:
 
 	void printErrors();
 
-signals:
-	void startTimer();
 
 protected:
 
@@ -152,6 +150,10 @@ private:
 	// QPaintDevice interface
 	// QWidget interface
 protected:
+
+signals:
+	void startTimer();
+
 };
 
 #endif // MAINWIDGET_H

@@ -165,7 +165,7 @@ public:
 		reader->setRowsCacheSize(tileHei + diffset + 10);
 	}
 
-	bool checkCircle(Img &ret, float eps  = 5);
+	bool checkCircle(Img &ret, float hei, float coof);
 
 	Img getTile(int index);
     Img getTile(int tx, int ty);
@@ -179,8 +179,9 @@ public:
 //        int endY = bb.endY / tileHei;
 
        x = (int)bb.x - startX * tileWid;
-       y = (int)bb.y - startY * tileHei;
-    }
+	   y = (int)bb.y - startY * tileHei;
+	}
+	bool checkCircle2(Img &ret, float hei, float minDiametr);
 };
 
 #endif // IMAGESEARCHER_H
