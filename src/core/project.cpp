@@ -332,7 +332,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 		if (checkSyrcl)
 		{
-			if (!imgsrch.checkCircle2(img, searchSetts.height.start, eps))
+			if (!imgsrch.checkCircle(img, searchSetts.height.start, eps))
 			{
 				spotZones->addBoundy(bb.bb,displayFactor, 3);
 				img.release();

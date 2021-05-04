@@ -297,10 +297,17 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 
 #include <opencv2/core/mat.hpp>
 
+float sqr(float X)
+{
+	return ((float) (X) * (X));
+}
+
 bool ImageSearcher::checkCircle(Img& ret, float hei, float coof)
 {
 	cv::Mat mat(ret.hei, ret.wid, CV_8UC1);
     float maxval = -9999;
+	int h = 0, k = 0;
+
     for (int j = 0; j < ret.hei; ++j)
     {
         for (int i = 0; i < ret.wid; ++i)
@@ -308,7 +315,9 @@ bool ImageSearcher::checkCircle(Img& ret, float hei, float coof)
             float d =ret.get(i,j);
             if (d > maxval)
             {
-                maxval = d;
+				h = i;
+				k = j;
+				maxval = d;
             }
 		}
 	}
@@ -329,8 +338,6 @@ bool ImageSearcher::checkCircle(Img& ret, float hei, float coof)
 	if (contours.size() != 1)
 		return false;
 
-	int realsumX = 0;
-	int realsumY = 0;
 	cv::Point prevc = contours[0][0];
 	int minx = contours[0][0].x, miny = contours[0][0].y, maxx = contours[0][0].x, maxy = contours[0][0].y;
 	for (size_t i = 1; i < contours[0].size(); ++i)
@@ -341,27 +348,31 @@ bool ImageSearcher::checkCircle(Img& ret, float hei, float coof)
 
 		miny = MIN(miny, c.y);
 		maxy = MAX(maxy, c.y);
-
-		realsumX += abs(c.x - prevc.x);
-		realsumY += abs(c.y - prevc.y);
-
-		prevc = c;
+//		h += c.x;
+//		k += c.y;
 	}
 
-	//	int diam = ((maxx - minx) + ( maxy - miny)) / 2;//Щедаяшее
-//	int diam = std::max(maxx - minx,  maxy - miny);
-	int diamX = maxx - minx;
-	int diamY = maxy - miny;
+//	h /= contours[0].size();
+//	k /= contours[0].size();
 
-	int maxsumX = (diamX - diamX % 2) * 2 + (diamX % 2) * 2;
-	int maxsumY = (diamY - diamY % 2) * 2 + (diamY % 2) * 2;
+	int diamX = maxx - minx + 1;
+	int diamY = maxy - miny + 1;
+	//(x−h)2/r2x+(y−k)2/r2y≤1.(1)
 
-	float coofX = static_cast<float>(realsumX) / (maxsumX);
-	float coofY = static_cast<float>(realsumY) / (maxsumY);
+	int correct = 0;
+	for (size_t i = 0; i < contours[0].size(); ++i)
+	{
+		int x = contours[0][i].x;
+		int y = contours[0][i].y;
 
-	float ds = coof;
+		float fr = ((sqr(x - h) / 2) / sqr(diamX / 2)) + (sqr(y - k) / sqr(diamY / 2));
+		if (fr >= 0.5f && fr <= 1.0f)
+			++correct;
+	}
 
-	return MIN(coofX, coofY) >= ds;
+	cv::imshow("res", mat);
+	cv::waitKey(1);
+	return correct >= (coof *  contours[0].size());
 //	return coofX >= ds && coofY >= ds;
 }
 #include <math.h>
@@ -406,6 +417,7 @@ bool ImageSearcher::checkCircle2(Img &ret, float hei, float coof)
 	float baseAngel = 0;
 
 	float coofPi = 180.f / M_PI;
+
 	for (size_t i = step*2; i < contours[0].size(); i += step)
 	{
 		auto prev = contours[0][i - step*2];
