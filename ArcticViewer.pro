@@ -85,6 +85,7 @@ DEPENDPATH += $$PWD/side-src/opencv-mingw
 
 
 RESOURCES += \
+    baritems.qrc \
     shaders.qrc \
     textures.qrc
 

@@ -1,0 +1,28 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/imgs_orginal/imgOut0.bf</file>
+        <file>resources/imgs_orginal/imgOut1.bf</file>
+        <file>resources/imgs_orginal/imgOut2.bf</file>
+        <file>resources/imgs_orginal/imgOut3.bf</file>
+        <file>resources/imgs_orginal/imgOut4.bf</file>
+        <file>resources/imgs_orginal/imgOut5.bf</file>
+        <file>resources/imgs_orginal/imgOut6.bf</file>
+        <file>resources/imgs_orginal/imgOut7.bf</file>
+        <file>resources/imgs_orginal/imgOut8.bf</file>
+        <file>resources/imgs_orginal/imgOut9.bf</file>
+        <file>resources/imgs_orginal/imgOut10.bf</file>
+        <file>resources/imgs_orginal/imgOut11.bf</file>
+        <file>resources/imgs_orginal/imgOut12.bf</file>
+        <file>resources/imgs_orginal/imgOut13.bf</file>
+        <file>resources/imgs_orginal/imgOut14.bf</file>
+        <file>resources/imgs_orginal/imgOut15.bf</file>
+        <file>resources/imgs_orginal/imgOut16.bf</file>
+        <file>resources/imgs_orginal/imgOut17.bf</file>
+        <file>resources/imgs_orginal/imgOut18.bf</file>
+        <file>resources/imgs_orginal/imgOut19.bf</file>
+        <file>resources/imgs_orginal/imgOut20.bf</file>
+        <file>resources/imgs_orginal/imgOut21.bf</file>
+        <file>resources/imgs_orginal/imgOut22.bf</file>
+        <file>resources/imgs_orginal/imgOut23.bf</file>
+    </qresource>
+</RCC>

@@ -182,14 +182,12 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		constr.createBinayMasks = false;
 		constr.createGraph = false;
 
-		QDir directory("D:/Progs/QT/QArcticViewer/etalons/imgs_orginal");
-		// QDir directory("D:/Programs/Python/barcode/experements/geo/imgs_orginal");
-		QStringList images = directory.entryList(QStringList() << "*.bf", QDir::Files);
 		int sd = 0;
-		foreach (QString filename, images)
+		for (int i = 0; i < maxetalcount; ++i)
 		{
-			QFile file(directory.path() + "/" + filename);
-			file.open(QIODevice::ReadOnly);
+			QFile file(":/resources/imgs_orginal/imgOut" +QString::number(i)+".bf");
+			if(!file.open(QIODevice::ReadOnly))
+				break;
 
 			QByteArray arr = file.read(file.size());
 //			char shape[2]{arr.at(0), arr.at(1)};
@@ -206,10 +204,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			etalons.append(item);
 			delete ret;
 			file.close();
-			if (++sd >= maxetalcount)
-				break;
-
-			//do whatever you need to do
 		}
 	}
 
