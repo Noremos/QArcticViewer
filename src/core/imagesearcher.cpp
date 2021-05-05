@@ -304,6 +304,7 @@ float sqr(float X)
 
 void show(cv::Mat &mat)
 {
+	cv::destroyAllWindows();
 	cv::namedWindow("res", cv::WINDOW_NORMAL);
 	cv::imshow("res", mat);
 	cv::waitKey(1);
@@ -315,31 +316,41 @@ struct Direction
 	static const int COUNT = 4;
 	Direction() { memset(dirs, 0, COUNT * sizeof(int)); }
 	int dirs[COUNT];
+	int totalSum = 0;
 	void add(int x, int y)
 	{
 		if (x == 0 && y == 0)
 		{
 			qDebug() << "Ass";
 		}
-		//(-1 -1) = 0; (-1 0) = 1; (-1 1) = 2; (0 -1) = 3;
-		//(0 1) = 5; (1 -1) = 6; (1 0) = 7; (1 1) = 8;
+		//(-1 -1) = 0; (-1  0) = 1; (-1 1) = 2; (0 -1) = 3;
+		//( 0  1) = 5; ( 1 -1) = 6; ( 1 0) = 7; (1  1) = 8;
 		int off = (y + 1) * 3 + (x + 1);
 		if (off < 4)
 			++dirs[off];
 		else
-			--dirs[off-5];
+			--dirs[8 - off];
+
+//		totalSum += (abs(x) + abs(y));
+		totalSum += 1;
 	}
 
-	int sums()
+	float sums()
 	{
 		int sm = 0;
 		for (int i = 0; i < COUNT; ++i)
 		{
-			sm += dirs[i];
+			sm += abs(dirs[i]);
 		}
-		return sm;
+		return static_cast<float>(sm) / totalSum;
 	}
 };
+
+bool cehckCoof(float a, float b)
+{
+	float coof = (a > b ? a / b : b / a);
+	return coof <= 2.0;
+}
 
 bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 {
@@ -393,9 +404,12 @@ bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 		prevc = c;
 	}
 
+	int dx = maxx - minx;
+	int dy = maxy - miny;
+
 	show(mat);
-	float tcoof = 1.0f - (realsum.sums() / size);
-	return tcoof >= coof;
+	float tcoof = 1.0f - realsum.sums();
+	return tcoof >= coof &&cehckCoof(dx, dy);
 	//	return coofX >= ds && coofY >= ds;
 }
 #include <math.h>
