@@ -553,7 +553,7 @@ background-color: &quot;#d4d1d1&quot;;
           <double>0.010000000000000</double>
          </property>
          <property name="value">
-          <double>1.000000000000000</double>
+          <double>0.500000000000000</double>
          </property>
         </widget>
         <widget class="QDoubleSpinBox" name="barShoj">
@@ -578,7 +578,7 @@ background-color: &quot;#d4d1d1&quot;;
           <double>0.100000000000000</double>
          </property>
          <property name="value">
-          <double>0.400000000000000</double>
+          <double>0.900000000000000</double>
          </property>
         </widget>
         <widget class="QGroupBox" name="gbZones">

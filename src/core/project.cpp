@@ -182,7 +182,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		constr.createBinayMasks = false;
 		constr.createGraph = false;
 
-		int sd = 0;
 		for (int i = 0; i < maxetalcount; ++i)
 		{
 			QFile file(":/resources/imgs_orginal/imgOut" +QString::number(i)+".bf");
@@ -198,7 +197,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
             bc::Barcontainer<float> *ret = creator.createBarcode(&fileimg, constr);
             bc::Baritem<float> *item = ret->exractItem(0);
 //			item->removePorog(3);
-//			item->relen();
+			item->relen();
 			item->normalize();
 
 			etalons.append(item);
@@ -303,7 +302,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			auto *retf = creator.createBarcode(&bimg, constr);
 			auto *baritem = retf->exractItem(0);
 //			baritem->removePorog(3);
-//            baritem->relen();
+			baritem->relen();
 			baritem->normalize();
 
 			delete retf;
