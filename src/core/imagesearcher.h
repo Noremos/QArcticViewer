@@ -74,7 +74,17 @@ public slots:
 
 
 };
+struct Size2
+{
+	int wid, hei;
+	Size2(int _wid, int _hei)
+	{
+		wid = _wid;
+		hei = _hei;
+	}
+};
 
+#include <QDir>
 struct FileBuffer
 {
 	QString buffer;
@@ -86,7 +96,12 @@ struct FileBuffer
 	{
 		outfile.setFileName(path);
 
-		//		if (outfile.exists())outfile.remove();
+		if (outfile.exists())
+		{
+			QFile::rename(path,  path.replace("bds.lst", "bds old.lst"));
+//			outfile.setFileName(path);
+		}
+
 		if (!outfile.open(QFile::WriteOnly | QFile::Truncate))
 			return false;
 
@@ -129,8 +144,15 @@ struct FileBuffer
 	}
 };
 
+namespace cv
+{
+	class Mat;
+}
+
 class ImageSearcher
 {
+	cv::Mat* mat;
+
 	TiffReader *reader;
     int tileWid;
     int tileHei;
@@ -148,6 +170,11 @@ class ImageSearcher
 	boundy getBounty(barline<float> *line);
 public:
 	ImageSearcher(TiffReader *reader);
+
+	constexpr int getTileOffset(int tx, int ty)
+	{
+		return ty* tilesInWid + tx;
+	}
 
 	uint getTilesInWid()
     {
@@ -168,8 +195,12 @@ public:
 	bool checkCircle(Img &ret, float hei, float coof);
 
 	Img getTile(int index);
-    Img getTile(int tx, int ty);
+	Img getTile(int tx, int ty);
 
+	Size2 getTileSize()
+	{
+		return Size2(tileWid, tileHei);
+	}
     void getFileOffset(int index, boundy bb, int& x, int &y)
     {
         // diffset 100
@@ -182,6 +213,12 @@ public:
 	   y = (int)bb.y - startY * tileHei;
 	}
 	bool checkCircle2(Img &ret, float hei, float minDiametr);
+
+	void savemat();
+	~ImageSearcher();
+	void segment(bc::barline<float> *line, int i, const int &tx, const int &ty);
+protected:
+	void mark(bc::barvector<float> &mart, int ind, const int &tx, const int &ty);
 };
 
 #endif // IMAGESEARCHER_H

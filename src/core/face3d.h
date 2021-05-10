@@ -44,7 +44,7 @@ public:
 	QString buildStr(objoff offset=0)
 	{
 		QString st = "f ";
-		for(auto v : nums)
+		for(auto v : qAsConst(nums))
 			st += QString::number(v + offset) + " ";
 
 		return st.remove(st.length() - 1, 1);

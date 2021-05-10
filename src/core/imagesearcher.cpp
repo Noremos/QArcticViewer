@@ -1,7 +1,10 @@
 #include "imagesearcher.h"
 #include "src/core/project.h"
 
-ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/mat.hpp>
+
+ImageSearcher::ImageSearcher(TiffReader *reader) : reader(reader)
 {
 	if (reader->tiff.TileWidth != 0)
 	{
@@ -16,21 +19,20 @@ ImageSearcher::ImageSearcher(TiffReader *reader): reader(reader)
 		reader->setRowsCacheSize(tileHei);
 	}
 
+
     tilesInWid = (uint)reader->widght() / tileWid;
     tilesInHei = (uint)reader->height() / tileHei;
 	qDebug() << tilesInWid * tilesInHei;
 	cachedTiles.setMaxSize(10);
 
+
+	mat = new cv::Mat(reader->height(), reader->widght(), CV_8UC3);
 //	settings->bottomProc = 0.1f;
 //	settings->coof= 1.7f;
 //	settings->diamert = TRange<int>(10,300);
 //	settings->height = TRange<float>(2,6);
 }
 
-constexpr int getTid(int tx, int ty, int wid)
-{
-	return ty* wid + tx;
-}
 
 Img ImageSearcher::getTile(int index)
 {
@@ -208,6 +210,47 @@ void check(void *ptr)
 #include <QImage>
 #include <QPixmap>
 
+
+void ImageSearcher::mark(bc::barvector<float>& matr, int ind, const int &tx, const int &ty)
+{
+
+	static cv::Vec3b colors[8]{
+		{0, 0, 255},
+		{0, 255, 0},
+		{255, 0, 0},
+		{0, 255, 255},
+		{255, 0, 255},
+		{255, 255, 0},
+		{0, 255, 255},
+		{255, 255, 255},
+		};
+	auto &col = colors[ind % 8];
+	for (auto& a : matr)
+	{
+		int y = ty + a.getY();
+		int x = tx + a.getX();
+		if (x> this->reader->widght() || y > reader->height())
+			continue;
+		// Если хотя бы одно не 0, значи тут уже есть цвет
+		auto &colref = mat->at<cv::Vec3b>(y, x);
+		if (colref[0] == 0 && colref[1] == 0 && colref[2] == 0)
+		{
+			colref[0] = col[0];
+			colref[1] = col[1];
+			colref[2] = col[2];
+		}
+	}
+}
+void ImageSearcher::segment(bc::barline<float> *line, int i, const int &tx, const int &ty)
+{
+
+	for(auto& c: line->childrens)
+	{
+		segment(c, i+1, tx,ty);
+	}
+	mark(line->matr, i, tx, ty);
+}
+
 size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 							   int start, int len, int bottom,
 							   volatile bool &valStop)
@@ -226,7 +269,8 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 	{
 		QString tileNumstr = QString::number(i);
 		boundsOut.writeLine("t " + tileNumstr);
-		// barsOut.writeLine("{num:" + tileNumstr + ", barcodes:");
+
+		// barsOut.writeLine("{num:" + tileNumstr + ", barcodes: { bars:[ ");
 
 		Img img = getTile(i);
 		int wid = img.wid, hei = img.hei;
@@ -236,10 +280,6 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem<float> *item = bars->getItem(0);
 
-		// barsOut.writeLine("{");
-		// barsOut.write("bars:[ ");
-
-
 		// delete data and delete pointer on it
 		img.release();
 		reader->removeTileFromCache(i);
@@ -247,29 +287,63 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 
 		int tx = (i % tilesInWid) * tileWid;
 		int ty = (i / tilesInWid) * tileHei;
-
-		//boundy b(0, 0, wid-1,  hei-1);
-		//b.addXoffset(tx);
-		//b.addYoffset(ty);
-		//b.z = 0;
-		//b.endZ = 50;
-		//bounds.push_back(b);
 		std::string out = "[ ";
-		for (size_t i = 0, total = item->barlines.size(); i < total; ++i)
+		size_t addded = 0;
+
+//		segment(item->getRootNode(), 0, tx, ty);
+
+		for (size_t ib = 0, total = item->barlines.size(); ib < total; ++ib)
 		{
-			bc::barline<float> *line = item->barlines[i];
+			bc::barline<float> *line = item->barlines[ib];
 //			check(line->matr);
+
+
+			mark(line->matr, ib, tx, ty);
+
+
+			if (line->childrens.size() != 0)
+				continue;
+
+//			int deep = 0;
+//			bc::barline<float> *temp = line;
+//			while (temp)
+//			{
+//				auto &col = colors[deep % 8];
+//				if (temp->matr.size()==0)
+//					break;
+
+//				auto orcol = mat->at<cv::Vec3b>(ty + temp->matr[0].getY(), tx + temp->matr[0].getX());
+
+////				if (orcol[0] != 0 || orcol[1] != 0 || orcol[2] != 0)
+////					break;
+
+
+
+//				temp = temp->parrent;
+//				++deep;
+////				if (deep>10)
+////					break;
+//			}
+
+
+//			if (deep==0 || deep>10)
+//				continue;
+
 			boundy b = getBounty(line);
 
 			b.addXoffset(tx);
 			b.addYoffset(ty);
 
 			boundsOut.writeLine(b.getStr());
+			addded += 1;
 
 
 			// line->getJsonObject(out);
 			// out += ",";
 		}
+
+
+
 		// out[out.length() - 1] = ']';
 
 		// QString swr = QString::fromStdString(out);
@@ -281,7 +355,7 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 
 		// barsOut.writeLine(swr);
 
-		totalAdded += item->barlines.size();
+		totalAdded += addded;
 
 		delete bars;
 
@@ -292,10 +366,7 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 	return totalAdded;
 }
 
-#include <opencv2/opencv.hpp>
-//#include <opencv2/imgproc.hpp>
 
-#include <opencv2/core/mat.hpp>
 
 float sqr(float X)
 {
@@ -369,14 +440,14 @@ bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 	}
 
 	maxval -= hei;
-	for (int j = 0; j < ret.hei; ++j)
-	{
-		for (int i = 0; i < ret.wid; ++i)
-		{
-			float d = ret.get(i, j);
-			mat.at<uchar>(j, i) = (d > maxval) ? 255 : 0;
-		}
-	}
+//	for (int j = 0; j < ret.hei; ++j)
+//	{
+//		for (int i = 0; i < ret.wid; ++i)
+//		{
+//			float d = ret.get(i, j);
+//			mat.at<uchar>(j, i) = (d > maxval) ? 255 : 0;
+//		}
+//	}
 	std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Vec4i> hierarchy;
 	cv::findContours(mat, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
@@ -407,7 +478,7 @@ bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 	int dx = maxx - minx;
 	int dy = maxy - miny;
 
-	show(mat);
+//	show(mat);
 	float tcoof = 1.0f - realsum.sums();
 	return tcoof >= coof &&cehckCoof(dx, dy);
 	//	return coofX >= ds && coofY >= ds;
@@ -502,6 +573,17 @@ bool ImageSearcher::checkCircle2(Img &ret, float hei, float coof)
 	cv::imshow("res", mat);
 	cv::waitKey(1);
 	return true;
+}
+
+void ImageSearcher::savemat()
+{
+	QString ds = Project::proj->getPath(BackPath::root);
+	cv::imwrite((ds + "img.jpg").toStdString(), *mat);
+}
+
+ImageSearcher::~ImageSearcher()
+{
+	delete mat;
 }
 
 void Beaf::exportDataAsBeaf(const QString &path, int wid, int hei, float *data)
@@ -599,8 +681,6 @@ Img Beaf::importBeafData(const QString &path)
 	QFile file(path);
 
 	file.open(QFile::OpenModeFlag::ReadOnly | QFile::OpenModeFlag::ExistingOnly);
-
-	QByteArray arr = file.readAll();
 
 	char type[8];
 	file.read(type, 1);
