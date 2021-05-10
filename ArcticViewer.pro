@@ -18,10 +18,13 @@ SOURCES += \
     side-src/Barcode/PrjBarlib/source/barcodeCreator.cpp \
     side-src/Barcode/PrjBarlib/source/component.cpp \
     side-src/Barcode/PrjBarlib/source/hole.cpp \
+    src/core/convertation.cpp \
     src/core/imagesearcher.cpp \
     src/core/obj3d.cpp \
+    src/core/object3d.cpp \
     src/core/project.cpp \
     src/core/tiffreader.cpp \
+    src/render/markers.cpp \
     src/render/spotzones.cpp \
     src/render/text2d.cpp \
     terrarian/terrariangui.cpp
@@ -32,12 +35,15 @@ HEADERS += \
     mainwidget.h \
     mainwindow.h \
     src/base.h \
+    src/core/convertion.h \
     src/core/decoder.h \
     src/core/face3d.h \
     src/core/imagesearcher.h \
     src/core/obj3d.h \
+    src/core/object3d.h \
     src/core/project.h \
     src/core/tiffreader.h \
+    src/render/markers.h \
     src/render/text2d.h \
     src/types/img.h \
     src/types/instinfo.h \

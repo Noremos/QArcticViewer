@@ -81,28 +81,6 @@ class Terrain :protected QOpenGLFunctions
 	float maxH;
 	QVector<QOpenGLTexture *> textures;
 
-
-
-	struct vertex
-	{
-		vertex(float _x=0, float _y=0, float _z=0) : x(_x),y(_y),z(_z),texX(_x),texY(_y)
-		{}
-
-		float x, y, z;
-		float texX, texY;
-	};
-	struct face
-	{
-		unsigned int v1, v2, v3;
-		face(unsigned int _v1=0, int _v2=0, int _v3=0) : v1(_v1),v2(_v2),v3(_v3)
-		{
-
-		}
-	};
-	QVector<vertex> vetexes;
-	QVector<face> faces;
-	QVector<QVector2D> textureCoords;
-
 public:
 	Terrain();
 	~Terrain();
@@ -114,6 +92,7 @@ public:
 		this->maxH = maxH;
 	}
 
+	Object3d obj;
 	void displayTexture(int textNum)
 	{
 		this->textNum = textNum;
@@ -173,12 +152,9 @@ private:
 
 	void initShaders();
 
-
-
-	void draw();
 public:
+	vertex getValue(size_t offset);
 	void initArrays();
-	void readfile(const PrjgBarCallback &pbCallback, QString path);
 	void drawFull(QMatrix4x4 &view, QMatrix4x4 &projection);
 	void setTexture(int num, QString path);
 };
