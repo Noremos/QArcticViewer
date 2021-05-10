@@ -10,6 +10,8 @@
 #include "src/render/spotzones.h"
 #include "src/render/text2d.h"
 
+#include "mainwidget.h"
+
 using std::min;
 using std::vector;
 
@@ -47,6 +49,21 @@ float Project::getImgMinVal() const
 {
 	return imgMinVal;
 }
+
+void Project::mouseCast(int x, int y)
+{
+//	float x = (2.0f * mouse_x) / width - 1.0f;
+//	float y = 1.0f - (2.0f * mouse_y) / height;
+//	float z = 1.0f;
+//	vec3 ray_nds = vec3(x, y, z);
+//	vec4 ray_clip = vec4(ray_nds.xy, -1.0, 1.0);
+//	vec4 ray_eye = inverse(projection_matrix) * ray_clip;
+//	ray_eye = vec4(ray_eye.xy, -1.0, 0.0);
+//	vec3 ray_wor = (inverse(view_matrix) * ray_eye).xyz;
+//	// don't forget to normalise the vector at some point
+	//	ray_wor = normalise(ray_wor);
+}
+
 
 float Project::getImgMaxVal() const
 {
@@ -97,6 +114,9 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 		qDebug() << ind << "/" << imgsrch.getMaxTiles() << ": " << size;
 	}
 
+	QString ds = Project::proj->getPath(BackPath::root);
+	imgsrch.savemat();
+
 	if (pbCallback.cbIncrValue)
 		pbCallback.cbIncrValue(end - start+1);
 
@@ -106,6 +126,7 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 }
 
 
+#include <QJsonArray>
 #include <fstream>
 
 
@@ -269,7 +290,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		{
 			if (!checkBounty(bb.bb))
 			{
-//                spotZones->addBoundy(bb.bb,displayFactor, 0);
+//				spotZones->addBoundy(bb.bb,displayFactor, 0);
 				continue;
 			}
 		}
@@ -472,4 +493,63 @@ void Project::write(QJsonObject &json) const
 //	setts.height = {minHei, maxHei};
 //	setts.bottomProc = bottomLineProc;
 }
+
+void Project::readGeoshape()
+{
+	QFile jsonFile(":/resources/shape.geojson");
+	if (!jsonFile.open(QIODevice::ReadOnly))
+	{
+		return;
+	}
+
+	// Считываем весь файл
+	QByteArray geodata = jsonFile.readAll();
+	// Создаём QJsonDocument
+	QJsonDocument jsonDocument(QJsonDocument::fromJson(geodata));
+	// Из которого выделяем объект в текущий рабочий QJsonObject
+	QJsonObject object = jsonDocument.object();
+	QJsonArray features = object["features"].toArray();
+
+	openReader();
+	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
+
+	/*
+	 * 1900000.0000000000000000,950000.0000000000000000 :
+	 * 1950000.0000000000000000,1000000.0000000000000000
+
+		satrt: 190; 100
+		end:   195;  95
+
+
+Tag: 34735 ; Value:  2692054518
+		Tag: 34736 ; Value:  2692054662
+		Tag: 34737 ; Value:  2692054718
+		Tag: 42113 ; Value:  2692054512
+	 * */
+	// start at 1900000 1000000
+
+
+//	auto maxsize = reader->getMaxModelSize();
+//	Size2 size = imgsrch.getTileSize();
+	foreach (auto f, features)
+	{
+		auto arrcoors = f["geometry"].toObject()["coordinates"].toArray();
+
+		// Send in format x, y, T
+		QVector3D coord(arrcoors[0].toDouble(), arrcoors[1].toDouble(), 0);
+		coord = reader->convertModelToRaster(coord);
+		// Get in format x, T, y
+
+		if (coord.x() < 0 || coord.z() < 0 || coord.x() >= reader->widght() || coord.z() >=reader->height())
+			continue;
+
+		size_t offset = (static_cast<int>(coord.z() / displayFactor) * reader->widght() + static_cast<int>(coord.x()));
+		coord.setY(widget->terra->getValue(offset).y);
+
+		widget->markers->addBoundy(coord, displayFactor, 1);
+	}
+
+	widget->markers->updateBuffer();
+}
+
 

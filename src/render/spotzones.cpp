@@ -77,6 +77,7 @@ void SpotZones::updateBuffer()
 	mshader.enableAttributeArray(offloc);
 
 	mshader.setUniformValue("minval", Project::getProject()->getImgMinVal()/ Project::getProject()->displayFactor);
+	mshader.setUniformValue("opacity", 0.4f);
 
 	/*
 	int vertexLocation = program.attributeLocation("a_position");

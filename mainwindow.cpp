@@ -150,7 +150,8 @@ void MainWindow::openProjectAsync()
 	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
 	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
 
-	ui->glWidget->terra->readfile(callback, proj->getPath(BackPath::object));
+	ui->glWidget->terra->obj.readFastfile(callback, proj->getPath(BackPath::object));
+	proj->readGeoshape();
 }
 
 void MainWindow::openProjectAsyncEnd()
@@ -344,7 +345,7 @@ void MainWindow::importDTMAsync(QString fileName)
 	if (callback.stopAction)
 		return;
 	callback.cbSetMax(1);
-	ui->glWidget->terra->readfile(callback, proj->getPath(BackPath::object));
+	ui->glWidget->terra->obj.readFastfile(callback, proj->getPath(BackPath::object));
 
 	opened = true;
 }
@@ -498,7 +499,7 @@ void MainWindow::timerEvent(QTimerEvent */*event*/)
 }
 
 
-void MainWindow::on_cbUseRegion_stateChanged(int arg1)
+void MainWindow::on_cbUseRegion_stateChanged(int /*arg1*/)
 {
     ui->gbZones->setEnabled(ui->chShowFinded->checkState() == Qt::CheckState::Checked);
 

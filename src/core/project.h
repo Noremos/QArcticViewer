@@ -10,8 +10,11 @@
 #include "src/types/instinfo.h"
 #include "src/core/obj3d.h"
 
+#include <src/render/markers.h>
+
 class SpotZones;
 class Text2d;
+class MainWidget;
 
 enum class BackPath
 {
@@ -22,7 +25,8 @@ enum class BackPath
 	barlist,
 	roilist,
 	heimap,
-	tiles
+	tiles,
+	root
 };
 
 
@@ -46,6 +50,7 @@ public:
 	~Project()
 	{
 		closeReader();
+		silense();
 	}
 public:
 
@@ -126,7 +131,9 @@ public:
 		}
 	}
 
+	MainWidget *widget;
 private:
+
 	QString projectPath;
 	bool checkBounty(boundy& bb)
 	{
@@ -194,6 +201,8 @@ public:
 			return projectPath + modelPath;
 		case BackPath::heimap:
 			return heimapPath;
+		case BackPath::root:
+			return projectPath;
 		default:
 			return "";
 		}
@@ -209,6 +218,9 @@ public:
 
 	float getImgMinVal() const;
 
+
+	void mouseCast(int x, int y);
+	void readGeoshape();
 signals:
 	void meterialtypeChanged(int);
 	void heimapChanged(QString);

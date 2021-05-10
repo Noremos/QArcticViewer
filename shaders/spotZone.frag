@@ -2,20 +2,17 @@
 
 in float outColor;
 out vec4 fragColor;
+uniform float opacity;
 
 void main(void)
 {
-    int ds = 1;
-    int type = int(round(outColor));
-    if (type==1)
-        fragColor = vec4(0, 1, 0, 0.4);
-    else if(type==2)
-        fragColor = vec4(0.54, 0.0, 0.5, 0.4);
-    else if(type==3)
-        fragColor = vec4(0.0, 0.3, 0.7, 0.4);
-    else
-        fragColor = vec4(1, 0, 0, 0.4);
+    vec3 colors[4];
+    colors[0] = vec3(0.0, 1.0, 0.0);
+    colors[1] = vec3(0.54, 0.0, 0.5);
+    colors[2] = vec3(0.0, 0.3, 0.7);
+    colors[3] = vec3(1.0, 0.0, 0.0);
 
-    // r g b
-//   fragColor = vec4(1-outColor, outColor, 0, 0.4);
+    int type = int(round(outColor)) - 1;
+
+    fragColor = vec4(colors[type], opacity);
 }

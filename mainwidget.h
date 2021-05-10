@@ -93,6 +93,7 @@ public:
 
 	Terrain *terra = nullptr;
 	SpotZones* zones;
+	Markers *markers;
 
 	bool drawTerra = false;
 	bool drawZones = false;
@@ -100,6 +101,7 @@ public:
 	void printErrors();
 
 
+	void readGeoshape();
 protected:
 
 	void mouseMoveEvent(QMouseEvent *event) override;

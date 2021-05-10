@@ -67,7 +67,10 @@ MainWidget::MainWidget(QWidget */*parent*/)
 	zones = new SpotZones();
 	text = new Text2d();
 
+	markers = new Markers();
+
 	useTimer = false;
+	Project::getProject()->widget = this;
 }
 
 MainWidget::~MainWidget()
@@ -144,6 +147,8 @@ void MainWidget::initializeGL()
 	zones->initGL();
 	text->initGL();
 
+	markers->initGL();
+
 	emit startTimer();
 //		terra->readfile("D:\2.obj");
 //	terra->readfile("D:\\2_.OBJ");
@@ -206,7 +211,7 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 	shitfp = event->modifiers() & Qt::ShiftModifier;
 	ctrl = event->modifiers() & Qt::ControlModifier;
 	auto key = event->nativeVirtualKey();
-	if (key >= 0 && key < 1024)
+	if (key < 1024)
 	{
 //		bool jg = keys[key];
 		keys[key] = true;
@@ -255,7 +260,7 @@ void MainWidget::keyReleaseEvent(QKeyEvent *event)
 	ctrl = event->modifiers() & Qt::ControlModifier;
 
 	auto key = event->nativeVirtualKey();
-	if (key >= 0 && key < 1024)
+	if (key < 1024)
 	{
 //		bool jg = keys[key];
 
@@ -396,6 +401,8 @@ void MainWidget::paintGL()
 		zones->renderGL(view, projection);
 		text->renderGL(view, projection);
 	}
+
+	markers->renderGL(view, projection);
 
 //	QPainterPath path;
 ////	glDisable(GL_LIGHTING);

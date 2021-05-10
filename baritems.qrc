@@ -24,5 +24,6 @@
         <file>resources/imgs_orginal/imgOut21.bf</file>
         <file>resources/imgs_orginal/imgOut22.bf</file>
         <file>resources/imgs_orginal/imgOut23.bf</file>
+        <file>resources/shape.geojson</file>
     </qresource>
 </RCC>

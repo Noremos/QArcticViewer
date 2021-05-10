@@ -17,11 +17,11 @@ private:
 public:
     glinstanse(/* args */)
     {
-        initializeOpenGLFunctions();
 //        initGL();
     }
     virtual void initGL() = 0;
-    virtual void renderGL() = 0;
+	virtual void renderGL(QMatrix4x4& view, QMatrix4x4& projection) = 0;
+
     virtual ~glinstanse()
     {}
     
@@ -45,4 +45,24 @@ public:
 	}
 };
 
+struct InstanceData
+{
+	QVector4D v0;
+	QVector4D v1;
+	QVector4D v2;
+	QVector4D v3;
+	//	QMatrix4x4 model;
+	float val;
+	//	int zer1;
+	//	int zer2;
+	InstanceData(QMatrix4x4 matr, int val)
+	{
+		//		model = matr;
+		v0 = matr.column(0);
+		v1 = matr.column(1);
+		v2 = matr.column(2);
+		v3 = matr.column(3);
+		this->val = val;
+	}
+};
 #endif // !GLINSTANSE_H
