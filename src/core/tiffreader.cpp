@@ -21,102 +21,8 @@ using std::vector;
 string dectodeTEST(uchar* buffer, int len);
 TiffReader::TiffReader()
 {
-	uint16_t x = 0x0001;
-	sysByteOredr = *((uint8_t*)&x) ? 77 : 73;//b : l
-//	uchar cs[]{ 0,1,0,2,5,0,3,9,8,6,4 };
-	//	dectodeTEST(cs, 11);
 }
 
-
-union toduble
-{
-	uchar data[8];
-	double value;
-};
-union tofloat
-{
-	uchar data[4];
-	float value;
-};
-struct increnenter
-{
-	increnenter(int st, int ed, bool reverse)
-	{
-		rev = reverse;
-		i = rev ? ed : st;
-	}
-	bool rev;
-	int i = 0;
-	int v()
-	{
-		return rev ? i-- : i++;
-	}
-};
-
-template<class T>
-struct increnenterBytes
-{
-	increnenterBytes(uchar *bytes, int st, int ed, bool reverse)
-	{
-		this->bytes = bytes;
-		rev = reverse;
-		i = rev ? ed : st;
-	}
-	uchar *bytes;
-	bool rev;
-	int i = 0;
-	T v(int off)
-	{
-		return (T)bytes[(rev ? i-- : i++)] << off;
-	}
-};
-
-float TiffReader::toFloat(uchar* bytes)
-{
-	tofloat conv;
-	memcpy(conv.data, bytes, 4);
-	//reorder(conv.data, 4);
-	return conv.value;
-}
-
-double TiffReader::toDouble(uchar* bytes)
-{
-	toduble conv;
-	memcpy(conv.data, bytes, 8);
-	reorder(conv.data, 8);
-	return conv.value;
-}
-
-ushort TiffReader::toShort(uchar* bytes)
-{
-	increnenter t(0, 1, imgByteOrder != sysByteOredr);
-
-	return short((unsigned char)(bytes[t.v()]) << 8 | (bytes[t.v()]));
-}
-
-uint TiffReader::toInt(uchar* bytes)
-{
-	//alternative int* y; y = reinterpret_cast<int*>(bytes); return *y;
-	increnenter t(0, 3, imgByteOrder != sysByteOredr);
-	return int((unsigned char)(bytes[t.v()]) << 24 | (bytes[t.v()]) << 16 | (bytes[t.v()]) << 8 | (bytes[t.v()]));
-}
-
-long long TiffReader::toInt64(uchar *bytes)
-{
-	//alternative int* y; y = reinterpret_cast<int*>(bytes); return *y;
-	increnenterBytes<long long> t(bytes, 0, 7, imgByteOrder != sysByteOredr);
-	return t.v(56) |t.v(48) |t.v(40) |t.v(32) |t.v(24) | t.v(16) | t.v(8) | t.v(0);
-}
-
-
-void TiffReader::reorder(uchar* bytes, int size)
-{
-	if (sysByteOredr != imgByteOrder)
-	{
-		uchar* istart = bytes, * iend = istart + size;
-		std::reverse(istart, iend);
-	}
-}
 
 int TiffReader::printHeader(uchar* buffer)
 {
@@ -169,7 +75,7 @@ size_t TiffReader::getTagIntValue(size_t offOrValue, size_t count, char format, 
 #include "side-src/fast_float/fast_float.h"
 
 
-float TiffReader::getFloatFromAscii(size_t offOrValue, size_t count, char format, bool is64)
+float TiffReader::getFloatFromAscii(size_t offOrValue, size_t count, char /*format*/, bool /*is64*/)
 {
 	uchar *buffer = new uchar[count];
 	memset(buffer, 0, count);
@@ -183,9 +89,8 @@ float TiffReader::getFloatFromAscii(size_t offOrValue, size_t count, char format
 		if (s[i] == ',')
 			s[i] = '.';
 	}
-	float val = std::stof(s);
 //	fast_float::from_chars((const char*)buffer, (const char*)(buffer + count), val);
-	return val;
+	return std::stof(s);
 }
 
 template <class T>
@@ -259,11 +164,39 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		this->tiff.Compression = getTagIntValue(value, count, type, is64);
 		OUT << "Compression";
 		break;
-	case Tags::NoData:
+
+	case Tags::ModelTiepointTag:
 	{
-		this->tiff.NoDataValue = getFloatFromAscii(value, count, type, is64);
+		uchar *buffer = new uchar[count * sizeof(double)];
+		read(buffer, value, count * sizeof(double));
+		int k = count / 6;
+		this->tiff.ModelTiepointTag.resize(k);
+		for (int lk = 0; lk < k; ++lk)
+		{
+			this->tiff.ModelTiepointTag.add(buffer + lk * 6 * sizeof(double));
+		}
+		delete[] buffer;
+		OUT << "ModelTiepointTag";
+		break;
 	}
+	case Tags::ModelPixelScaleTag: {
+		assert(count == 3);
+
+		uchar buffer[3 * sizeof(double)];
+		read(buffer, value, count * sizeof(double));
+		this->tiff.ModelPixelScaleTag.x = toDouble(buffer);
+		this->tiff.ModelPixelScaleTag.y = toDouble(buffer +  sizeof(double));
+		this->tiff.ModelPixelScaleTag.z = toDouble(buffer +  sizeof(double) * 2);
+
+		OUT << "ModelPixelScaleTag";
+		break;
+	}
+	case Tags::NoData:
+		this->tiff.NoDataValue = getFloatFromAscii(value, count, type, is64);
+		break;
+
 	default:
+		OUT << "Tag:" << (tag) << "; Value: " << value;
 		print = false;
 		break;
 	}
@@ -445,14 +378,15 @@ rowptr TiffReader::getRowData(int y)
 //		int TilesPerImage = TilesAcross * TilesDown;
 		cachedTiles.setMaxElems(TilesInRow+2);
 
-		//	    col0  col1  col2
-		//row0	/\ /\ /\ /\ /\
-		//		\/ \/ \/ \/ \/
-		//row1	/\ /\ /\ /\ /\
-		//		\/ \/ \/ \/ \/
-		//row2	/\ /\ /\ /\ /\
-		//		\/ \/ \/ \/ \/
-
+		/*
+				col0  col1  col2
+		row0	/\ /\ /\ /\ /\
+				\/ \/ \/ \/ \/
+		row1	/\ /\ /\ /\ /\
+				\/ \/ \/ \/ \/
+		row2	/\ /\ /\ /\ /\
+				\/ \/ \/ \/ \/
+		*/
 
 		//|------|------$-x----|-----|----|-----
 		//-------------rowTileNum----
@@ -613,7 +547,7 @@ bool TiffReader::open(const wchar_t* path)
 	else
 	{
 		read(buffer, 0, 8);
-		imgByteOrder = buffer[0];
+		increnenter::GLOBALloclByteOreder = buffer[0];
 		int verNum = printHeader(buffer);
 		if (verNum==42)
 		{

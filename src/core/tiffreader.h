@@ -1,13 +1,14 @@
 #ifndef TIFFREADER_H
 #define TIFFREADER_H
 //
-#include "../base.h"
+#include "convertion.h"
+
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
 typedef unsigned short ushort;
 
-enum class Tags : ushort {
+enum class Tags : int {
 	//A general indication of the kind of data contained in this subfile.
 	NewSubfileType = 254,
 
@@ -122,9 +123,74 @@ enum class Tags : ushort {
 
 	TileByteCounts = 325,
 
+	ModelPixelScaleTag = 33550,
+
+	ModelTiepointTag = 33922,
+
 	NoData = 42113
 };
 
+
+struct ModelTiepoint
+{
+	double I, J, K, X, Y, Z;
+	ModelTiepoint()
+	{}
+	ModelTiepoint(double i, double j, double k, double x, double y, double z)
+	{
+		I = i;
+		J = j;
+		K = k;
+		X = x;
+		Y = y;
+		Z = z;
+	}
+};
+
+
+struct ModelTiepoints
+{
+	ModelTiepoint *points = nullptr;
+	int c = 0;
+
+
+	void resize(int n) { points = new ModelTiepoint[n]; }
+	~ModelTiepoints() { delete[] points; }
+
+	void add(uchar* buffer)
+	{
+		double temp[6];
+		int o = 0;
+		temp[o++] = toDouble(buffer);
+		buffer += sizeof(double);
+		temp[o++] = toDouble(buffer);
+		buffer += sizeof(double);
+		temp[o++] = toDouble(buffer);
+		buffer += sizeof(double);
+		temp[o++] = toDouble(buffer);
+		buffer += sizeof(double);
+		temp[o++] = toDouble(buffer);
+		buffer += sizeof(double);
+		temp[o++] = toDouble(buffer);
+
+		add(temp[0], temp[1], temp[2], temp[3], temp[4], temp[5]);
+	}
+
+	void add(double i, double j, double k, double x, double y, double z)
+	{
+		points[c++] = ModelTiepoint(i, j, k, x, y, z);
+	}
+};
+struct Scale3d
+{
+	double x, y, z;
+	Scale3d(double X =0, double Y = 0, double Z = 0)
+	{
+		x = X;
+		y = Y;
+		z = Z;
+	}
+};
 
 struct TiffTags
 {
@@ -249,6 +315,11 @@ struct TiffTags
 
 	float NoDataValue = -9999;
 
+	// raster->model tiepoint pairs in the order
+	// ModelTiepointTag = (...,I,J,K, X,Y,Z...)
+	ModelTiepoints ModelTiepointTag;
+
+	Scale3d ModelPixelScaleTag;
 };
 
 
@@ -257,6 +328,7 @@ struct TiffTags
 #include <vector>
 #include <queue>
 #include <unordered_map>
+#include <QVector3D>
 
 //#include <bits/unique_ptr.h>
 
@@ -427,19 +499,11 @@ public:
 class TiffReader: public ImageReader
 {
 	FILE * pFile;
-	uchar imgByteOrder;
-	uchar sysByteOredr;
 	uint tilesCount = 0;
 	int compressType = 1;
 	PointerArrayCache<rowptr> cachedTiles;
 
-	void convert(uchar *bytes, float &out) { out = toFloat(bytes); }
-	void convert(uchar *bytes, int &out) { out = toInt(bytes);}
-	void convert(uchar* bytes, uchar& out)	{ out = bytes[0];}
-	void convert(uchar* bytes, double& out)	{out = toDouble(bytes);}
-	void convert(uchar* bytes, ushort& out)	{out = toShort(bytes);}
-	void convert(uchar* bytes, short& out)	{out = toShort(bytes);}
-	void reorder(uchar *bytes, int size);
+
 	void **checkTileInCache(int x, int y);
 	template<class T>
 	T *setData(uchar *in, int len)
@@ -464,10 +528,7 @@ public:
 //	std::string dectode(uchar* bf, offu64 len);
 	int printHeader(uchar *buffer);
 	size_t getTagIntValue(size_t offOrValue, size_t count, char format, bool is64);
-	ushort toShort(uchar *mbytes);
-	uint toInt(uchar *bytes);
-	float toFloat(uchar* bytes);
-	double toDouble(uchar *bytes);
+
 
 	template<class T>
 	void printTag(uchar *buffer, bool is64);
@@ -487,8 +548,40 @@ public:
 	void removeTileFromCache(int ind);
 	rowptr processData(uchar *bytes, int len);
 
-	long long toInt64(uchar *bytes);
-	
+	QVector3D getMaxModelSize()
+	{
+		return convertRasterToModel(QVector3D(widght(), 0, height()));
+	}
+	QVector3D convertModelToRaster(QVector3D modelCoord)
+	{
+		double x = modelCoord.x() - tiff.ModelTiepointTag.points[0].X;
+		double y = modelCoord.y() - tiff.ModelTiepointTag.points[0].Y;
+		double z = modelCoord.z() - tiff.ModelTiepointTag.points[0].Z;
+
+		x /= tiff.ModelPixelScaleTag.x;
+		y /= tiff.ModelPixelScaleTag.y;
+		z /= tiff.ModelPixelScaleTag.z;
+		return QVector3D(x, z, y);
+	}
+	// Raster in x,z,y; model in x,y,z
+
+	QVector3D convertRasterToModel(QVector3D rasterCoord)
+	{
+		double x = rasterCoord.x();
+		double y = rasterCoord.z();
+		double z = rasterCoord.y();
+
+		x *= tiff.ModelPixelScaleTag.x;
+		y *= tiff.ModelPixelScaleTag.y;
+		z *= tiff.ModelPixelScaleTag.z;
+
+		x += tiff.ModelTiepointTag.points[0].X;
+		y += tiff.ModelTiepointTag.points[0].Y;
+		z += tiff.ModelTiepointTag.points[0].Z;
+
+		return QVector3D(x,y,z);
+	}
+
 	virtual float getNullValue() override
 	{
 		return tiff.NoDataValue;
