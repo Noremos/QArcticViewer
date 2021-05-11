@@ -14,7 +14,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Arctic Viewer</string>
   </property>
   <property name="dockNestingEnabled">
    <bool>false</bool>
@@ -514,6 +514,9 @@ background-color: &quot;#d4d1d1&quot;;
          <property name="text">
           <string>Бакроды</string>
          </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
         </widget>
         <widget class="QCheckBox" name="cbUseCycle">
          <property name="geometry">
@@ -526,6 +529,9 @@ background-color: &quot;#d4d1d1&quot;;
          </property>
          <property name="text">
           <string>Круг</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
         <widget class="QDoubleSpinBox" name="cirlceShoj">

@@ -31,7 +31,7 @@ public:
 	QVector<InstanceData> boundydata;
 
 	QOpenGLVertexArrayObject vao;
-	int factor = 10;
+//	int factor = 10;
 	QOpenGLBuffer arrBuf, modelsBuf, goodBuff;
 	QOpenGLBuffer indexBuf;
 

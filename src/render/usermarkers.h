@@ -1,5 +1,5 @@
-#ifndef MARKERS_H
-#define MARKERS_H
+#ifndef USER_MARKERS_H
+#define USER_MARKERS_H
 
 #include <QOpenGLFunctions>
 
@@ -27,19 +27,20 @@
 
 class Project;
 
-class Markers : public glinstanse
+class UserMarkers : public glinstanse
 {
 public:
-	Markers();
+	UserMarkers();
+
 public:
 	Project *proj;
 	Object3d obj;
 	uint faceSize = 0;
-	QVector<InstanceData> boundydata;
+	QVector<QMatrix4x4> boundydata;
 
 	QOpenGLVertexArrayObject vao;
-	int factor = 10;
-	QOpenGLBuffer arrBuf, modelsBuf, goodBuff;
+
+	QOpenGLBuffer arrBuf;
 	QOpenGLBuffer indexBuf;
 
 	QOpenGLShaderProgram mshader;
@@ -47,9 +48,9 @@ public:
 
 	size_t boundySize = 0;
 	// type: 0=bad;1=good; 2= more good, 3=more bad
-	void addBoundy(QVector3D &bb, int displayFactor);
+	void addBoundy(int x, int y, float z);
 
-	void updateBuffer();
+	void initArrays();
 
 	// glinstanse interface
 public:
@@ -58,4 +59,4 @@ public:
 	void initModel();
 };
 
-#endif // MARKERS_H
+#endif // USER_MARKERS_H

@@ -24,9 +24,11 @@ SOURCES += \
     src/core/object3d.cpp \
     src/core/project.cpp \
     src/core/tiffreader.cpp \
+    src/render/line.cpp \
     src/render/markers.cpp \
     src/render/spotzones.cpp \
     src/render/text2d.cpp \
+    src/render/usermarkers.cpp \
     terrarian/terrariangui.cpp
 
 HEADERS += \
@@ -43,8 +45,10 @@ HEADERS += \
     src/core/object3d.h \
     src/core/project.h \
     src/core/tiffreader.h \
+    src/render/line.h \
     src/render/markers.h \
     src/render/text2d.h \
+    src/render/usermarkers.h \
     src/types/img.h \
     src/types/instinfo.h \
     src/types/types.h \

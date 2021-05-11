@@ -76,8 +76,8 @@ void SpotZones::updateBuffer()
 	mshader.setAttributeBuffer(offloc, GL_FLOAT, vec4size * 4,1, matr4Size);
 	mshader.enableAttributeArray(offloc);
 
-	mshader.setUniformValue("minval", Project::getProject()->getImgMinVal()/ Project::getProject()->displayFactor);
 	mshader.setUniformValue("opacity", 0.4f);
+	mshader.setUniformValue("localMinHei", -1.f);
 
 	/*
 	int vertexLocation = program.attributeLocation("a_position");
@@ -117,7 +117,7 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	//projection * view * model * vec4(position, 1.0f);
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
-	mshader.setUniformValue("factor", factor);
+	mshader.setUniformValue("factor", proj->heiFactor);
 	mshader.setUniformValue("minHei", proj->getImgMinVal()/ proj->displayFactor);
 
 	vao.bind();
@@ -127,8 +127,7 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 
 }
 
-void SpotZones::
-	initSpotModel()
+void SpotZones::initSpotModel()
 {
 	const float MaxTop = 40.0f;
 	// const float MaxTop = 1.0f;

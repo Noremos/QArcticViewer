@@ -117,8 +117,7 @@ public:
 	{
 		for (int i = (int) source.size() - 1; i >= 0; --i)
 		{
-			uchar v = source[i];
-			result->push_back(v);
+			result->push_back(source[i]);
 		}
 	}
 	void getDictionaryReversed(int n, buffer& rev)

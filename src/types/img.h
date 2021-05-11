@@ -16,6 +16,7 @@ struct Img
 	Img(int widgth, int height) : wid(widgth), hei(height) { data = new float[wid * hei]; }
 	~Img()
 	{}
+	float get(int off) const { return data[off]; }
 	float get(int x, int y) const { return data[y * wid + x]; }
 
 	uint minmaxX(int x)

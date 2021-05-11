@@ -37,15 +37,22 @@ void Terrain::initShaders()
 	//	initShader(textureShader, ":/vshader.glsl", ":/fshader.glsl");
 }
 
+
+float Terrain::getValue(int x, int z)
+{
+	if (x < 0 || z < 0 || x >= proj->displayedWid || z >= proj->displayedHei)
+		return -9999;
+
+	return getValue(x * proj->displayedHei + z).y;
+}
+
 vertex Terrain::getValue(size_t offset)
 {
+	vertex vert[1];
 	arrayBuf.bind();
-	arrayBuf.allocate((const void *) obj.vetexes.data(), obj.vetexes.size() * sizeof(vertex));
-	arrayBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
-
-	vertex vert;
-	arrayBuf.read(offset * sizeof(vertex), &vert, sizeof(vertex));
-	return vert;
+	arrayBuf.read(offset * sizeof(lvertex), vert, sizeof(lvertex));
+	arrayBuf.release();
+	return vert[0];
 }
 
 void Terrain::setTexture(int num, QString path)
@@ -91,11 +98,6 @@ void Terrain::addTexture(QString path)
 
 	textures.append(texture);
 }
-struct VertexData
-{
-	QVector3D v;
-	QVector2D t;
-};
 
 void Terrain::initArrays()
 {
@@ -106,6 +108,7 @@ void Terrain::initArrays()
 
 	textureShader.bind();
 	// Transfer vertex data to VBO 0
+	qDebug() << "Vert tatol size:" << obj.vetexes.size() * sizeof(vertex);
 	arrayBuf.bind();
 	arrayBuf.allocate((const void *)obj.vetexes.data(), obj.vetexes.size() * sizeof(vertex));
 	arrayBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
@@ -177,7 +180,7 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 	model.scale(1, 1, 1);
 	model.translate(0, 0, 0);
 
-	curshader->setUniformValue("factor", factor);
+	curshader->setUniformValue("factor", proj->heiFactor);
 	curshader->setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
 
 	curshader->setUniformValue("projection", projection);

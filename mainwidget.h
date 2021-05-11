@@ -72,8 +72,10 @@
 #include <chrono>
 #include <QOpenGLExtraFunctions>
 
+#include <src/render/line.h>
 #include <src/render/spotzones.h>
 #include <src/render/text2d.h>
+#include <src/render/usermarkers.h>
 
 class CubeGL;
 typedef std::chrono::time_point<std::chrono::steady_clock> timeType;
@@ -81,6 +83,9 @@ typedef std::chrono::time_point<std::chrono::steady_clock> timeType;
 class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
+
+	const qreal zNear = 0.1, zFar = 10000.0, fov = 60.0;
+
 
 public:
 	bool useTimer = false;
@@ -94,6 +99,8 @@ public:
 	Terrain *terra = nullptr;
 	SpotZones* zones;
 	Markers *markers;
+	UserMarkers *userMarkers;
+	Line line;
 
 	bool drawTerra = false;
 	bool drawZones = false;
@@ -151,8 +158,11 @@ private:
 	QOpenGLExtraFunctions *f;
 	// QPaintDevice interface
 	// QWidget interface
+	QVector4D getVal(int x, int z);
 protected:
 
+	QVector3D CreateRay(QMatrix4x4 &projection, QMatrix4x4 &view, float mouseX, float mouseY);
+	QVector3D mouseCast(QMatrix4x4 &projection, QMatrix4x4 &view, int mouse_x, int mouse_y);
 signals:
 	void startTimer();
 

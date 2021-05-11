@@ -6,6 +6,13 @@
 
 #include <src/base.h>
 
+struct lvertex
+{
+	lvertex(float _x=0, float _y=0, float _z=0) : x(_x),y(_y),z(_z)
+	{}
+	float x, y, z;
+};
+
 struct vertex
 {
 	vertex(float _x=0, float _y=0, float _z=0) : x(_x),y(_y),z(_z),texX(_x),texY(_y)
@@ -28,6 +35,7 @@ class Object3d
 public:
 	Object3d();
 	QVector<vertex> vetexes;
+	QVector<lvertex> lvetexes;
 	QVector<face> faces;
 
 	void readFile(QString path);

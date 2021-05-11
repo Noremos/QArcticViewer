@@ -68,6 +68,7 @@ MainWidget::MainWidget(QWidget */*parent*/)
 	text = new Text2d();
 
 	markers = new Markers();
+	userMarkers = new UserMarkers();
 
 	useTimer = false;
 	Project::getProject()->widget = this;
@@ -89,20 +90,6 @@ MainWidget::~MainWidget()
 }
 
 //! [1]
-
-void MessageCallback( GLenum /*source*/,
-					 GLenum type,
-					 GLuint /*id*/,
-					 GLenum severity,
-					 GLsizei /*length*/,
-					 const GLchar* message,
-					 const void* /*userParam*/ )
-{
-	fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-			( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-			type, severity, message );
-}
-
 
 
 void MainWidget::initializeGL()
@@ -148,6 +135,9 @@ void MainWidget::initializeGL()
 	text->initGL();
 
 	markers->initGL();
+	userMarkers->initGL();
+
+//	line.initGL();
 
 	emit startTimer();
 //		terra->readfile("D:\2.obj");
@@ -162,6 +152,39 @@ void MainWidget::initializeGL()
 
 }
 
+QVector3D MainWidget::CreateRay(QMatrix4x4& projection, QMatrix4x4& view,  float mouseX, float mouseY)
+{
+	// these positions must be in range [-1, 1] (!!!), not [0, width] and [0, height]
+	// mouseX, mouseY
+	mouseX = mouseX / (this->width()  * 0.5f) - 1.0f;
+	mouseY = mouseY / (this->height() * 0.5f) - 1.0f;
+
+	QMatrix4x4 invVP = (projection * view).inverted();
+	QVector4D screenPos(mouseX, -mouseY, 1.0f, 1.0f);
+	QVector4D worldPos = invVP * screenPos;
+
+	QVector3D dir = worldPos.toVector3D().normalized();
+	return dir;
+}
+
+QVector3D MainWidget::mouseCast(QMatrix4x4& projection, QMatrix4x4& view,  int mouse_x, int mouse_y)
+{
+	float x = (2.0f * mouse_x) /  this->width() - 1.0f;
+	float y = 1.0f - (2.0f * mouse_y) /  this->height();
+//	float z = 1.0f;
+	QVector4D ray_clip(x, y, -1.0, 1.0);
+	QVector4D ray_eye = projection.inverted() * ray_clip;
+	ray_eye = QVector4D(ray_eye.x(), ray_eye.y(), -1.0, 0.0);
+	QVector3D ray_wor = (view.inverted() * ray_eye).toVector3D();
+	// don't forget to normalise the vector at some point
+	ray_wor.normalize();
+	return ray_wor;
+}
+
+
+
+QVector4D MainWidget::getVal(int x, int z) { return QVector4D(x, terra->getValue(x, z), z, 1.0);}
+
 //! [0]
 void MainWidget::mousePressEvent(QMouseEvent *e)
 {
@@ -171,6 +194,72 @@ void MainWidget::mousePressEvent(QMouseEvent *e)
 	// Save mouse press position
 
 	mousePressPosition = QVector2D(e->localPos());
+
+	if (e->button() != Qt::MouseButton::RightButton)
+		return;
+
+	QMatrix4x4 view = camera->GetViewMatrix();
+	QMatrix4x4 skyboxview(view.normalMatrix());
+	QMatrix4x4 projection;
+	projection.setToIdentity();
+	projection.perspective(fov, aspect, zNear, zFar);
+
+//	QVector3D ray = mouseCast(projection, view, mousePressPosition.x(), mousePressPosition.y());
+	QVector3D ray = mouseCast(projection, view, 0,0);
+//	QVector3D ray1 = CreateRay(projection, view, mousePressPosition.x(), mousePressPosition.y());
+	//	float hei = terra->getValue(ray.x(), ray.y());
+
+	//x = col, y = topBot, y = row
+//	ray = QVector3D(ray.x(), ray.z(), ray.y());
+
+	// MAx global coors
+	QMatrix4x4 model;
+	model.setToIdentity();
+	model.scale(1, 1, 1);
+	model.translate(0, 0, 0);
+
+	QVector4D mins[4];
+	int locWid = Project::getProject()->displayedWid - 1;
+	int locHei = Project::getProject()->displayedHei - 1;
+
+	mins[0] = getVal(0, 0);
+	mins[1] = getVal(0, locHei);
+	mins[2] = getVal(locWid, 0);
+	mins[3] = getVal(locWid, locHei);
+
+	QVector3D rayStartPositon = camera->Position;
+	//(projection * view * model * camera->Position.toVector4D()).toVector3D();
+
+	float maxDist = 0;
+	for (auto &a : mins)
+	{
+		QVector3D gl_Position = a.toVector3D();
+		//(projection * view * model * a).toVector3D();
+
+		float dist = gl_Position.distanceToPoint(rayStartPositon);
+		maxDist = MAX(dist, maxDist);
+	}
+
+
+	int off = maxDist;
+	int divis = off;
+
+	QVector3D rayEndPosition;
+	while (divis != 1)
+	{
+		rayEndPosition = rayStartPositon + ray * off;
+		float hei = terra->getValue(rayEndPosition.x(), rayEndPosition.z());
+
+		divis /= 2;
+		if (hei == -9999 || hei < rayEndPosition.y())
+			off -= divis;
+		else
+			off += divis;
+	}
+	qDebug() << ray <<  rayEndPosition;
+	float x = rayEndPosition.x();
+	float z = rayEndPosition.z();
+	userMarkers->addBoundy(x, terra->getValue(x, z), z);
 }
 
 void MainWidget::mouseReleaseEvent(QMouseEvent *e)
@@ -185,6 +274,8 @@ void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 	qreal acc = diff.length() / 100.0;
 	rotationAxis = (rotationAxis * angularSpeed + n * acc).normalized();
 	angularSpeed += acc;
+
+
 }
 //! [0]
 
@@ -193,6 +284,17 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
 //	sky->mouseMoveEvent(event);
     camera->ProcessMouseMovement(event->localPos().x(), event->localPos().y(), deltaTime);
 
+//	QMatrix4x4 view = camera->GetViewMatrix();
+//	QMatrix4x4 projection;
+//	projection.setToIdentity();
+//	projection.perspective(fov, aspect, zNear, zFar);
+
+//	QVector3D rayStartPositon = camera->Position;
+
+//	QVector3D ray = mouseCast(projection, view, event->localPos().x(), event->localPos().y());
+//	ray = QVector3D(ray.x(), ray.z(), ray.y());
+//	auto rayEndPosition = rayStartPositon + ray * 100;
+//	line.setLine(rayStartPositon, rayEndPosition);
 //	if (!useTimer && camera->isEnableTraking())
 //		update();
 }
@@ -228,6 +330,9 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 			camera->Yaw = 56;
 			camera->Pitch = -32.25;
 			memset(keys, 0, 1024);
+
+//			line.setLine(QVector3D(0, 0, 0), QVector3D(100, 100, 100));
+
 
 
 			// camera->Position = QVector3D(981.52, 29.6308, 271.393);
@@ -304,6 +409,10 @@ void MainWidget::resizeGL(int w, int h)
 
 void MainWidget::printErrors()
 {
+	//	const QList<QOpenGLDebugMessage> messages = logger->loggedMessages();
+	//	for (const QOpenGLDebugMessage &message : messages)
+	//		qDebug() << message;
+
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR)
 	{
@@ -356,7 +465,6 @@ void MainWidget::paintGL()
 		rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
 	}
 
-	const qreal zNear = 0.1, zFar = 10000.0, fov = 60.0;
 
 	timeType currentFrame = std::chrono::steady_clock::now();
 	deltaTime = timediff(currentFrame, lastFrame);
@@ -372,29 +480,22 @@ void MainWidget::paintGL()
 	QMatrix4x4 projection;
 	projection.setToIdentity();
 	projection.perspective(fov, aspect, zNear, zFar);
-//	 sky->mPerspective.verticalAngle, mPerspective.aspectRatio, mPerspective.nearPlane, mPerspective.farPlane
-//	 Set perspective projection
 
-//	makeCurrent();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-	// makeCurrent();
-	// doneCurrent();
-
-
-//	texture->bind();
-
-	geometries->model.setToIdentity();
-	geometries->model.translate(0.0, 0.0, 0.0);
-	geometries->model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
-
-//	program.bind();
-	geometries->drawCubeGeometry(view, projection);
+//	geometries->model.setToIdentity();
+//	geometries->model.translate(0.0, 0.0, 0.0);
+//	geometries->model.rotate(timediff(currentFrame, timeStart) * 20.0f, QVector3D(0.0f, 1.0f, 0.0f));
+//	geometries->drawCubeGeometry(view, projection);
 
 	if (drawTerra)
+	{
 		terra->drawFull(view, projection);
-
+		markers->renderGL(view, projection);
+		userMarkers->renderGL(view, projection);
+//		line.renderGL(view, projection);
+	}
 
 	if (drawZones)
 	{
@@ -402,41 +503,12 @@ void MainWidget::paintGL()
 		text->renderGL(view, projection);
 	}
 
-	markers->renderGL(view, projection);
-
-//	QPainterPath path;
-////	glDisable(GL_LIGHTING);
-//	QFont font("Arial", 40);
-//	path.addText(QPointF(0, 0), QFont("Arial", 40), QString(tr("This is a test")));
-//	QList<QPolygonF> poly = path.toSubpathPolygons();
-//	for (QList<QPolygonF>::iterator i = poly.begin(); i != poly.end(); i++){
-//		glBegin(GL_LINE_LOOP);
-//		for (QPolygonF::iterator p = (*i).begin(); p != i->end(); p++)
-//			glVertex3f(p->rx()*0.1f, -p->ry()*0.1f, 0);
-//		glEnd();
-//	}
-//	glEnable(GL_LIGHTING);
-//	QPainter painter(this);
-//	painter.setPen(Qt::black);
-//	painter.setFont(QFont("Arial", 56));
-//	painter.drawText(0, 0, width(), height(), Qt::AlignCenter, "Hello World!");
-//	painter.end();
-
 	///skybox
 	glDepthFunc(GL_LEQUAL);
 	sky->paintGL(skyboxview, projection); //projection * matrix
 	glDepthFunc(GL_LESS);
 
 	printErrors();
-//	doneCurrent();
-//	update();
-
-
-
-
-//	const QList<QOpenGLDebugMessage> messages = logger->loggedMessages();
-//	for (const QOpenGLDebugMessage &message : messages)
-	//		qDebug() << message;
 }
 
 
@@ -456,5 +528,15 @@ void MainWidget::Do_Movement()
 	if(keys[Qt::Key::Key_A])
 		camera->ProcessKeyboard(LEFT, deltaTime, factor);
 	if(keys[Qt::Key::Key_D])
+		camera->ProcessKeyboard(RIGHT, deltaTime, factor);
+
+
+	if(keys[38])
+		camera->ProcessKeyboard(FORWARD, deltaTime, factor);
+	if(keys[40])
+		camera->ProcessKeyboard(BACKWARD, deltaTime, factor);
+	if(keys[37])
+		camera->ProcessKeyboard(LEFT, deltaTime, factor);
+	if(keys[39])
 		camera->ProcessKeyboard(RIGHT, deltaTime, factor);
 }

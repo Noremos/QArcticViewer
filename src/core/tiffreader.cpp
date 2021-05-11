@@ -18,6 +18,11 @@ using std::vector;
 
 #include <string>
 #include <cassert>
+
+
+std::unordered_map<int, CoordProjection> CoordProjection::map{{4326, {1,-1}}};
+
+
 string dectodeTEST(uchar* buffer, int len);
 TiffReader::TiffReader()
 {
@@ -70,6 +75,99 @@ size_t TiffReader::getTagIntValue(size_t offOrValue, size_t count, char format, 
 		else
 			return offOrValue;
 	}
+}
+
+/*
+ * http://geotiff.maptools.org/spec/geotiff2.7.html#2.7
+		 * Header={KeyDirectoryVersion, KeyRevision, MinorRevision, NumberOfKeys}
+		 * KeyEntry = { KeyID, TIFFTagLocation, Count, Value_Offset }
+		 * If TIFFTagLocation=0, then Value_Offset contains the actual (SHORT)
+		 * TIFFTagLocation=GeoKeyDirectoryTag
+		 * Example:
+  GeoKeyDirectoryTag=(   1,     1, 2,     6,
+					  1024,     0, 1,     2,
+					  1026, 34737,12,     0,
+					  2048,     0, 1, 32767,
+					  2049, 34737,14,    12,
+					  2050,     0, 1,     6,
+					  2051, 34736, 1,     0 )
+		 */
+void TiffReader::processGeoHeader(uchar *buffer)
+{
+	ushort KeyDirectoryVersion = toShort(buffer);
+	ushort KeyRevision = toShort(buffer + 2);
+	ushort MinorRevision = toShort(buffer + 4);
+	ushort NumberOfKeys = toShort(buffer + 6);
+
+	OUT << "";
+	OUT << "KeyDirectoryVersion: " << KeyDirectoryVersion;
+	OUT << "KeyRevision: " << KeyRevision;
+	OUT << "MinorRevision: " << MinorRevision;
+	OUT << "NumberOfKeys: " << NumberOfKeys;
+	OUT << "";
+
+	for (int i = 0; i < NumberOfKeys; ++i)
+	{
+		processGeoentry(buffer + 8 + i * 8);
+	}
+	OUT << "";
+}
+
+void TiffReader::readAsciiFromBuffer(std::string &output, int offset, int Count)
+{
+	output.resize(Count, ' ');
+	uchar *buff = (uchar *) output.c_str();
+	read(buff, offset, Count);
+}
+
+void TiffReader::processGeoentry(uchar *buffer)
+{
+	ushort KeyID = toShort(buffer);
+	ushort TIFFTagLocation = toShort(buffer + 2);
+	ushort Count = toShort(buffer + 4);
+	ushort Value_Offset = toShort(buffer + 6);
+
+	size_t value = 0;
+
+	if (TIFFTagLocation == 0)
+		value = Value_Offset;
+
+	switch (KeyID)
+	{
+	case GeotiffTags::GTModelTypeGeoKey:
+		geotags.GTModelTypeGeoKey = value;
+		OUT << "GTModelTypeGeoKey:" << value;
+		break;
+	case GeotiffTags::GTCitationGeoKey:
+		readAsciiFromBuffer(geotags.GTCitationGeoKey, Value_Offset, Count);
+		OUT << "GTCitationGeoKey:" << geotags.GTCitationGeoKey.c_str();
+		break;
+	case GeotiffTags::GTRasterTypeGeoKey:
+//		geotags.GTRasterTypeGeoKey = value;
+		OUT << "GTRasterTypeGeoKey (DEPR):" << value;
+		break;
+	case GeotiffTags::GeogCitationGeoKey:
+		readAsciiFromBuffer(geotags.GeogCitationGeoKey, Value_Offset, Count);
+		OUT << "GeogCitationGeoKey:" << geotags.GeogCitationGeoKey.c_str();
+		break;
+	case GeotiffTags::GeographicTypeGeoKey:
+		geotags.GeographicTypeGeoKey = value;
+		OUT << "GeographicTypeGeoKey:" << value;
+		break;
+	case GeotiffTags::ProjectedCSTypeGeoKey:
+		geotags.ProjectedCSTypeGeoKey = value;
+		OUT << "ProjectedCSTypeGeoKey:" << value;
+		break;
+	default:
+		OUT << "Unknown geotag:" << KeyID << ", Value_Offset = " << Value_Offset;
+//		return;
+		break;
+	}
+
+//	OUT << "KeyID: " << KeyID;
+//	OUT << "TIFFTagLocation: " << TIFFTagLocation;
+//	OUT << "Count: " << Count;
+//	OUT << "Value_Offset: " << Value_Offset;
 }
 
 #include "side-src/fast_float/fast_float.h"
@@ -191,9 +289,30 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		OUT << "ModelPixelScaleTag";
 		break;
 	}
+	case Tags::ModelTransformationTag: {
+		assert(count == 16);
+		uchar buffer[16 * sizeof(double)];
+		read(buffer, value, count * sizeof(double));
+		for (size_t i = 0; i < count; ++i)
+		{
+			this->tiff.ModelTransformationTag[i] = toDouble(buffer + sizeof(double) * i);
+		}
+
+		OUT << "ModelTransformationTag" << this->tiff.ModelTransformationTag;
+		break;
+	}
 	case Tags::NoData:
 		this->tiff.NoDataValue = getFloatFromAscii(value, count, type, is64);
+		OUT << "Nodata";
 		break;
+
+	case Tags::GeoKeyDirectoryTag:
+	{
+		uchar* buffer = new uchar[count * sizeof(short)];
+		read(buffer, value, count * sizeof(short));
+		processGeoHeader(buffer);
+		break;
+	}
 
 	default:
 		OUT << "Tag:" << (tag) << "; Value: " << value;
@@ -571,7 +690,7 @@ bool TiffReader::open(const wchar_t* path)
 
 TiffReader::~TiffReader()
 {
-	close();
+	this->close();
 }
 
 void TiffReader::close()
@@ -581,121 +700,4 @@ void TiffReader::close()
 
 	cachedRows.clear();
 	cachedTiles.clear();
-}
-void parceTage(TiffTags& st, Tags tag, int value)
-{
-
-	switch (tag)
-	{
-	case Tags::NewSubfileType:
-		st.NewSubfileType = value;
-		break;
-	case Tags::SubfileType:
-		st.SubfileType = value;
-		break;
-	case Tags::ImageWidth:
-		st.ImageWidth = value;
-		break;
-	case Tags::ImageLength:
-		st.ImageLength = value;
-		break;
-	case Tags::BitsPerSample:
-		st.BitsPerSample = value;
-		break;
-	case Tags::Compression:
-		st.Compression = value;
-		break;
-	case Tags::PhotometricInterpretation:
-		st.PhotometricInterpretation = value;
-		break;
-	case Tags::Threshholding:
-		st.Threshholding = value;
-		break;
-	case Tags::CellWidth:
-		st.CellWidth = value;
-		break;
-	case Tags::CellLength:
-		st.CellLength = value;
-		break;
-	case Tags::FillOrder:
-		st.FillOrder = value;
-		break;
-	case Tags::ImageDescription:
-		st.ImageDescription = value;
-		break;
-	case Tags::Make:
-		st.Make = value;
-		break;
-	case Tags::Model:
-		st.Model = value;
-		break;
-	case Tags::StripOffsets:
-		st.StripOffsets = value;
-		break;
-	case Tags::Orientation:
-		st.Orientation = value;
-		break;
-	case Tags::SamplesPerPixel:
-		st.SamplesPerPixel = value;
-		break;
-	case Tags::RowsPerStrip:
-		st.RowsPerStrip = value;
-		break;
-	case Tags::StripByteCounts:
-		st.StripByteCounts = value;
-		break;
-	case Tags::MinSampleValue:
-		st.MinSampleValue = value;
-		break;
-	case Tags::MaxSampleValue:
-		st.MaxSampleValue = value;
-		break;
-	case Tags::XResolution:
-		st.XResolution = value;
-		break;
-	case Tags::YResolution:
-		st.YResolution = value;
-		break;
-	case Tags::PlanarConfiguration:
-		st.PlanarConfiguration = value;
-		break;
-	case Tags::FreeOffsets:
-		st.FreeOffsets = value;
-		break;
-	case Tags::FreeByteCounts:
-		st.FreeByteCounts = value;
-		break;
-	case Tags::GrayResponseUnit:
-		st.GrayResponseUnit = value;
-		break;
-	case Tags::GrayResponseCurve:
-		st.GrayResponseCurve = value;
-		break;
-	case Tags::ResolutionUnit:
-		st.ResolutionUnit = value;
-		break;
-	case Tags::Software:
-		st.Software = value;
-		break;
-	case Tags::DateTime:
-		st.DateTime = value;
-		break;
-	case Tags::Artist:
-		st.Artist = value;
-		break;
-	case Tags::HostComputer:
-		st.HostComputer = value;
-		break;
-	case Tags::ColorMap:
-		st.ColorMap = value;
-		break;
-	case Tags::ExtraSamples:
-		st.ExtraSamples = value;
-		break;
-	case Tags::Copyright:
-		st.Copyright = value;
-		break;
-	default:
-		break;
-	}
 }

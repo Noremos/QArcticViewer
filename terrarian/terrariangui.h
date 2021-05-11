@@ -19,36 +19,36 @@
 #include "src/core/project.h"
 //#include "cubegl.h"
 
-struct MaterialInfo
-{
-	QString Name;
-	QVector3D Ambient;
-	QVector3D Diffuse;
-	QVector3D Specular;
-	float Shininess;
-};
+//struct MaterialInfo
+//{
+//	QString Name;
+//	QVector3D Ambient;
+//	QVector3D Diffuse;
+//	QVector3D Specular;
+//	float Shininess;
+//};
 
-struct LightInfo
-{
-	QVector4D Position;
-	QVector3D Intensity;
-};
+//struct LightInfo
+//{
+//	QVector4D Position;
+//	QVector3D Intensity;
+//};
 
-struct Mesh
-{
-	QString name;
-	unsigned int indexCount;
-	unsigned int indexOffset;
-	QSharedPointer<MaterialInfo> material;
-};
+//struct Mesh
+//{
+//	QString name;
+//	unsigned int indexCount;
+//	unsigned int indexOffset;
+//	QSharedPointer<MaterialInfo> material;
+//};
 
-struct Node
-{
-	QString name;
-	QMatrix4x4 transformation;
-	QVector<QSharedPointer<Mesh>> meshes;
-	QVector<Node> nodes;
-};
+//struct Node
+//{
+//	QString name;
+//	QMatrix4x4 transformation;
+//	QVector<QSharedPointer<Mesh>> meshes;
+//	QVector<Node> nodes;
+//};
 
 
 enum class DisplayMode {
@@ -57,11 +57,11 @@ enum class DisplayMode {
 	texture
 
 };
-struct ObjBuffers
-{
-	QOpenGLBuffer arrayBuf;
-	QOpenGLBuffer indexBuf;
-};
+//struct ObjBuffers
+//{
+//	QOpenGLBuffer arrayBuf;
+//	QOpenGLBuffer indexBuf;
+//};
 
 class Terrain :protected QOpenGLFunctions
 {
@@ -71,7 +71,6 @@ class Terrain :protected QOpenGLFunctions
 	QOpenGLBuffer indexBuf;
 //	QVector<ObjBuffers*> buffers;
 	QOpenGLShaderProgram heimapShader, objectShader, textureShader;
-
 
 
 	// Display data
@@ -125,8 +124,6 @@ public:
 //		textures.append(nullptr);
 	}
 
-	int factor = 10;
-
 	Project *proj;
 private:
 	QOpenGLExtraFunctions *f;
@@ -153,10 +150,12 @@ private:
 	void initShaders();
 
 public:
-	vertex getValue(size_t offset);
 	void initArrays();
 	void drawFull(QMatrix4x4 &view, QMatrix4x4 &projection);
 	void setTexture(int num, QString path);
+
+	vertex getValue(size_t offset);
+	float getValue(int x, int z);
 };
 #include <fstream>
 #include <string>

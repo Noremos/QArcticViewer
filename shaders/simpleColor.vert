@@ -18,11 +18,11 @@ void main()
     mat4 rmat = model;
     vec3 vp = a_position;
 
-    vp.y = minHei + (vp.y - minHei) * factor;
 //    vp.y *= factor;
 
 //    rmat[1][1] *= factor;
 
+    vp.y = minHei + (vp.y - minHei) * factor;
     gl_Position = projection * view * rmat  * vec4(vp, 1.0);
 
     v_texcoord = a_texcoord;

@@ -225,7 +225,7 @@ void Object3d::readFile(QString path)
 	size_t lines = 0;
 
 	faces.clear();
-	vetexes.clear();
+	lvetexes.clear();
 
 	std::stringstream errss;
 	std::string name;
@@ -248,7 +248,7 @@ void Object3d::readFile(QString path)
 
 		if (token[0] == 'v')
 		{
-			vertex v;
+			lvertex v;
 
 			token += 2;
 			len = getWord(token);
@@ -262,7 +262,7 @@ void Object3d::readFile(QString path)
 			len = getWord(token);
 			fast_float::from_chars(token, token + len, v.z);
 
-			this->vetexes.push_back(v);
+			this->lvetexes.push_back(v);
 			continue;
 		}
 		if (token[0] == 'f')
@@ -287,7 +287,7 @@ void Object3d::readFile(QString path)
 	}
 	fin.close();
 	qDebug() << "Readed " << lines << " lines";
-	qDebug() << "Vs: " << vetexes.size();
+	qDebug() << "LVs: " << lvetexes.size();
 	qDebug() << "Fs: " << faces.size();
 
 	return;

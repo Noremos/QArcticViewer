@@ -229,7 +229,7 @@ void ImageSearcher::mark(bc::barvector<float>& matr, int ind, const int &tx, con
 	{
 		int y = ty + a.getY();
 		int x = tx + a.getX();
-		if (x> this->reader->widght() || y > reader->height())
+		if (x>= this->reader->widght() || y >= reader->height())
 			continue;
 		// Если хотя бы одно не 0, значи тут уже есть цвет
 		auto &colref = mat->at<cv::Vec3b>(y, x);
@@ -295,10 +295,8 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		for (size_t ib = 0, total = item->barlines.size(); ib < total; ++ib)
 		{
 			bc::barline<float> *line = item->barlines[ib];
-//			check(line->matr);
 
-
-			mark(line->matr, ib, tx, ty);
+//			mark(line->matr, ib, tx, ty);
 
 
 			if (line->childrens.size() != 0)
@@ -426,33 +424,32 @@ bool cehckCoof(float a, float b)
 bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 {
 	cv::Mat mat(ret.hei, ret.wid, CV_8UC1);
+
 	float maxval = -9999;
+	for (int j = 0, total = ret.hei *  ret.wid; j < total; ++j)
+	{
+		float d = ret.get(j);
+		if (d > maxval)
+		{
+			maxval = d;
+		}
+	}
+
+	maxval -= hei;
 	for (int j = 0; j < ret.hei; ++j)
 	{
 		for (int i = 0; i < ret.wid; ++i)
 		{
 			float d = ret.get(i, j);
-			if (d > maxval)
-			{
-				maxval = d;
-			}
+			mat.at<uchar>(j, i) = (d > maxval) ? 255 : 0;
 		}
 	}
 
-	maxval -= hei;
-//	for (int j = 0; j < ret.hei; ++j)
-//	{
-//		for (int i = 0; i < ret.wid; ++i)
-//		{
-//			float d = ret.get(i, j);
-//			mat.at<uchar>(j, i) = (d > maxval) ? 255 : 0;
-//		}
-//	}
 	std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Vec4i> hierarchy;
 	cv::findContours(mat, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
 
-	if (contours.size() > 2)
+	if (contours.size() > 2 || contours.size() == 0)
 		return false;
 
 	int cur = (contours.size() == 2 && contours[1].size() > contours[0].size()) ? 1 : 0;

@@ -14,37 +14,82 @@ void Markers::initGL()
 	initializeOpenGLFunctions();
 	f = QOpenGLContext::currentContext()->extraFunctions();
 
-	glinstanse::initShader(mshader, ":/shaders/spotZone.vert", ":/shaders/spotZone.frag");
-	modelsBuf.create();
-	vao.create();
-	arrBuf.create();
-	indexBuf.create();
-	initModel();
+//	initModel();
 }
 
 
-void Markers::addBoundy(QVector3D& bb, int displayFactor, int type)
+void Markers::addBoundy(QVector3D& bb, int displayFactor)
 {
 	bb.setX(bb.x() / displayFactor);
-	bb.setY(bb.y() / displayFactor);
+//	bb.setY(bb.y() / displayFactor);
+	bb.setZ(bb.z() / displayFactor);
 	QMatrix4x4 matr;
 	matr.setToIdentity();
 
-	matr.translate(bb.x(), bb.z(), bb.y());
-//	matr.scale(bb.wid() / 2, bb.zei() / 2, bb.hei() / 2);
+	matr.translate(bb.x(), bb.y(), bb.z());
+	matr.scale(1,10,1);
 
-	boundydata.append(InstanceData(matr, type));
+	boundydata.append(InstanceData(matr, 5));
 }
 
 
 void Markers::updateBuffer()
 {
+	obj.readFile(":/resources/objects/makr.obj");
+
+	vao.destroy();
+	indexBuf.destroy();
+	arrBuf.destroy();
+	modelsBuf.destroy();
+
+	mshader.create();
+	glinstanse::initShader(mshader, ":/shaders/spotZone.vert", ":/shaders/spotZone.frag");
+
+	modelsBuf.create();
+	vao.create();
+	arrBuf.create();
+	indexBuf.create();
+
 	vao.bind();
-	int loc, offloc;
+
 	mshader.bind();
 
-	modelsBuf.destroy();
-	modelsBuf.create();
+	QVector<lvertex> vect;
+	for (int i = 0; i < obj.faces.size(); ++i)
+	{
+		vect.append(obj.lvetexes[obj.faces[i].v1]);
+		vect.append(obj.lvetexes[obj.faces[i].v2]);
+		vect.append(obj.lvetexes[obj.faces[i].v3]);
+	}
+
+	arrBuf.bind();
+	arrBuf.allocate((const void *)vect.data(), vect.size() * sizeof(lvertex));
+	arrBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
+
+//	arrBuf.bind();
+//	arrBuf.allocate((const void *)obj.lvetexes.data(), obj.lvetexes.size() * sizeof(lvertex));
+//	arrBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
+
+	// Transfer index data to VBO 1
+//	indexBuf.bind();
+//	indexBuf.allocate((const void *)obj.faces.data(), obj.faces.size() * sizeof(face));
+//	indexBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
+
+	// Position
+	int vertexLocation = mshader.attributeLocation("aPos");
+	mshader.setAttributeBuffer(vertexLocation, GL_FLOAT, 0, 3, sizeof(lvertex));//sizeof(vertex)
+	mshader.enableAttributeArray(vertexLocation);
+
+	//	vao.release();
+
+	//	mshader.release();
+
+	faceSize = obj.faces.size() * 3;
+	obj.faces.clear();
+	obj.lvetexes.clear();
+
+	int loc, offloc;
+
 	modelsBuf.bind();
 	modelsBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 	modelsBuf.allocate(this->boundydata.data(), boundydata.size() * sizeof(InstanceData));
@@ -74,7 +119,8 @@ void Markers::updateBuffer()
 	mshader.setAttributeBuffer(offloc, GL_FLOAT, vec4size * 4, 1, matr4Size);
 	mshader.enableAttributeArray(offloc);
 
-	mshader.setUniformValue("opacity", 1.0f);
+	mshader.setUniformValue("opacity", 0.8f);
+	mshader.setUniformValue("localMinHei", -1.f);
 
 	f->glVertexAttribDivisor(loc - 3, 1);
 	f->glVertexAttribDivisor(loc - 2, 1);
@@ -84,13 +130,10 @@ void Markers::updateBuffer()
 
 
 	vao.release();
-
-	//	goodBuff.release();
-	modelsBuf.release();
 	arrBuf.release();
 	indexBuf.release();
+	modelsBuf.release();
 	mshader.release();
-
 
 	// mast be at end
 	boundySize = boundydata.size();
@@ -107,43 +150,31 @@ void Markers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 	//projection * view * model * vec4(position, 1.0f);
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
-	mshader.setUniformValue("factor", factor);
+	mshader.setUniformValue("factor", proj->heiFactor);
 	mshader.setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
-	mshader.setUniformValue("opacity", 1.0f);
+//	mshader.setUniformValue("opacity", 1.0f);
 
 	vao.bind();
-	f->glDrawElementsInstanced(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, 0, boundySize);
+
+//	indexBuf.bind();
+//	modelsBuf.bind();
+//	arrBuf.bind();
+//	printErrors();
+	//	f->glDrawArraysInstanced(GL_TRIANGLES, 0, faceSize, boundySize); //spot
+	//glDrawElements(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, nullptr);//terra
+
+//	f->glDrawElementsInstanced(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, 0, boundySize);
+	f->glDrawArraysInstanced(GL_TRIANGLES, 0, faceSize, boundySize);
+
 	vao.release();
+//	indexBuf.release();
+//	modelsBuf.release();
+//	arrBuf.release();
 	mshader.release();
 }
 
 void Markers::initModel()
 {
-	arrBuf.bind();
-	obj.readFile(":/resources/objects/makr.obj");
 
-
-	vao.bind();
-
-	arrBuf.allocate((const void *)obj.vetexes.data(), obj.vetexes.size() * sizeof(vertex));
-	arrBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
-
-	// Transfer index data to VBO 1
-	indexBuf.bind();
-	indexBuf.allocate((const void *)obj.faces.data(), obj.faces.size() * sizeof(face));
-	indexBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
-
-	// Position
-	int vertexLocation = mshader.attributeLocation("aPos");
-	mshader.setAttributeBuffer(vertexLocation, GL_FLOAT, 0, 3, sizeof(QVector3D));
-	mshader.enableAttributeArray(vertexLocation);
-
-	vao.release();
-
-	arrBuf.release();
-	indexBuf.release();
-	faceSize = obj.faces.size() * 3;
-	obj.faces.clear();
-	obj.vetexes.clear();
 }
 

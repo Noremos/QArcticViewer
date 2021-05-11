@@ -127,9 +127,22 @@ enum class Tags : int {
 
 	ModelTiepointTag = 33922,
 
+	GeoKeyDirectoryTag = 34735,
+
+	ModelTransformationTag = 34264,
+
 	NoData = 42113
 };
 
+enum GeotiffTags: ushort
+{
+	GTModelTypeGeoKey = 1024,//SHORT
+	GTRasterTypeGeoKey = 1025, //DEPR
+	GTCitationGeoKey = 1026, //ASCII
+	GeographicTypeGeoKey = 2048, //SHORT
+	GeogCitationGeoKey = 2049, //ascii
+	ProjectedCSTypeGeoKey = 3072,//SHORT
+};
 
 struct ModelTiepoint
 {
@@ -190,6 +203,18 @@ struct Scale3d
 		y = Y;
 		z = Z;
 	}
+};
+
+struct GeoTiffTags
+{
+	short GTModelTypeGeoKey = 0;
+	std::string GTCitationGeoKey; //ASCII
+	short GeographicTypeGeoKey = 0; //SHORT
+	std::string GeogCitationGeoKey;
+	short ProjectedCSTypeGeoKey = 0; //SHORT
+	short ProjectionGeoKey = 0;
+	short ProjLinearUnitsGeoKey = 0;
+	short ProjCoordTransGeoKey = 0;
 };
 
 struct TiffTags
@@ -320,6 +345,8 @@ struct TiffTags
 	ModelTiepoints ModelTiepointTag;
 
 	Scale3d ModelPixelScaleTag;
+
+	double ModelTransformationTag[16];
 };
 
 
@@ -329,6 +356,7 @@ struct TiffTags
 #include <queue>
 #include <unordered_map>
 #include <QVector3D>
+#include <unordered_map>
 
 //#include <bits/unique_ptr.h>
 
@@ -496,6 +524,18 @@ public:
 	}
 };
 
+struct CoordProjection
+{
+	int wid = 1, hei = 1;
+	//GeographicTypeGeoKey
+	static std::unordered_map<int, CoordProjection> map;
+
+	static CoordProjection getCoors(int a)
+	{
+		return map.at(a);
+	}
+};
+
 class TiffReader: public ImageReader
 {
 	FILE * pFile;
@@ -516,23 +556,29 @@ class TiffReader: public ImageReader
 	}
 public:
 	TiffTags tiff;
+	GeoTiffTags geotags;
 
 	TiffReader();
 
 	bool open(const wchar_t *path) override;
 	void close() override;
-	~TiffReader();
+	virtual ~TiffReader();
 	void printValue(int x, int y);
 	void printIFD(offu64 offset);
 	void printBigIFD(size_t offset);
 //	std::string dectode(uchar* bf, offu64 len);
 	int printHeader(uchar *buffer);
+
+
 	size_t getTagIntValue(size_t offOrValue, size_t count, char format, bool is64);
+
+	void processGeoHeader(uchar *buffer);
+	void processGeoentry(uchar *buffer);
 
 
 	template<class T>
 	void printTag(uchar *buffer, bool is64);
-	void read(uchar* buffer, offu64 offset, offu64 len);
+	void read(uchar *buffer, offu64 offset, offu64 len);
 	void setTitleCacheSize(size_t n);
 	void setRowsCacheSize(size_t n);
 	// ImageReader interface
@@ -554,19 +600,22 @@ public:
 	}
 	QVector3D convertModelToRaster(QVector3D modelCoord)
 	{
-		double x = modelCoord.x() - tiff.ModelTiepointTag.points[0].X;
-		double y = modelCoord.y() - tiff.ModelTiepointTag.points[0].Y;
+		auto coord = CoordProjection::getCoors(geotags.GeographicTypeGeoKey);
+		double x =(modelCoord.x() - tiff.ModelTiepointTag.points[0].X) * coord.wid;
+		double y = (modelCoord.y() - tiff.ModelTiepointTag.points[0].Y) * coord.hei;
 		double z = modelCoord.z() - tiff.ModelTiepointTag.points[0].Z;
 
 		x /= tiff.ModelPixelScaleTag.x;
 		y /= tiff.ModelPixelScaleTag.y;
-		z /= tiff.ModelPixelScaleTag.z;
+		//		z /= tiff.ModelPixelScaleTag.z;
+		z = 0;
 		return QVector3D(x, z, y);
 	}
 	// Raster in x,z,y; model in x,y,z
 
 	QVector3D convertRasterToModel(QVector3D rasterCoord)
 	{
+
 		double x = rasterCoord.x();
 		double y = rasterCoord.z();
 		double z = rasterCoord.y();
@@ -575,8 +624,9 @@ public:
 		y *= tiff.ModelPixelScaleTag.y;
 		z *= tiff.ModelPixelScaleTag.z;
 
-		x += tiff.ModelTiepointTag.points[0].X;
-		y += tiff.ModelTiepointTag.points[0].Y;
+		auto coord = CoordProjection::getCoors(geotags.GeographicTypeGeoKey);
+		x += tiff.ModelTiepointTag.points[0].X * coord.wid;
+		y += tiff.ModelTiepointTag.points[0].Y * coord.hei;
 		z += tiff.ModelTiepointTag.points[0].Z;
 
 		return QVector3D(x,y,z);
@@ -588,6 +638,8 @@ public:
 	}
 	float getFloatFromAscii(size_t offOrValue, size_t count, char format, bool is64);
 	int getTileWid(int rowNum);
+protected:
+	void readAsciiFromBuffer(std::string &output, int offset, int Count);
 };
 
 

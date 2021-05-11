@@ -50,21 +50,6 @@ float Project::getImgMinVal() const
 	return imgMinVal;
 }
 
-void Project::mouseCast(int x, int y)
-{
-//	float x = (2.0f * mouse_x) / width - 1.0f;
-//	float y = 1.0f - (2.0f * mouse_y) / height;
-//	float z = 1.0f;
-//	vec3 ray_nds = vec3(x, y, z);
-//	vec4 ray_clip = vec4(ray_nds.xy, -1.0, 1.0);
-//	vec4 ray_eye = inverse(projection_matrix) * ray_clip;
-//	ray_eye = vec4(ray_eye.xy, -1.0, 0.0);
-//	vec3 ray_wor = (inverse(view_matrix) * ray_eye).xyz;
-//	// don't forget to normalise the vector at some point
-	//	ray_wor = normalise(ray_wor);
-}
-
-
 float Project::getImgMaxVal() const
 {
 	return imgMaxVal;
@@ -83,7 +68,7 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	if (!barStream.openFileStream(getPath(BackPath::barlist)))
 		return;
 
-	openReader();
+//	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
 	--start;
@@ -184,7 +169,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	}
 
 //    closeReader();
-	openReader();
+//	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 	imgsrch.setFillTileRowCache();
 
@@ -361,7 +346,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 		img.release();
 		spotZones->addBoundy(bb.bb, displayFactor, 1);
-		text->addText(bb.bb);
+//		text->addText(bb.bb);
 		//			model->boundydata.append(bb);
 		k++;
 	}
@@ -401,10 +386,11 @@ void Project::loadImage(const PrjgBarCallback &pbCallback, QString path, int ste
 //		break;
 //	}
 
+	closeReader();
+
 	this->modelPath = "map.obj";
 	this->heimapPath = path;
 
-	closeReader();
 	openReader();
 	if (!reader->ready)
 		return ;
@@ -441,6 +427,11 @@ bool Project::loadProject(QString path)
 	
 	qDebug() << searchSetts.height.start;
 	qDebug() << searchSetts.heightMin();
+
+	openReader();
+	displayedWid = reader->widght() / displayFactor;
+	displayedHei = reader->height() / displayFactor;
+
 	notifySettings();
 	return true;
 }
@@ -494,6 +485,11 @@ void Project::write(QJsonObject &json) const
 //	setts.bottomProc = bottomLineProc;
 }
 
+int normal(float val, int factor)
+{
+	return  static_cast<int>(val/factor);
+}
+
 void Project::readGeoshape()
 {
 	QFile jsonFile(":/resources/shape.geojson");
@@ -510,7 +506,7 @@ void Project::readGeoshape()
 	QJsonObject object = jsonDocument.object();
 	QJsonArray features = object["features"].toArray();
 
-	openReader();
+//	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
 	/*
@@ -529,7 +525,11 @@ Tag: 34735 ; Value:  2692054518
 	// start at 1900000 1000000
 
 
-//	auto maxsize = reader->getMaxModelSize();
+	auto maxsize = reader->getMaxModelSize();
+	qDebug() << reader->tiff.ModelTiepointTag.points[0].X <<
+				reader->tiff.ModelTiepointTag.points[0].Y <<
+				maxsize.x() << maxsize.y();
+
 //	Size2 size = imgsrch.getTileSize();
 	foreach (auto f, features)
 	{
@@ -537,16 +537,19 @@ Tag: 34735 ; Value:  2692054518
 
 		// Send in format x, y, T
 		QVector3D coord(arrcoors[0].toDouble(), arrcoors[1].toDouble(), 0);
+		//1922680.143535581184551, 998692
+		if ((int) coord.x() == 1922680)
+			qDebug() << "";
 		coord = reader->convertModelToRaster(coord);
 		// Get in format x, T, y
 
 		if (coord.x() < 0 || coord.z() < 0 || coord.x() >= reader->widght() || coord.z() >=reader->height())
 			continue;
 
-		size_t offset = (static_cast<int>(coord.z() / displayFactor) * reader->widght() + static_cast<int>(coord.x()));
+		size_t offset = normal(coord.x() * reader->height(), displayFactor * displayFactor) + normal(coord.z(), displayFactor);
 		coord.setY(widget->terra->getValue(offset).y);
 
-		widget->markers->addBoundy(coord, displayFactor, 1);
+		widget->markers->addBoundy(coord, displayFactor);
 	}
 
 	widget->markers->updateBuffer();

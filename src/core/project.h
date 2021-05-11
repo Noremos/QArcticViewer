@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QJsonObject>
 #include <QString>
+#include <QVector3D>
 
 #include "src/types/instinfo.h"
 #include "src/core/obj3d.h"
@@ -55,7 +56,8 @@ public:
 public:
 
 	bool block = false;
-
+	int displayedWid;
+	int displayedHei;
 	bool loadProject(QString path);
 	bool saveProject();
 	void notifySettings()
@@ -74,6 +76,7 @@ public:
 	QString heimapPath;
 	QString texturePath, texture2Path;
 	int displayFactor=10;
+	int heiFactor=10;
 	float imgMaxVal;
 	float imgMinVal;
 	int materialType=0;
@@ -219,7 +222,6 @@ public:
 	float getImgMinVal() const;
 
 
-	void mouseCast(int x, int y);
 	void readGeoshape();
 signals:
 	void meterialtypeChanged(int);

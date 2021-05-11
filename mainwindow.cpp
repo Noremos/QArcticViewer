@@ -56,6 +56,12 @@ MainWindow::MainWindow(QWidget *parent)
 	watcher = nullptr;
 	//	connect(ui->pbFindByParams, &QPushButton::click, proj, .)
 
+	ui->cbUseBarcode->setVisible(false);
+	ui->barShoj->setVisible(false);
+	ui->cbUseCycle->setVisible(false);
+	ui->cirlceShoj->setVisible(false);
+	ui->cbUseRegion->setVisible(false);
+
 }
 
 MainWindow::~MainWindow()
@@ -151,7 +157,6 @@ void MainWindow::openProjectAsync()
 	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
 
 	ui->glWidget->terra->obj.readFastfile(callback, proj->getPath(BackPath::object));
-	proj->readGeoshape();
 }
 
 void MainWindow::openProjectAsyncEnd()
@@ -162,6 +167,8 @@ void MainWindow::openProjectAsyncEnd()
 	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
 	ui->glWidget->terra->displayTexture(0);
 	ui->glWidget->drawTerra = true;
+//	proj->readGeoshape();
+
 	ui->glWidget->doneCurrent();
 
 	ui->glWidget->update();
@@ -473,9 +480,9 @@ void MainWindow::on_pbSave_clicked()
 
 void MainWindow::on_heightSpin_valueChanged(int arg1)
 {
-	ui->glWidget->terra->factor = arg1;
-	ui->glWidget->zones->factor = arg1;
-	qDebug() << ui->glWidget->zones->factor;
+	proj->heiFactor = arg1;
+//	ui->glWidget->zones->factor = arg1;
+//	qDebug() << ui->glWidget->zones->factor;
 }
 
 void MainWindow::on_chShowFinded_stateChanged(int /*arg1*/)
