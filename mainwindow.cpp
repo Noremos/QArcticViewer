@@ -56,11 +56,13 @@ MainWindow::MainWindow(QWidget *parent)
 	watcher = nullptr;
 	//	connect(ui->pbFindByParams, &QPushButton::click, proj, .)
 
+#ifdef RELEASE_AV
 	ui->cbUseBarcode->setVisible(false);
 	ui->barShoj->setVisible(false);
 	ui->cbUseCycle->setVisible(false);
 	ui->cirlceShoj->setVisible(false);
 	ui->cbUseRegion->setVisible(false);
+#endif
 
 }
 
@@ -109,6 +111,7 @@ void MainWindow::openProject(QString projName)
 	if (projName.length() == 0)
 		return;
 
+//	proj->displayFactor = ui->simpithithion->value();
 	proj->loadProject(projName);
 
 	ui->coofSB->setValue(proj->searchSetts.coof);
@@ -166,10 +169,14 @@ void MainWindow::openProjectAsyncEnd()
 	ui->glWidget->terra->setTexture(0, proj->getPath(BackPath::texture1));
 	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
 	ui->glWidget->terra->displayTexture(0);
-	ui->glWidget->drawTerra = true;
+
+	proj->readMarkers();
+	// open and read, rewrite
 //	proj->readGeoshape();
 
 	ui->glWidget->doneCurrent();
+
+	ui->glWidget->drawTerra = true;
 
 	ui->glWidget->update();
 
@@ -510,4 +517,9 @@ void MainWindow::on_cbUseRegion_stateChanged(int /*arg1*/)
 {
     ui->gbZones->setEnabled(ui->chShowFinded->checkState() == Qt::CheckState::Checked);
 
+}
+
+void MainWindow::on_simpithithion_valueChanged(int /*arg1*/)
+{
+//	proj->displayFactor = arg1;
 }

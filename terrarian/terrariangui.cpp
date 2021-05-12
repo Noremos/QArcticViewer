@@ -50,7 +50,7 @@ vertex Terrain::getValue(size_t offset)
 {
 	vertex vert[1];
 	arrayBuf.bind();
-	arrayBuf.read(offset * sizeof(lvertex), vert, sizeof(lvertex));
+	arrayBuf.read(offset * sizeof(vertex), vert, sizeof(vertex));
 	arrayBuf.release();
 	return vert[0];
 }

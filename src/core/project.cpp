@@ -36,12 +36,17 @@ bool Project::saveProject()
 	write(gameObject);
 	QJsonDocument saveDoc(gameObject);
 	saveFile.write(saveDoc.toJson());
+	saveFile.close();
 
 	QString pas = getPath(BackPath::tiles);
 	if (!QDir(pas).exists())
 	{
 		QDir().mkdir(pas);
 	}
+
+	widget->userMarkers->save();
+	widget->userMarkers->openFile();
+
 	return true;
 }
 
@@ -99,7 +104,7 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 		qDebug() << ind << "/" << imgsrch.getMaxTiles() << ": " << size;
 	}
 
-	QString ds = Project::proj->getPath(BackPath::root);
+//	QString ds = Project::proj->getPath(BackPath::root);
 	imgsrch.savemat();
 
 	if (pbCallback.cbIncrValue)
@@ -245,7 +250,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
             tileindex = listw[1].toInt();
 
 			if (tileindex >= endT-1)
-                break;
+				break;
 
             if (checkBar3d || checkSyrcl)
 			{
@@ -297,10 +302,9 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 		if (checkBar3d)
 		{
-
 			bc::BarImg<float> bimg(img.wid, img.hei, 1, reinterpret_cast<uchar *>(img.data), false, false);
 
-			Beaf::exportDataAsPng("D:/out.png", bimg);
+//			Beaf::exportDataAsPng("D:/out.png", bimg);
 
 			if (exportImg)
 				painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
@@ -425,8 +429,8 @@ bool Project::loadProject(QString path)
 	QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
 	read(loadDoc.object());
 	
-	qDebug() << searchSetts.height.start;
-	qDebug() << searchSetts.heightMin();
+//	qDebug() << searchSetts.height.start;
+//	qDebug() << searchSetts.heightMin();
 
 	openReader();
 	displayedWid = reader->widght() / displayFactor;
@@ -442,7 +446,7 @@ void Project::read(const QJsonObject &json)
 	this->heimapPath	= json["heimapPath"].toString();
 	this->texturePath	= json["texturePath"].toString();
 	this->texture2Path	= json["texture2Path"].toString();
-	this->displayFactor			= json["step"].toInt();
+	this->displayFactor	= json["step"].toInt();
 	this->imgMinVal		= json["imgMinVal"].toDouble();
 	this->imgMaxVal		= json["imgMaxVal"].toDouble();
 	this->materialType  = json["materialType"].toInt();
@@ -553,6 +557,46 @@ Tag: 34735 ; Value:  2692054518
 	}
 
 	widget->markers->updateBuffer();
+}
+
+#include "side-src/fast_float/fast_float.h"
+
+void Project::readMarkers()
+{
+	QFile listFile(Project::getPath(BackPath::markers));
+	if (!listFile.open(QIODevice::ReadOnly))
+	{
+		return;
+	}
+
+	char rawtoken[500];
+	const char *token;
+	while (!listFile.atEnd())
+	{
+		int size = listFile.readLine(rawtoken, 500);
+		if (size <= 2)
+			continue;
+
+		token = rawtoken;
+		float x = 0, y = 0, z = 0;
+
+		int len = Object3d::getWord(token);
+		fast_float::from_chars(token, token + len, x);
+		token += len + 1;
+
+		len = Object3d::getWord(token);
+		fast_float::from_chars(token, token + len, y);
+		token += len + 1;
+
+		len = Object3d::getWord(token);
+		fast_float::from_chars(token, token + len, z);
+
+		widget->userMarkers->addBoundy(x, y, z);
+	}
+
+	listFile.close();
+
+	widget->userMarkers->openFile();
 }
 
 

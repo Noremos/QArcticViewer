@@ -69,6 +69,8 @@ CubeGui::~CubeGui()
 {
     arrayBuf.destroy();
     indexBuf.destroy();
+	texture->destroy();
+	delete texture;
 }
 
 void CubeGui::initShaders()

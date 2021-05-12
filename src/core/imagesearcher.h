@@ -1,6 +1,7 @@
 #ifndef IMAGESEARCHER_H
 #define IMAGESEARCHER_H
 #include "../base.h"
+#include "subclasses.h"
 #include "tiffreader.h"
 
 #include <QFile>
@@ -12,7 +13,6 @@
 #include "side-src/Barcode/PrjBarlib/include/barcodeCreator.h"
 using namespace bc;
 
-#include "fstream"
 
 class Beaf
 {
@@ -49,13 +49,13 @@ public:
 		// diamert = {0, 0};
 		// height = {0, 0};
 		// bottomProc = 0;
-		
+
 		bottomProc = 10;
 		coof = 1.7f;
 		diamert = TRange<int>(10, 400);
 		height = TRange<float>(2, 6);
 	}
-// FOR PORPERTYs
+	// FOR PORPERTYs
 
 	int diametrMin() { return diamert.start; }
 
@@ -73,75 +73,6 @@ public slots:
 	void setBottomProc(float val)  { bottomProc = val;}
 
 
-};
-struct Size2
-{
-	int wid, hei;
-	Size2(int _wid, int _hei)
-	{
-		wid = _wid;
-		hei = _hei;
-	}
-};
-
-#include <QDir>
-struct FileBuffer
-{
-	QString buffer;
-	QFile outfile;
-	QTextStream *stream = nullptr;
-	int maxBufferSize = 10000;
-
-	bool openFileStream(QString path, int maxBufferSize = 10000)
-	{
-		outfile.setFileName(path);
-
-		if (outfile.exists())
-		{
-			QFile::rename(path,  path.replace("bds.lst", "bds old.lst"));
-//			outfile.setFileName(path);
-		}
-
-		if (!outfile.open(QFile::WriteOnly | QFile::Truncate))
-			return false;
-
-		if (stream != nullptr)
-			delete stream;
-		stream = new QTextStream(&outfile);
-
-		this->maxBufferSize = maxBufferSize;
-
-		return true;
-	}
-
-	void write(const QString &part)
-	{
-		buffer += part;
-		if (buffer.size() > maxBufferSize)
-		{
-			stream->operator<<(buffer);
-			buffer.clear();
-		}
-	}
-
-
-	void writeLine(const QString &part= "")
-	{
-		buffer += part + nl;
-		if (buffer.size() > maxBufferSize)
-		{
-			stream->operator<<(buffer);
-			buffer.clear();
-		}
-	}
-
-	void close()
-	{
-		stream->operator<<(buffer);
-		buffer.clear();
-
-		outfile.close();
-	}
 };
 
 namespace cv

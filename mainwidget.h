@@ -110,6 +110,7 @@ public:
 
 	void readGeoshape();
 protected:
+	QVector3D getMouseCast(const QVector2D &mousePos);
 
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void wheelEvent(QWheelEvent *event) override;
@@ -143,7 +144,7 @@ private:
 	SkyBoxGUI *sky;
 	Text2d *text;
 
-	CubeGui *geometries = nullptr;
+	CubeGui *cubeRot = nullptr;
 
 
 	QOpenGLDebugLogger *logger;

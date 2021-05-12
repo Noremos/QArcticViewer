@@ -70,7 +70,7 @@ inline bool isNotEnd(int c)
 	return (c != ' ' && c != '\n' && c != '\r');
 }
 
-int getWord(const char *base)
+int Object3d::getWord(const char *base)
 {
 	const char *ref = base;
 	int len = 0;

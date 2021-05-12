@@ -16,6 +16,12 @@ SkyBoxGUI::SkyBoxGUI(QWidget */*parent*/) : mTexture(QOpenGLTexture::TargetCubeM
 	mLookAt.up = {+0.0f, +1.0f, +0.0f};
 }
 
+SkyBoxGUI::~SkyBoxGUI()
+{
+	mTexture.destroy();
+	vao.destroy();
+}
+
 void SkyBoxGUI::loadImages()
 {
 	const QImage posx = QImage(mRightImagePath).convertToFormat(QImage::Format_RGBA8888);

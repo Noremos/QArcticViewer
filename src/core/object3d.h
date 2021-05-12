@@ -40,6 +40,7 @@ public:
 
 	void readFile(QString path);
 	void readFastfile(const PrjgBarCallback &pbCallback, QString path);
+	static int getWord(const char *base);
 };
 
 #endif // OBJECT3D_H

@@ -26,7 +26,7 @@ class SkyBoxGUI : protected QOpenGLFunctions
 {
 public:
 	SkyBoxGUI(QWidget *parent = Q_NULLPTR);
-
+	~SkyBoxGUI();
 	void initializeGL() ;
 	void resizeGL(int w, int h) ;
 	void paintGL(QMatrix4x4 view, QMatrix4x4 projection);

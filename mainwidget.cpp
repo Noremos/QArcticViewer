@@ -1,52 +1,3 @@
-/****************************************************************************
-**
-** Copyright (C) 2016 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
-**
-** This file is part of the QtCore module of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
-**
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
-**
-** $QT_END_LICENSE$
-**
-****************************************************************************/
 
 #include "mainwidget.h"
 
@@ -84,6 +35,10 @@ MainWidget::~MainWidget()
 	delete camera;
 	delete zones;
 	delete text;
+	delete markers;
+	delete userMarkers;
+	delete cubeRot;
+
 //    delete texture;
 //    delete geometries;
 	doneCurrent();
@@ -119,7 +74,7 @@ void MainWidget::initializeGL()
 //	f->glDebugMessageCallback( MessageCallback, 0 );
 
 
-	geometries = new CubeGui();
+	cubeRot = new CubeGui();
 
 	sky->initializeGL();
 
@@ -157,16 +112,17 @@ QVector3D MainWidget::CreateRay(QMatrix4x4& projection, QMatrix4x4& view,  float
 	// these positions must be in range [-1, 1] (!!!), not [0, width] and [0, height]
 	// mouseX, mouseY
 	mouseX = mouseX / (this->width()  * 0.5f) - 1.0f;
-	mouseY = mouseY / (this->height() * 0.5f) - 1.0f;
+	mouseY = -mouseY / (this->height() * 0.5f) - 1.0f;
 
 	QMatrix4x4 invVP = (projection * view).inverted();
-	QVector4D screenPos(mouseX, -mouseY, 1.0f, 1.0f);
+	QVector4D screenPos(mouseX, mouseY, 1.0f, 1.0f);
 	QVector4D worldPos = invVP * screenPos;
 
 	QVector3D dir = worldPos.toVector3D().normalized();
 	return dir;
 }
 
+//more occuroncy
 QVector3D MainWidget::mouseCast(QMatrix4x4& projection, QMatrix4x4& view,  int mouse_x, int mouse_y)
 {
 	float x = (2.0f * mouse_x) /  this->width() - 1.0f;
@@ -175,9 +131,10 @@ QVector3D MainWidget::mouseCast(QMatrix4x4& projection, QMatrix4x4& view,  int m
 	QVector4D ray_clip(x, y, -1.0, 1.0);
 	QVector4D ray_eye = projection.inverted() * ray_clip;
 	ray_eye = QVector4D(ray_eye.x(), ray_eye.y(), -1.0, 0.0);
-	QVector3D ray_wor = (view.inverted() * ray_eye).toVector3D();
+
+	QVector4D worldPos = (view.inverted() * ray_eye);
 	// don't forget to normalise the vector at some point
-	ray_wor.normalize();
+	QVector3D ray_wor = worldPos.toVector3D().normalized();
 	return ray_wor;
 }
 
@@ -185,38 +142,18 @@ QVector3D MainWidget::mouseCast(QMatrix4x4& projection, QMatrix4x4& view,  int m
 
 QVector4D MainWidget::getVal(int x, int z) { return QVector4D(x, terra->getValue(x, z), z, 1.0);}
 
-//! [0]
-void MainWidget::mousePressEvent(QMouseEvent *e)
+QVector3D MainWidget::getMouseCast(const QVector2D &mousePos)
 {
-	camera->setEnableTraking(true);
-//	sky->mousePressEvent(e);
-
-	// Save mouse press position
-
-	mousePressPosition = QVector2D(e->localPos());
-
-	if (e->button() != Qt::MouseButton::RightButton)
-		return;
-
 	QMatrix4x4 view = camera->GetViewMatrix();
-	QMatrix4x4 skyboxview(view.normalMatrix());
 	QMatrix4x4 projection;
 	projection.setToIdentity();
 	projection.perspective(fov, aspect, zNear, zFar);
 
-//	QVector3D ray = mouseCast(projection, view, mousePressPosition.x(), mousePressPosition.y());
-	QVector3D ray = mouseCast(projection, view, 0,0);
-//	QVector3D ray1 = CreateRay(projection, view, mousePressPosition.x(), mousePressPosition.y());
-	//	float hei = terra->getValue(ray.x(), ray.y());
+	QVector3D ray;
+	//	ray = CreateRay(projection, view, mousePressPosition.x(), mousePressPosition.y());
+	//	qDebug() << ray;
+	ray = mouseCast(projection, view, mousePos.x(), mousePos.y());
 
-	//x = col, y = topBot, y = row
-//	ray = QVector3D(ray.x(), ray.z(), ray.y());
-
-	// MAx global coors
-	QMatrix4x4 model;
-	model.setToIdentity();
-	model.scale(1, 1, 1);
-	model.translate(0, 0, 0);
 
 	QVector4D mins[4];
 	int locWid = Project::getProject()->displayedWid - 1;
@@ -240,26 +177,40 @@ void MainWidget::mousePressEvent(QMouseEvent *e)
 		maxDist = MAX(dist, maxDist);
 	}
 
-
 	int off = maxDist;
-	int divis = off;
+	int divis = off / 2;
 
 	QVector3D rayEndPosition;
-	while (divis != 1)
+	float hei = 0;
+	while (divis > 1)
 	{
 		rayEndPosition = rayStartPositon + ray * off;
-		float hei = terra->getValue(rayEndPosition.x(), rayEndPosition.z());
+		hei = terra->getValue(rayEndPosition.x(), rayEndPosition.z());
 
-		divis /= 2;
-		if (hei == -9999 || hei < rayEndPosition.y())
+		if (hei == -9999 || rayEndPosition.y() < hei)
 			off -= divis;
 		else
 			off += divis;
+		divis /= 2;
 	}
-	qDebug() << ray <<  rayEndPosition;
-	float x = rayEndPosition.x();
-	float z = rayEndPosition.z();
-	userMarkers->addBoundy(x, terra->getValue(x, z), z);
+	rayEndPosition = rayStartPositon + ray * off;
+
+	qDebug() << ray << rayEndPosition;
+	rayEndPosition.setY(hei);
+	return rayEndPosition;
+}
+
+void MainWidget::mousePressEvent(QMouseEvent *e)
+{
+	camera->setEnableTraking(true);
+
+	// Save mouse press position
+	mousePressPosition = QVector2D(e->localPos());
+
+	if (e->button() != Qt::MouseButton::RightButton)
+		return;
+
+	userMarkers->addBoundy(getMouseCast(mousePressPosition));
 }
 
 void MainWidget::mouseReleaseEvent(QMouseEvent *e)
@@ -274,15 +225,19 @@ void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 	qreal acc = diff.length() / 100.0;
 	rotationAxis = (rotationAxis * angularSpeed + n * acc).normalized();
 	angularSpeed += acc;
-
-
 }
 //! [0]
 
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
 //	sky->mouseMoveEvent(event);
-    camera->ProcessMouseMovement(event->localPos().x(), event->localPos().y(), deltaTime);
+	QVector2D vec(event->localPos());
+	camera->ProcessMouseMovement(vec.x(), vec.y(), deltaTime);
+
+	if (userMarkers->enable)
+	{
+		userMarkers->move(0, getMouseCast(vec));
+	}
 
 //	QMatrix4x4 view = camera->GetViewMatrix();
 //	QMatrix4x4 projection;

@@ -27,7 +27,8 @@ enum class BackPath
 	roilist,
 	heimap,
 	tiles,
-	root
+	root,
+	markers
 };
 
 
@@ -206,6 +207,8 @@ public:
 			return heimapPath;
 		case BackPath::root:
 			return projectPath;
+		case BackPath::markers:
+			return projectPath + "markers.lst";
 		default:
 			return "";
 		}
@@ -223,6 +226,7 @@ public:
 
 
 	void readGeoshape();
+	void readMarkers();
 signals:
 	void meterialtypeChanged(int);
 	void heimapChanged(QString);

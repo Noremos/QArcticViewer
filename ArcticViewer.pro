@@ -44,6 +44,7 @@ HEADERS += \
     src/core/obj3d.h \
     src/core/object3d.h \
     src/core/project.h \
+    src/core/subclasses.h \
     src/core/tiffreader.h \
     src/render/line.h \
     src/render/markers.h \
