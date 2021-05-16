@@ -40,10 +40,10 @@ void Terrain::initShaders()
 
 float Terrain::getValue(int x, int z)
 {
-	if (x < 0 || z < 0 || x >= proj->displayedWid || z >= proj->displayedHei)
+	if (x < 0 || z < 0 || x >= proj->modelWid || z >= proj->modelHei)
 		return -9999;
 
-	return getValue(x * proj->displayedHei + z).y;
+	return getValue(x * proj->modelHei + z).y;
 }
 
 vertex Terrain::getValue(size_t offset)

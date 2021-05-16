@@ -62,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->cbUseCycle->setVisible(false);
 	ui->cirlceShoj->setVisible(false);
 	ui->cbUseRegion->setVisible(false);
+	ui->cbUseBarcode->setChecked(true);
+	ui->cbUseCycle->setChecked(true);
 #endif
 
 }

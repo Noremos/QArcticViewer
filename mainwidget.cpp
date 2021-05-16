@@ -156,8 +156,8 @@ QVector3D MainWidget::getMouseCast(const QVector2D &mousePos)
 
 
 	QVector4D mins[4];
-	int locWid = Project::getProject()->displayedWid - 1;
-	int locHei = Project::getProject()->displayedHei - 1;
+	int locWid = Project::getProject()->modelWid - 1;
+	int locHei = Project::getProject()->modelHei - 1;
 
 	mins[0] = getVal(0, 0);
 	mins[1] = getVal(0, locHei);
@@ -195,7 +195,7 @@ QVector3D MainWidget::getMouseCast(const QVector2D &mousePos)
 	}
 	rayEndPosition = rayStartPositon + ray * off;
 
-	qDebug() << ray << rayEndPosition;
+//	qDebug() << ray << rayEndPosition;
 	rayEndPosition.setY(hei);
 	return rayEndPosition;
 }
@@ -206,6 +206,7 @@ void MainWidget::mousePressEvent(QMouseEvent *e)
 
 	// Save mouse press position
 	mousePressPosition = QVector2D(e->localPos());
+//	QVector2D vec(mousePressPosition.x() * width(), mousePressPosition.y() * height());
 
 	if (e->button() != Qt::MouseButton::RightButton)
 		return;
@@ -226,16 +227,19 @@ void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 	rotationAxis = (rotationAxis * angularSpeed + n * acc).normalized();
 	angularSpeed += acc;
 }
-//! [0]
 
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
 //	sky->mouseMoveEvent(event);
 	QVector2D vec(event->localPos());
 	camera->ProcessMouseMovement(vec.x(), vec.y(), deltaTime);
-
+//	qDebug() << vec;
 	if (userMarkers->enable)
 	{
+		//		vec.setX(event->localPos().x() * width());
+		//		vec.setY(event->localPos().y() * height());
+//		QVector2D vecs(event->localPos().x() * width(), event->localPos().y() * height());
+
 		userMarkers->move(0, getMouseCast(vec));
 	}
 

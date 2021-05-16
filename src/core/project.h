@@ -57,8 +57,8 @@ public:
 public:
 
 	bool block = false;
-	int displayedWid;
-	int displayedHei;
+	int modelWid;
+	int modelHei;
 	bool loadProject(QString path);
 	bool saveProject();
 	void notifySettings()
@@ -169,6 +169,9 @@ private:
 			return false;
 
 		if (bb.zei() > searchSetts.height.end)
+			return false;
+
+		if (dmax * 1.5 < bb.zei())
 			return false;
 
 		return true;

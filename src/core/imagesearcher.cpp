@@ -296,41 +296,31 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		{
 			bc::barline<float> *line = item->barlines[ib];
 
-//			mark(line->matr, ib, tx, ty);
+			// mark(line->matr, ib, tx, ty);
 
 
 			if (line->childrens.size() != 0)
 				continue;
 
-//			int deep = 0;
-//			bc::barline<float> *temp = line;
-//			while (temp)
+//			float deep = 0;
+//			bc::barline<float> *temp = line->parrent;
+//			while (temp && temp != item->getRootNode())
 //			{
-//				auto &col = colors[deep % 8];
-//				if (temp->matr.size()==0)
-//					break;
-
-//				auto orcol = mat->at<cv::Vec3b>(ty + temp->matr[0].getY(), tx + temp->matr[0].getX());
-
-////				if (orcol[0] != 0 || orcol[1] != 0 || orcol[2] != 0)
-////					break;
-
-
-
+//				deep += abs(temp->len);
 //				temp = temp->parrent;
-//				++deep;
-////				if (deep>10)
-////					break;
 //			}
 
-
-//			if (deep==0 || deep>10)
+//			if (deep> abs(line->len))
 //				continue;
 
 			boundy b = getBounty(line);
 
+			if (round(b.x)<=1.0 || round(b.y<=1.0) || round(b.endX) >= (wid-2) || round(b.endY)>=(hei-2))
+				continue;
+
 			b.addXoffset(tx);
 			b.addYoffset(ty);
+
 
 			boundsOut.writeLine(b.getStr());
 			addded += 1;
@@ -576,6 +566,7 @@ void ImageSearcher::savemat()
 {
 	QString ds = Project::proj->getPath(BackPath::root);
 	cv::imwrite((ds + "img.jpg").toStdString(), *mat);
+	mat->release();
 }
 
 ImageSearcher::~ImageSearcher()

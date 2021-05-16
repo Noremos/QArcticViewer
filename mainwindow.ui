@@ -515,10 +515,13 @@ background-color: &quot;#d4d1d1&quot;;
           <string>Бакроды</string>
          </property>
          <property name="checked">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
         <widget class="QCheckBox" name="cbUseCycle">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="geometry">
           <rect>
            <x>10</x>
@@ -531,7 +534,7 @@ background-color: &quot;#d4d1d1&quot;;
           <string>Круг</string>
          </property>
          <property name="checked">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
         <widget class="QDoubleSpinBox" name="cirlceShoj">

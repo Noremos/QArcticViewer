@@ -189,7 +189,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	if (checkBar3d)
 	{
 		constr.addStructure(ProcType::f255t0, ColorType::gray, ComponentType::Component);
-        constr.returnType = ReturnType::barcode2d;
+		constr.returnType = ReturnType::barcode2d;
 		constr.createBinayMasks = false;
 		constr.createGraph = false;
 
@@ -310,12 +310,12 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 				painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
 
 			auto *retf = creator.createBarcode(&bimg, constr);
-			auto *baritem = retf->exractItem(0);
+			std::unique_ptr<bc::Baritem<float>> baritem(retf->exractItem(0));
+			delete retf;
 //			baritem->removePorog(3);
 			baritem->relen();
 			baritem->normalize();
 
-			delete retf;
 
 			float maxRet = 0;
 			for (auto *bas : etalons)
@@ -323,7 +323,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 				float rew = baritem->compireFull(bas, CompireStrategy::CommonToLen);
 				maxRet = MAX(maxRet, rew);
 			}
-			delete baritem;
+
 			qDebug() <<"max:" <<  maxRet;
 			if (maxRet < POROG)
 			{
@@ -433,8 +433,8 @@ bool Project::loadProject(QString path)
 //	qDebug() << searchSetts.heightMin();
 
 	openReader();
-	displayedWid = reader->widght() / displayFactor;
-	displayedHei = reader->height() / displayFactor;
+	modelWid = reader->widght() / displayFactor;
+	modelHei = reader->height() / displayFactor;
 
 	notifySettings();
 	return true;
