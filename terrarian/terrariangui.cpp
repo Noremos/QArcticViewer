@@ -32,7 +32,7 @@ void Terrain::initGL()
 void Terrain::initShaders()
 {
 	initShader(heimapShader, ":/shaders/HeightFactor.vert", ":/shaders/HeightFactor.frag");
-	initShader(objectShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
+	initShader(objectShader, ":/shaders/simpleColor.vert", ":/shaders/terraColor.frag");
 	initShader(textureShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
 	//	initShader(textureShader, ":/vshader.glsl", ":/fshader.glsl");
 }
@@ -152,9 +152,8 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 	case DisplayMode::Heimap:
 		curshader = &this->heimapShader;
 		curshader->bind();
-		curshader->setUniformValue("texture0", 0);
-		curshader->setUniformValue("aminHei", proj->getImgMinVal());
-		curshader->setUniformValue("amaxHei", proj->getImgMaxVal());
+//		curshader->setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
+		curshader->setUniformValue("maxHei", proj->getImgMaxVal() / proj->displayFactor);
 
 
 		break;

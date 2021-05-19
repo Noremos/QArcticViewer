@@ -11,13 +11,13 @@ uniform float minHei;// = -2.1988;
 uniform int factor;
 
 out vec2 v_texcoord;
-
+out vec3 v_pos;
 //! [0]
 void main()
 {
     mat4 rmat = model;
     vec3 vp = a_position;
-
+    v_pos = vp;
 //    vp.y *= factor;
 
 //    rmat[1][1] *= factor;

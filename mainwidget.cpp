@@ -314,6 +314,7 @@ void MainWidget::keyPressEvent(QKeyEvent *event)
 			camera->updateCameraVectors();
 		}
 
+
 		// if (ctrl)
 		// {
 		// 	qDebug() << camera->Position;
@@ -500,6 +501,16 @@ void MainWidget::Do_Movement()
 	if(keys[Qt::Key::Key_D])
 		camera->ProcessKeyboard(RIGHT, deltaTime, factor);
 
+	if (keys[Qt::Key::Key_E])
+	{
+		camera->Yaw += 50 * deltaTime;
+		camera->updateCameraVectors();
+	}
+	if (keys[Qt::Key::Key_Q])
+	{
+		camera->Yaw -= 50 * deltaTime;
+		camera->updateCameraVectors();
+	}
 
 	if(keys[38])
 		camera->ProcessKeyboard(FORWARD, deltaTime, factor);

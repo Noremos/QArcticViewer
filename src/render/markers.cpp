@@ -138,7 +138,7 @@ void StaticMarkers::updateBuffer()
 
 	// mast be at end
 	boundySize = boundydata.size();
-	boundydata.clear();
+//	boundydata.clear();
 }
 
 void StaticMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)

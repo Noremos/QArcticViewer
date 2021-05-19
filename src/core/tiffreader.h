@@ -114,6 +114,9 @@ enum class Tags : int {
 	//Description of extra components.
 	ExtraSamples = 338,
 
+	//Specifies how to interpret each data sample in a pixel.
+	// 1 = uint; 2=int; 3=IEEEFP(float); 4=void
+	SampleFormat = 339,
 	//Copyright notice.
 	Copyright = 33432,
 
@@ -203,6 +206,15 @@ struct Scale3d
 		y = Y;
 		z = Z;
 	}
+};
+
+enum class tifftype
+{
+	tiff_uint = 1,	// unsigned integer data
+	tiff_short,		// two's complement signed integer data
+	tiff_float,		// IEEE floating point data
+	tiff_void		// undefined data format
+
 };
 
 struct GeoTiffTags
@@ -347,6 +359,8 @@ struct TiffTags
 	Scale3d ModelPixelScaleTag;
 
 	double ModelTransformationTag[16];
+
+	tifftype SampleFormat = tifftype::tiff_void;
 };
 
 
@@ -543,14 +557,18 @@ class TiffReader: public ImageReader
 	int compressType = 1;
 	PointerArrayCache<rowptr> cachedTiles;
 
-
 	void **checkTileInCache(int x, int y);
+
 	template<class T>
-	T *setData(uchar *in, int len)
+	rowptr setData(uchar *in, int len)
 	{
-		T *out = new T[len];
+		T outT;
+		float *out = new float[len];
 		for (int i = 0; i < len; ++i)
-			convert(in + i * sizeof(T), out[i]);
+		{
+			convert(in + i * sizeof(T), outT);
+			out[i] = outT;
+		}
 
 		return out;
 	}

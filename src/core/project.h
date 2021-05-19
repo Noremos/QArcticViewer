@@ -111,7 +111,7 @@ public:
 	SeachingSettings searchSetts;
 	//= "D:\\Programs\\Barcode\\_bar\\";
 
-	void setProjectPath(QString &path)
+	void setProjectPath(const QString &path)
 	{
 		projectPath = QFileInfo(path).absoluteDir().absolutePath();
 		QChar last = projectPath[projectPath.length() - 1];
@@ -139,10 +139,13 @@ public:
 private:
 
 	QString projectPath;
-	bool checkBounty(boundy& bb);
-	bool checkHolm(boundy& bb, Img &tile, int offX, int offY);
 
 public:
+
+	bool checkBounty(boundy& bb);
+
+	static bool checkHolm(boundy& bb, Img &tile, int offX, int offY);
+
 	bool isTileCached(int ind)
 	{
 		QString path = getTilePath(ind);
@@ -195,6 +198,7 @@ public:
 
 	void readGeoshape();
 	void readMarkers();
+	void readMyGeo();
 signals:
 	void meterialtypeChanged(int);
 	void heimapChanged(QString);

@@ -82,9 +82,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pbOpenProject_clicked()
 {
-    // openProject("D:\\Progs\\temp\\bar\\proj.qwr");
-    openProject("D:\\Programs\\Barcode\\_bar\\bar\\proj.qwr");
-	//	openProject();
+	// openProject("D:\\Progs\\temp\\bar\\proj.qwr");
+#ifndef RELEASE_AV
+	openProject("D:\\Programs\\Barcode\\_bar\\bar\\proj.qwr");
+#else
+	openProject();
+#endif
 }
 
 void MainWindow::setMinMaxSpin(QSpinBox *boxMin, QSpinBox *boxMax)
@@ -102,6 +105,7 @@ void MainWindow::setMinMaxSpin(QDoubleSpinBox *boxMin, QDoubleSpinBox *boxMax)
 // #################### OPEN PROJECT ASYNC ##########################
 void MainWindow::openProject()
 {
+//#ifndef E
 	QString projName = QFileDialog::getOpenFileName(0, "Открыть проект", QString(), tr("AW prject (*.qwr)"));
 	openProject(projName);
 }
@@ -170,7 +174,7 @@ void MainWindow::openProjectAsyncEnd()
 	ui->glWidget->terra->initArrays();
 	ui->glWidget->terra->setTexture(0, proj->getPath(BackPath::texture1));
 	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
-	ui->glWidget->terra->displayTexture(0);
+//	ui->glWidget->terra->displayTexture(0);
 
 #ifdef ENABLE_MARKERS
 	proj->readMarkers();
@@ -178,7 +182,8 @@ void MainWindow::openProjectAsyncEnd()
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 
 #ifdef ENABLE_SHAPE
-	proj->readGeoshape();
+//	proj->readMyGeo();
+//	proj->readGeoshape();
 #endif
 
 	ui->glWidget->doneCurrent();
@@ -214,6 +219,7 @@ void MainWindow::findROIs()
 
 	if (watcher)
 		delete watcher;
+
 	watcher = new QFutureWatcher<void>(this);
 	connect(watcher, SIGNAL(finished()), this, SLOT(findROIsAsyncEnd()));
     watcher->setFuture(future1);
@@ -327,10 +333,9 @@ void MainWindow::importDTM()
 		return;
 	if (!opened)
 	{
-		QString projName = QFileDialog::getSaveFileName(0, "Куда сохранить проект", QString(), tr("AW prject (*.qwr)"));
+		QString projName = QFileDialog::getExistingDirectory(0, "Куда сохранить проект", QString());
 		if (projName.length()==0)
 			return;
-
 		ui->progressBar->reset();
 		//	ui->pbFindByParams->setEnabled(false);
 		ui->leftMenu->setEnabled(false);
@@ -339,7 +344,7 @@ void MainWindow::importDTM()
 
 		stopAction = false;
 
-		proj->setProjectPath(projName);
+		proj->setProjectPath(QDir(projName).filePath("project.qwr"));
 
 		future1 = QtConcurrent::run(this, &MainWindow::importDTMAsync, fileName); // Thread 1
 
@@ -376,10 +381,14 @@ void MainWindow::importDTMAsyncEnd()
 {
 	if (opened)
 	{
+		ui->glWidget->makeCurrent();
 		ui->glWidget->terra->initArrays();
+		ui->glWidget->doneCurrent();
+
 		proj->saveProject();
 		ui->glWidget->drawTerra = true;
 	}
+
 
 	ui->pbStopButton->setEnabled(false);
 	ui->topMenu->setEnabled(true);

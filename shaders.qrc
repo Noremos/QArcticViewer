@@ -13,5 +13,7 @@
         <file>shaders/text.vert</file>
         <file>shaders/text.frag</file>
         <file>resources/objects/makr.obj</file>
+        <file>shaders/terraColor.frag</file>
+        <file>shaders/terraColor.vert</file>
     </qresource>
 </RCC>

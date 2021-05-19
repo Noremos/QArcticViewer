@@ -118,5 +118,12 @@ struct InstanceData
 		v3 = matr.column(3);
 		this->val = val;
 	}
+
+	float getX() const { return v3[0];}
+	float getY() const { return v3[1];}
+	float getZ() const { return v3[2];}
+
+	float getWid() const { return v0[0];}
+	float getLen() const { return v2[2];}
 };
 #endif // !GLINSTANSE_H

@@ -269,8 +269,8 @@ public:
 				}
 			}
 
-			if (h % 50 == 0)
-				qDebug() << h;
+//			if (h % 50 == 0)
+//				qDebug() << h;
 
 		}
 		reader->max = max;

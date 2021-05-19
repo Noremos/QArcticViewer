@@ -26,7 +26,7 @@ ImageSearcher::ImageSearcher(TiffReader *reader) : reader(reader)
 	cachedTiles.setMaxSize(10);
 
 
-	mat = new cv::Mat(reader->height(), reader->widght(), CV_8UC3);
+//	mat = new cv::Mat(reader->height(), reader->widght(), CV_8UC3);
 //	settings->bottomProc = 0.1f;
 //	settings->coof= 1.7f;
 //	settings->diamert = TRange<int>(10,300);
@@ -235,13 +235,13 @@ void ImageSearcher::mark(bc::barvector<float>& matr, int ind, const int &tx, con
 		if (x>= this->reader->widght() || y >= reader->height())
 			continue;
 		// Если хотя бы одно не 0, значи тут уже есть цвет
-		auto &colref = mat->at<cv::Vec3b>(y, x);
-		if (colref[0] == 0 && colref[1] == 0 && colref[2] == 0)
-		{
-			colref[0] = col[0];
-			colref[1] = col[1];
-			colref[2] = col[2];
-		}
+//		auto &colref = mat->at<cv::Vec3b>(y, x);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+//		if (colref[0] == 0 && colref[1] == 0 && colref[2] == 0)
+//		{
+//			colref[0] = col[0];
+//			colref[1] = col[1];
+//			colref[2] = col[2];
+//		}
 	}
 }
 void ImageSearcher::segment(bc::barline<float> *line, int i, const int &tx, const int &ty)
@@ -283,9 +283,7 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem<float> *item = bars->getItem(0);
 
-		// delete data and delete pointer on it
-		img.release();
-		reader->removeTileFromCache(i);
+
 
 
 		int tx = (i % tilesInWid) * tileWid;
@@ -324,10 +322,11 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 			b.addXoffset(tx);
 			b.addYoffset(ty);
 
+			if (!Project::checkHolm(b, img, tx, ty))
+				continue;
 
 			boundsOut.writeLine(b.getStr());
 			addded += 1;
-
 
 			// line->getJsonObject(out);
 			// out += ",";
@@ -349,10 +348,15 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		totalAdded += addded;
 
 		delete bars;
+		img.release();
+
+		// delete data and delete pointer on it
+		reader->removeTileFromCache(i);
 
 		if (valStop)
 			break;
 	}
+
 	qDebug() << "st:" << start << "ed:" << len << "size:" << totalAdded;
 	return totalAdded;
 }
@@ -470,7 +474,7 @@ bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 
 //	show(mat);
 	float tcoof = 1.0f - realsum.sums();
-	return tcoof >= coof &&cehckCoof(dx, dy);
+	return tcoof >= coof && cehckCoof(dx, dy);
 	//	return coofX >= ds && coofY >= ds;
 }
 #include <math.h>
@@ -567,14 +571,14 @@ bool ImageSearcher::checkCircle2(Img &ret, float hei, float coof)
 
 void ImageSearcher::savemat()
 {
-	QString ds = Project::proj->getPath(BackPath::root);
-	cv::imwrite((ds + "img.jpg").toStdString(), *mat);
-	mat->release();
+//	QString ds = Project::proj->getPath(BackPath::root);
+//	cv::imwrite((ds + "img.jpg").toStdString(), *mat);
+//	mat->release();
 }
 
 ImageSearcher::~ImageSearcher()
 {
-	delete mat;
+//	delete mat;
 }
 
 void Beaf::exportDataAsBeaf(const QString &path, int wid, int hei, float *data)

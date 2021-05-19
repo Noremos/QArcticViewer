@@ -4,7 +4,7 @@
 #include <vector>
 
 
-//#define RELEASE_AV
+#define RELEASE_AV
 //#define USE_OPENCV
 
 //#define ENABLE_MARKERS

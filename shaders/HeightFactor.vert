@@ -13,10 +13,8 @@ uniform int factor;
 void main()
 {
     vec3 vp = vertexPosition;
-
     curHei = vp.y;
-//    vp.y += (vp.y - minHei)* factor;
-    vp.y *= factor;
+    vp.y = minHei + (vp.y - minHei) * factor;
 
     gl_Position =  projection * view * model * vec4(vp, 1.0);
 }

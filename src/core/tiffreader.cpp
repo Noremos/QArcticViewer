@@ -262,6 +262,9 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		this->tiff.Compression = getTagIntValue(value, count, type, is64);
 		OUT << "Compression";
 		break;
+	case Tags::SampleFormat:
+		this->tiff.SampleFormat = static_cast<tifftype>(value);
+		break;
 
 	case Tags::ModelTiepointTag:
 	{
@@ -369,6 +372,21 @@ int TiffReader::height()
 
 ImageType TiffReader::getType()
 {
+	switch (tiff.SampleFormat)
+	{
+	case tifftype::tiff_uint:
+		return ImageType::int32;
+		break;
+	case tifftype::tiff_short:
+		return ImageType::int16;
+		break;
+	case tifftype::tiff_float:
+		return ImageType::float32;
+		break;
+	case tifftype::tiff_void:
+	default:
+		std::exception();
+	}
 	return ImageType::float32;
 }
 
@@ -475,12 +493,18 @@ void TiffReader::removeTileFromCache(int ind)
 
 rowptr TiffReader::processData(uchar* bytes, int len)
 {
-	rowptr data;
-//	switch (getType())
-//	{
-//	case ImageType::float32:
+	rowptr data = nullptr;
+	switch (getType())
+	{
+	case ImageType::int16:
+		data = (rowptr)setData<short>(bytes, len);
+		break;
+	case ImageType::float32:
 		data = setData<float>(bytes, len);
-//	}
+		break;
+	default:
+		break;
+	}
 	return data;
 }
 

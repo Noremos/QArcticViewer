@@ -82,7 +82,7 @@ namespace cv
 
 class ImageSearcher
 {
-	cv::Mat* mat;
+//	cv::Mat* mat;
 
 	TiffReader *reader;
     int tileWid;
