@@ -139,43 +139,8 @@ public:
 private:
 
 	QString projectPath;
-	bool checkBounty(boundy& bb)
-	{
-		float coof;
-		int dmin, dmax;
-		if (bb.wid() > bb.hei())
-		{
-			dmin = bb.hei();
-			dmax = bb.wid();
-		}
-		else
-		{
-			dmin = bb.wid();
-			dmax = bb.hei();
-		}
-
-		coof = float(dmax) / float(dmin);
-
-		// sootn
-		if (coof > searchSetts.coof)
-			return false;
-
-
-		// diametr// dmin in pixels. Cast in  to meters
-		if (dmin * resol < searchSetts.diamert.start || dmax * resol > searchSetts.diamert.end)
-			return false;
-
-		if (bb.zei() < searchSetts.height.start)
-			return false;
-
-		if (bb.zei() > searchSetts.height.end)
-			return false;
-
-		if (dmax * 1.5 < bb.zei())
-			return false;
-
-		return true;
-	}
+	bool checkBounty(boundy& bb);
+	bool checkHolm(boundy& bb, Img &tile, int offX, int offY);
 
 public:
 	bool isTileCached(int ind)

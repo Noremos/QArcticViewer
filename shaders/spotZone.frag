@@ -13,7 +13,7 @@ void main(void)
     colors[3] = vec3(1.0, 0.0, 0.0);
     colors[4] = vec3(1.0, 0.5, 0.0);
 
-    int type = int(round(outColor)) - 1;
+    int type = int(round(outColor));
 
     fragColor = vec4(colors[type], opacity);
 }

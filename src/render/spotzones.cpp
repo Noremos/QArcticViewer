@@ -3,7 +3,7 @@
 #include "spotzones.h"
 
 
-void SpotZones::addBoundy(boundy &bb,int displayFactor, int type)
+void SpotZones::addBoundy(boundy &bb, int displayFactor, glColor type)
 {
 	bb.divStep(displayFactor);
 	QMatrix4x4 matr;
@@ -12,7 +12,7 @@ void SpotZones::addBoundy(boundy &bb,int displayFactor, int type)
 	matr.translate(bb.x + bb.wid()/2, bb.z - bb.zei(), bb.y + bb.hei()/2);
 	matr.scale(bb.wid()/2, bb.zei()/2, bb.hei()/2);
 
-	boundydata.append(InstanceData(matr, type));
+	boundydata.append(InstanceData(matr, (int)type));
 }
 
 SpotZones::SpotZones() :

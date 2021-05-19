@@ -50,6 +50,111 @@ bool Project::saveProject()
 	return true;
 }
 
+bool Project::checkBounty(boundy &bb)
+{
+	float coof;
+	int dmin, dmax;
+	if (bb.wid() > bb.hei())
+	{
+		dmin = bb.hei();
+		dmax = bb.wid();
+	}
+	else
+	{
+		dmin = bb.wid();
+		dmax = bb.hei();
+	}
+
+	coof = float(dmax) / float(dmin);
+
+	// sootn
+	if (coof > searchSetts.coof)
+		return false;
+
+
+	// diametr// dmin in pixels. Cast in  to meters
+	if (dmin * resol < searchSetts.diamert.start || dmax * resol > searchSetts.diamert.end)
+		return false;
+
+	if (bb.zei() < searchSetts.height.start)
+		return false;
+
+	if (bb.zei() > searchSetts.height.end)
+		return false;
+
+	if (dmax * 1.5 < bb.zei())
+		return false;
+
+	return true;
+}
+
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/core/mat.hpp>
+
+bool Project::checkHolm(boundy &bb, Img &tile, int offX, int offY)
+{
+	float dwid = bb.wid();
+	float dhei = bb.hei();
+
+	float z = bb.bottom();
+	float maxHei = bb.zei();
+
+	// -1|-1  0  1
+	//  0|-1  s  1
+	//  1|-1  0  1
+	char offs[]{-1, -1, -1, 0, -1, 1, 0, -1, 0, 1, 1, -1, 1, 0, 1, 1};
+
+	int midX = bb.x - offX + dwid / 2;
+	int midY = bb.y - offY + dhei / 2;
+
+//	float midv = tile.getSafe(midX, midY, z);
+//	int stX = midX - dwid;
+//	int stY = midY - dhei;
+//	int endY = midY + dhei;
+//	int endX = midX + dwid;W
+//	tile.genMinMax();
+//	cv::Mat mat(endY - stY + 5, endX - stX + 5, CV_8UC3, cv::Scalar(0,0,0));
+//	float diffset = tile.maxVal - tile.minVal;
+
+//	for (int i = stX; i < endX; ++i)
+//	{
+//		for (int j = stY; j < endY; ++j)
+//		{
+//			float val = tile.getSafe(i, j, tile.minVal);
+//			int conv = static_cast<int>(255 * ((val - tile.minVal) / diffset));
+//			uchar s = (uchar) MIN(conv, 255);
+//			mat.at<cv::Vec3b>(j - stY, i - stX) = cv::Vec3b(s, s, s);
+//		}
+//	}
+
+//	mat.at<cv::Vec3b>(midY - stY, midX - stX) = cv::Vec3b(255, 0, 0);
+//	qDebug() <<"z:" << z << "min real:" << midv;
+
+	dwid -= 2;
+	dhei -= 2;
+	//			Beaf::exportDataAsPng("D:/out.png", bimg);
+	for (int i = 0; i < 16; i += 2)
+	{
+		//Предполаагется, что бугор может быть на крае, поэтому val будет ниже
+		int nx = midX + dwid * offs[i];
+		int ny = midY + dhei * offs[i + 1];
+
+		//mat.at<cv::Vec3b>(ny - stY, nx - stX) = cv::Vec3b(0, 255, 0);
+
+		float val = tile.getSafe(nx, ny, z);
+		if (z - val >= maxHei)
+		{
+			return false;
+//			mat.at<cv::Vec3b>(ny - stY, nx - stX) = cv::Vec3b(0, 0, 255);
+		}
+//		qDebug() << val;
+	}
+//	cv::imwrite("D:\\sad.png", mat);
+//	exit(0);
+
+	return true;
+}
+
 float Project::getImgMinVal() const
 {
 	return imgMinVal;
@@ -73,7 +178,7 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	if (!barStream.openFileStream(getPath(BackPath::barlist)))
 		return;
 
-//	openReader();
+	//	openReader();
 	ImageSearcher imgsrch(dynamic_cast<TiffReader *>(reader));
 
 	--start;
@@ -84,14 +189,14 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	end = min(end, imgsrch.getMaxTiles()-1);
 	qDebug() << start << end;
 
-    if (pbCallback.cbSetMax)
-        pbCallback.cbSetMax(end - start+1);
+	if (pbCallback.cbSetMax)
+		pbCallback.cbSetMax(end - start+1);
 
-    imgsrch.setFillTileRowCache();
+	imgsrch.setFillTileRowCache();
 	//1000/18
 	for (int ind = start; ind <= end; ++ind)
 	{
-        size_t size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc, pbCallback.stopAction);
+		size_t size = imgsrch.findROIs(boundStream, barStream, ind, 1, searchSetts.bottomProc, pbCallback.stopAction);
 
 		// if (ind != end)
 		// 	barStream.writeLine(",");
@@ -252,8 +357,9 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			if (tileindex >= endT-1)
 				break;
 
-            if (checkBar3d || checkSyrcl)
+//            if (checkBar3d || checkSyrcl)
 			{
+				tile.release();
 				tile = imgsrch.getTile(tileindex);
 			}
 //			l = 0;
@@ -281,6 +387,14 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			if (!checkBounty(bb.bb))
 			{
 //				spotZones->addBoundy(bb.bb,displayFactor, 0);
+				continue;
+			}
+
+			int offX=0, offY=0;
+			imgsrch.getOffset(tileindex, offX, offY);
+			if (!checkHolm(bb.bb, tile, offX, offY))
+			{
+				spotZones->addBoundy(bb.bb,displayFactor, glColor::Oragne);
 				continue;
 			}
 		}
@@ -327,7 +441,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			qDebug() <<"max:" <<  maxRet;
 			if (maxRet < POROG)
 			{
-				spotZones->addBoundy(bb.bb,displayFactor, 2);
+				spotZones->addBoundy(bb.bb,displayFactor, glColor::Purpure);
 				img.release();
 				continue;
 			}
@@ -337,7 +451,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		{
 			if (!imgsrch.checkCircle(img, searchSetts.height.start, eps))
 			{
-				spotZones->addBoundy(bb.bb,displayFactor, 3);
+				spotZones->addBoundy(bb.bb,displayFactor, glColor::Blue);
 				img.release();
 				continue;
 			}
@@ -349,7 +463,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
 
 		img.release();
-		spotZones->addBoundy(bb.bb, displayFactor, 1);
+		spotZones->addBoundy(bb.bb, displayFactor, glColor::Green);
 //		text->addText(bb.bb);
 		//			model->boundydata.append(bb);
 		k++;
