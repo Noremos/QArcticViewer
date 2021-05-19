@@ -25,13 +25,7 @@
 
 class Project;
 
-enum class glColor {
-	Green = 0, // vec3(0.0, 1.0, 0.0);
-	Purpure, // vec3(0.54, 0.0, 0.5);
-	Blue, // vec3(0.0, 0.3, 0.7);
-	Red, //vec3(1.0, 0.0, 0.0);
-	Oragne //vec3(1.0, 0.5, 0.0);
-};
+
 
 
 class SpotZones :protected QOpenGLFunctions

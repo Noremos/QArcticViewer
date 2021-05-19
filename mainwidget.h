@@ -98,7 +98,7 @@ public:
 
 	Terrain *terra = nullptr;
 	SpotZones* zones;
-	Markers *markers;
+	StaticMarkers *markers;
 	UserMarkers *userMarkers;
 	Line line;
 

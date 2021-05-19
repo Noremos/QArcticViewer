@@ -7,6 +7,8 @@
 //#define RELEASE_AV
 //#define USE_OPENCV
 
+//#define ENABLE_MARKERS
+#define ENABLE_SHAPE
 
 typedef unsigned char uchar;
 typedef unsigned int uint;

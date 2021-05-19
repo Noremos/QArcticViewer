@@ -4,12 +4,12 @@
 #include <QVector2D>
 #include <src/core/project.h>
 
-Markers::Markers()
+StaticMarkers::StaticMarkers()
 {
 	proj = Project::getProject();
 }
 
-void Markers::initGL()
+void StaticMarkers::initGL()
 {
 	initializeOpenGLFunctions();
 	f = QOpenGLContext::currentContext()->extraFunctions();
@@ -18,7 +18,7 @@ void Markers::initGL()
 }
 
 
-void Markers::addBoundy(QVector3D& bb, int displayFactor)
+void StaticMarkers::addBoundy(QVector3D& bb, int displayFactor)
 {
 	bb.setX(bb.x() / displayFactor);
 //	bb.setY(bb.y() / displayFactor);
@@ -29,11 +29,12 @@ void Markers::addBoundy(QVector3D& bb, int displayFactor)
 	matr.translate(bb.x(), bb.y(), bb.z());
 	matr.scale(1,10,1);
 
-	boundydata.append(InstanceData(matr, 5));
+
+	boundydata.append(InstanceData(matr, (int)glColor::Oragne));
 }
 
 
-void Markers::updateBuffer()
+void StaticMarkers::updateBuffer()
 {
 	obj.readFile(":/resources/objects/makr.obj");
 
@@ -140,7 +141,7 @@ void Markers::updateBuffer()
 	boundydata.clear();
 }
 
-void Markers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
+void StaticMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 {
 	if (boundySize==0)
 		return;
@@ -173,7 +174,7 @@ void Markers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 	mshader.release();
 }
 
-void Markers::initModel()
+void StaticMarkers::initModel()
 {
 
 }

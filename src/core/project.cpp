@@ -44,8 +44,10 @@ bool Project::saveProject()
 		QDir().mkdir(pas);
 	}
 
+#ifdef ENABLE_MAKERS
 	widget->userMarkers->save();
 	widget->userMarkers->openFile();
+#endif
 
 	return true;
 }
@@ -394,7 +396,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			imgsrch.getOffset(tileindex, offX, offY);
 			if (!checkHolm(bb.bb, tile, offX, offY))
 			{
-				spotZones->addBoundy(bb.bb,displayFactor, glColor::Oragne);
+				spotZones->addBoundy(bb.bb,displayFactor, glColor::Brown);
 				continue;
 			}
 		}
@@ -655,17 +657,15 @@ Tag: 34735 ; Value:  2692054518
 
 		// Send in format x, y, T
 		QVector3D coord(arrcoors[0].toDouble(), arrcoors[1].toDouble(), 0);
-		//1922680.143535581184551, 998692
-		if ((int) coord.x() == 1922680)
-			qDebug() << "";
 		coord = reader->convertModelToRaster(coord);
 		// Get in format x, T, y
 
 		if (coord.x() < 0 || coord.z() < 0 || coord.x() >= reader->widght() || coord.z() >=reader->height())
 			continue;
 
-		size_t offset = normal(coord.x() * reader->height(), displayFactor * displayFactor) + normal(coord.z(), displayFactor);
-		coord.setY(widget->terra->getValue(offset).y);
+		int x = normal(coord.x(), displayFactor);
+		int z = normal(coord.z(), displayFactor);
+		coord.setY(widget->terra->getValue(x, z));
 
 		widget->markers->addBoundy(coord, displayFactor);
 	}

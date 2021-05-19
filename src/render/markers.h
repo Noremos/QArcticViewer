@@ -27,10 +27,10 @@
 
 class Project;
 
-class Markers : public glinstanse
+class StaticMarkers : public glinstanse
 {
 public:
-	Markers();
+	StaticMarkers();
 public:
 	Project *proj;
 	Object3d obj;

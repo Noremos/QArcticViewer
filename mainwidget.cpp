@@ -18,8 +18,10 @@ MainWidget::MainWidget(QWidget */*parent*/)
 	zones = new SpotZones();
 	text = new Text2d();
 
-	markers = new Markers();
+	markers = new StaticMarkers();
+#ifdef ENABLE_MARKERS
 	userMarkers = new UserMarkers();
+#endif
 
 	useTimer = false;
 	Project::getProject()->widget = this;
@@ -36,7 +38,9 @@ MainWidget::~MainWidget()
 	delete zones;
 	delete text;
 	delete markers;
+#ifdef ENABLE_MARKERS
 	delete userMarkers;
+#endif
 	delete cubeRot;
 
 //    delete texture;
@@ -90,7 +94,9 @@ void MainWidget::initializeGL()
 	text->initGL();
 
 	markers->initGL();
+#ifdef ENABLE_MARKERS
 	userMarkers->initGL();
+#endif
 
 //	line.initGL();
 
@@ -210,8 +216,9 @@ void MainWidget::mousePressEvent(QMouseEvent *e)
 
 	if (e->button() != Qt::MouseButton::RightButton)
 		return;
-
+#ifdef ENABLE_MARKERS
 	userMarkers->addBoundy(getMouseCast(mousePressPosition));
+#endif
 }
 
 void MainWidget::mouseReleaseEvent(QMouseEvent *e)
@@ -234,6 +241,7 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
 	QVector2D vec(event->localPos());
 	camera->ProcessMouseMovement(vec.x(), vec.y(), deltaTime);
 //	qDebug() << vec;
+#ifdef ENABLE_MARKERS
 	if (userMarkers->enable)
 	{
 		//		vec.setX(event->localPos().x() * width());
@@ -242,6 +250,7 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
 
 		userMarkers->move(0, getMouseCast(vec));
 	}
+#endif
 
 //	QMatrix4x4 view = camera->GetViewMatrix();
 //	QMatrix4x4 projection;
@@ -452,7 +461,9 @@ void MainWidget::paintGL()
 	{
 		terra->drawFull(view, projection);
 		markers->renderGL(view, projection);
+#ifdef ENABLE_MARKERS
 		userMarkers->renderGL(view, projection);
+#endif
 //		line.renderGL(view, projection);
 	}
 

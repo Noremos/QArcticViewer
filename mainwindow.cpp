@@ -172,9 +172,14 @@ void MainWindow::openProjectAsyncEnd()
 	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
 	ui->glWidget->terra->displayTexture(0);
 
+#ifdef ENABLE_MARKERS
 	proj->readMarkers();
-	// open and read, rewrite
-//	proj->readGeoshape();
+#endif
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
+#ifdef ENABLE_SHAPE
+	proj->readGeoshape();
+#endif
 
 	ui->glWidget->doneCurrent();
 
