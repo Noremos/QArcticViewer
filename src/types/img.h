@@ -7,8 +7,8 @@
 
 struct Img
 {
-	int minVal = -9999;
-	int maxVal = -9999;
+	float minVal = -9999;
+	float maxVal = -9999;
 	float *data;
 	int wid;
 	int hei;
@@ -34,7 +34,14 @@ struct Img
 		y = MAX(0, MIN(y, hei-1));
 		return data[y * wid + x];
 	}
-	
+
+	float getSafe(int x, int y, float defValue) const
+	{
+		if (x < 0 || x >= wid || y < 0 || y >= hei)
+			return defValue;
+		return data[y * wid + x];
+	}
+
 	void set(int x, int y, float val) { data[y * wid + x] = val; }
 	inline Img clone() const
 	{
@@ -92,6 +99,23 @@ struct Img
 			memcpy(dsa, src, (ce - cs) * 4);
 		}
 //		ret.maxVal = maxval;
+	}
+
+	void genMinMax(float nullVal = -9999)
+	{
+		maxVal = get(0);
+		minVal = maxVal;
+		for (uint i = 0; i < getTotal(); ++i)
+		{
+			float v = get(i);
+			if (v==nullVal)
+				continue;
+
+			if (v > maxVal)
+				maxVal = v;
+			if (v < minVal)
+				minVal = v;
+		}
 	}
 };
 #endif // !IMG_H

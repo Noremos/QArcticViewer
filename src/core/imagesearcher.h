@@ -132,6 +132,15 @@ public:
 	{
 		return Size2(tileWid, tileHei);
 	}
+
+	void getOffset(int index, int &x, int &y)
+	{
+		int tx = index % tilesInWid;
+		int ty = index / tilesInWid;
+		x = tx * tileWid;
+		y = ty * tileHei;
+	}
+
     void getFileOffset(int index, boundy bb, int& x, int &y)
     {
         // diffset 100

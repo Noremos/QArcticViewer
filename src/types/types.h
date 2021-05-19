@@ -54,6 +54,11 @@ public:
 	{
 		return endY - y;
 	}
+
+	float bottom()
+	{
+		return endZ < z ? endZ: z;
+	}
 	inline float zei() const
 	{
 		return endZ > z? endZ - z : z - endZ;
