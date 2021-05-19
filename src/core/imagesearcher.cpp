@@ -155,7 +155,7 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 	int minY = points[0].getY(), maxY = points[0].getY();
 	// f255t0: end is the top, start is a bottom, e.g. [st,end]=[255,3]
 	// float minT = line->end(), maxT = line->start;
-	float minT = line->start, maxT = line->end();
+	float maxT = line->start, minT =  line->start -  line->len;
 
 	if (minT > maxT)
 	{
@@ -163,13 +163,16 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 		minT = maxT;
 		maxT = temp;
 	}
-// если поставить 10, то слипшийся покажется
+
+	// если поставить 10, то слипшийся покажется
     float bottomPorog = (maxT - minT) / bottomLevel;
 
 	for (size_t i = 0, total = points.size(); i < total; ++i)
 	{
 		barvalue<float> &val = points[i];
-        if(abs(val.value) < bottomPorog)
+
+		// Скорей всего не работает
+		if (abs(val.value) < bottomPorog)
 			continue;
 //		Wif (maxT - val.second >= 2)
 //			continue;
@@ -302,16 +305,16 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 			if (line->childrens.size() != 0)
 				continue;
 
-//			float deep = 0;
-//			bc::barline<float> *temp = line->parrent;
-//			while (temp && temp != item->getRootNode())
-//			{
-//				deep += abs(temp->len);
-//				temp = temp->parrent;
-//			}
+			// float deep = 0;
+			// bc::barline<float> *temp = line->parrent;
+			// while (temp && temp != item->getRootNode())
+			// {
+			// 	deep += abs(temp->len);
+			// 	temp = temp->parrent;
+			// }
 
-//			if (deep> abs(line->len))
-//				continue;
+			// if (deep> abs(line->len))
+			// 	continue;
 
 			boundy b = getBounty(line);
 
