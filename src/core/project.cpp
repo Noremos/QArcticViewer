@@ -208,6 +208,9 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 		if (pbCallback.cbIncrValue)
 			pbCallback.cbIncrValue(1);
 
+		if (pbCallback.stopAction)
+			break;
+
 		qDebug() << ind << "/" << imgsrch.getMaxTiles() << ": " << size;
 	}
 
