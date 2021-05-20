@@ -322,8 +322,8 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 			b.addXoffset(tx);
 			b.addYoffset(ty);
 
-			if (!Project::checkHolm(b, img, tx, ty))
-				continue;
+			// if (!Project::checkHolm(b, img, tx, ty))
+			// 	continue;
 
 			boundsOut.writeLine(b.getStr());
 			addded += 1;

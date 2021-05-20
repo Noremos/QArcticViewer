@@ -395,13 +395,13 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 //		if (checkBoundy)
 //		{
-//			int offX=0, offY=0;
-//			imgsrch.getOffset(tileindex, offX, offY);
-//			if (!checkHolm(bb.bb, tile, offX, offY))
-//			{
-//				spotZones->addBoundy(bb.bb,displayFactor, glColor::Brown);
-//				continue;
-//			}
+			int offX=0, offY=0;
+			imgsrch.getOffset(tileindex, offX, offY);
+			if (!checkHolm(bb.bb, tile, offX, offY))
+			{
+				// spotZones->addBoundy(bb.bb,displayFactor, glColor::Brown);
+				continue;
+			}
 //		}
 
 
