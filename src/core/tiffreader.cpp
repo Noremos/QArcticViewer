@@ -464,11 +464,14 @@ rowptr TiffReader::getTile(int ind)
 		sie = getTypeSize(tiff.TileOffsetsType);
 		read(buffer, tiff.TileByteCounts + (ind) * sie, sie);
 		size_t count = (sie==4? toInt(buffer) : toInt64(buffer));
-		uchar *buff = new uchar[count];
-		//*****
 
 		//data
+		uchar *buff = new uchar[count + 3];
 		read(buff, off, count);
+		buff[count] = 0;
+		buff[count + 1] = 0;
+		buff[count + 2] = 0;
+	
 		decorder decod(tiff.Compression);
 
 		vector<uchar> temp;
@@ -571,9 +574,12 @@ rowptr TiffReader::getRowData(int y)
 		sie = getTypeSize(tiff.StripByteCountsType);
 		read(buffer, tiff.StripByteCounts + y * sie, sie);
 		uint count =  sie == 2 ? toShort(buffer) : toInt(buffer);
-		uchar *buff = new uchar[count];
 
+		uchar *buff = new uchar[count + 3];
 		read(buff, off, count);
+		buff[count] = 0;
+		buff[count + 1] = 0;
+		buff[count + 2] = 0;
 
 		string st = ""; // dectode(buff, count);
 		decorder decod(tiff.Compression);
@@ -655,8 +661,11 @@ void TiffReader::printValue(int x, int y)
 	read(buffer, tiff.StripByteCounts + y * 4, getTypeSize(tiff.StripByteCountsType));
 	int count = toInt(buffer);
 
-	uchar* buff = new uchar[count];
+	uchar* buff = new uchar[count + 3];
 	read(buff, off, count);
+	buff[count] = 0;
+	buff[count + 1] = 0;
+	buff[count + 2] = 0;
 
 
 	string st = "";// dectode(buff, count);

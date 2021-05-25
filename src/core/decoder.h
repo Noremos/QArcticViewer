@@ -59,14 +59,20 @@ public:
 		}
 		if (l + byteLength <= 16)// l + len <= 16
 		{
-			ushort r = ushort(arry[k] << 8 | ((k + 1)<arrLen? arry[k + 1] : 0));
+//			ushort r2 = ushort(arry[k] << 8 | ((k + 1) < arrLen ? arry[k + 1] : 0));
+			ushort r = (ushort(arry[k]) << 8) | ushort(arry[k + 1]);
+//			if (r2 != r)
+//				qDebug() << "";
 			r = r << l;
 			r = r >> (16 - byteLength);
 			return r;
 		}
 		else
 		{
-			uint r = uint(0 | arry[k] << 16 | ((k + 1)<arrLen? arry[k + 1] << 8 : 0) | ((k + 2) < arrLen? arry[k + 2]: 0));
+//			 uint r2 = uint(0 | arry[k] << 16 | ((k + 1)<arrLen? arry[k + 1] << 8 : 0) | ((k + 2) < arrLen? arry[k + 2]: 0));
+			uint r = (uint(arry[k]) << 16) | (uint(arry[k + 1]) << 8) | uint(arry[k + 2]);
+//			if (r2 != r)
+//				qDebug() << "";
 			r = r << (l + 8);
 			r = r >> (32 - byteLength);
 			return ushort(r);
@@ -79,32 +85,13 @@ public:
 	// 	a =b;
 	// 	b = temp;
 	// }
- 	buffer rev;
+	buffer rev;
 
-    uchar getAppedRev(ushort cod2e)
+	uchar getAppedRev(ushort cod2e)
 	{
-		// size_t srclen = this->result->size();
-		
-		// buffer rev;
-        // for (int i = code; i != 4096; i = dictionaryIndex[i])
-		// {
-		// 	this->result->push_back(dictionaryChar[i]);
-		// }
-        // uchar last = this->result->at(this->result->size()-1);
-
-        // size_t curlen = this->result->size();
-
-        // size_t diff = (curlen-srclen) / 2;
-		// for (size_t i = 0; i < diff / 2; ++i)
-		// {
-        //     swap( this->result->at(srclen + i), this->result->at(curlen -1 -i));
-		// }
-		
-		// return last;
-
 
 		rev.clear();
-        for (int i = cod2e; i != 4096; i = dictionaryIndex[i])
+		for (int i = cod2e; i != 4096; i = dictionaryIndex[i])
 		{
 			rev.push_back(dictionaryChar[i]);
 		}
