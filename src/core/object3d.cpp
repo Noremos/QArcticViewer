@@ -227,17 +227,13 @@ void Object3d::readFile(QString path)
 	faces.clear();
 	lvetexes.clear();
 
-	std::stringstream errss;
-	std::string name;
-
 	char rawtoken[500];
-	const char *token;
 	size_t readed = 0;
 	while (!fin.atEnd())
 	{
 		int size = fin.readLine(rawtoken, 500);
 		readed += size;
-		token = rawtoken;
+		const char *token = rawtoken;
 		lines++;
 
 		// Skip if empty line.

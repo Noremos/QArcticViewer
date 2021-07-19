@@ -28,9 +28,9 @@ namespace
 #ifdef _WIN32
 #define nl "\r\n"
 #elif defined macintosh // OS 9
-#define nl = "\r"
-#elif
-#define nl = "\n" // Mac OS X uses \n
+#define nl "\r"
+#else
+#define nl "\n" // linux | Mac OS X uses \n
 #endif
 }
 

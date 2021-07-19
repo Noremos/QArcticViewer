@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/mat.hpp>
 
-ImageSearcher::ImageSearcher(TiffReader *reader) : reader(reader)
+ImageSearcher::ImageSearcher(TiffReader *reader) : reader(reader), image(nullptr)
 {
 	if (reader->tiff.TileWidth != 0)
 	{

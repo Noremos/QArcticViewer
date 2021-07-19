@@ -25,6 +25,7 @@ std::unordered_map<int, CoordProjection> CoordProjection::map{{4326, {1,-1}}};
 
 string dectodeTEST(uchar* buffer, int len);
 TiffReader::TiffReader()
+ :pFile(NULL), tiff(0)
 {
 }
 
