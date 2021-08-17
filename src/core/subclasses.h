@@ -92,6 +92,7 @@ public:
 			dowrite();
 			outfile.close();
 			delete stream;
+			stream = nullptr;
 		}
 	}
 	~FileBuffer()

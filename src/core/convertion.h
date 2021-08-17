@@ -1,7 +1,7 @@
 #ifndef CONVERTION_H
 #define CONVERTION_H
 #include "../base.h"
-
+#include <cstring>
 
 union toduble
 {

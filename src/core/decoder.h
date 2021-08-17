@@ -168,13 +168,13 @@ public:
 	int byteLength = MIN_BITS;
 	size_t position = 0, added = 0, maxSize= 0;
 
-        sbuffer* result;
+	buffer* result;
 	// uchar *result;
 	uchar *arry;
 	short code;
 public:
 
-	void decompress(uchar* input, offu64 size, sbuffer& result, size_t maxVal = UINT64_MAX)
+	void decompress(uchar* input, offu64 size, buffer& result, size_t maxVal = UINT64_MAX)
 	{
 		if (comprType == 1)
 		{

@@ -11,6 +11,8 @@ public:
 	float z, endZ;
 	inline boundy(uint x, uint y, uint endX, uint endY): x(x), y(y), endX(endX), endY(endY)
 	{
+		z = 0;
+		endZ = 0;
 	}
 
 	inline boundy(uint x, uint y, float z, uint endX, uint endY, float endZ): x(x), y(y), endX(endX), endY(endY), z(z), endZ(endZ)

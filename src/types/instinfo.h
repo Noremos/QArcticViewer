@@ -18,7 +18,10 @@ public:
 //		bb = info.bb;
 //		factor = info.factor;
 //	}
-	/*explicit*/ InstInfo(uint _x, uint _y, float _z, uint _endX, uint _endY, float _endZ) : /*QObject(NULL),*/ bb(_x, _y, _z, _endX, _endY, _endZ) {}
+	/*explicit*/ InstInfo(uint _x, uint _y, float _z, uint _endX, uint _endY, float _endZ) : /*QObject(NULL),*/ bb(_x, _y, _z, _endX, _endY, _endZ)
+	{
+		factor = 0;
+	}
 
 //	Q_PROPERTY(QVector3D trans READ getTrans)
 //	Q_PROPERTY(QVector3D textTrans READ getTextTrans)

@@ -111,7 +111,6 @@ public:
 
 		int BUFFER = 5000;
 		QString sw;
-		QString faces;
 		sw = "";
 		sw.append("o Main");
 		sw.append(nl);
