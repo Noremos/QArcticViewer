@@ -16,6 +16,25 @@ using std::cout;
 			return;\
 		}
 
+/*
+read a character k;
+   output k;
+   w = k;
+   while ( read a character k )    
+  // k could be a character or a code.
+        {
+         if k exists in the dictionary
+			entry = dictionary entry for k;
+			output entry;
+			add w + entry[0] to dictionary;
+			w = entry;
+         else
+			output entry = w + firstCharacterOf(w);
+			add entry to dictionary;
+			w = entry;
+        }
+
+*/
 class decorder
 {
 	static const int MIN_BITS = 9;
@@ -149,22 +168,22 @@ public:
 	int byteLength = MIN_BITS;
 	size_t position = 0, added = 0, maxSize= 0;
 
-	buffer* result;
+        sbuffer* result;
 	// uchar *result;
 	uchar *arry;
 	short code;
 public:
 
-	void decompress(uchar* input, offu64 size, buffer& result, size_t maxVal = UINT64_MAX)
+	void decompress(uchar* input, offu64 size, sbuffer& result, size_t maxVal = UINT64_MAX)
 	{
 		if (comprType == 1)
 		{
-            result.insert(result.begin(), input, input + size);
-//			output = input;
+			result.insert(result.begin(), input, input + size);
+			//			output = input;
 			return;
 		}
 
-        this->result = &result;
+		this->result = &result;
 		this->arry = input;
 
 		this->maxSize = maxVal;
@@ -174,14 +193,14 @@ public:
 
 		memset(&dictionaryIndex, 0, 4093 * 4);
 		memset(&dictionaryChar, 0, 4093  * 2);
-        for (ushort i = 0; i <= 257; i++)
+		for (ushort i = 0; i <= 257; i++)
 		{
 			dictionaryIndex[i] = 4096;
 			dictionaryChar[i] = i;
 		}
 		initDictionary();
 		getNext();
-        short oldCode = 0;
+		short oldCode = 0;
 
 		buffer val;
 

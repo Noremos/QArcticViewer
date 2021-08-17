@@ -39,6 +39,7 @@ HEADERS += \
     src/base.h \
     src/core/convertion.h \
     src/core/decoder.h \
+    src/core/decoder2.h \
     src/core/face3d.h \
     src/core/imagesearcher.h \
     src/core/obj3d.h \
