@@ -1,11 +1,12 @@
+
+#include "../base.h"
+
 #include <QDebug>
 
 #include <chrono>
 #include <vector>
 #include <array>
 #include <iomanip>
-#include <fstream>
-#include <iostream>
 #include <algorithm>
 
 const unsigned int CLEAR_CODE = 256;
@@ -16,15 +17,16 @@ const unsigned int MAXCODE = 4095;      // 12 bit max less some head room
 #define LZW_STRINGS_SIZE 128000
 
 //make shure result have enough size
-bool decompressLZW(uchar* input, offu64 size, buffer& result)
+bool decompressLZW(uchar* input, offu64 size, buffer& result, int bytesPerRow)
 /*
     Works for RGB but not for RRGGBB (planarConfiguration = 2).  Requires tweak to pBuf.
 */
 {
+//    result.reserve(bytesPerRow);
     bool ret = false;
     // input and output pointers
-    char* c = inBa.data();
-    char* out = outBa.data();
+    char* c = reinterpret_cast<char*>(input);
+    char* out = reinterpret_cast<char*>(result.data());
 
     char* s[4096];                                  // ptrs in strings for each possible code
     int8_t sLen[4096];                              // code string length
@@ -45,7 +47,7 @@ bool decompressLZW(uchar* input, offu64 size, buffer& result)
     size_t psLen = 0;                               // length of prevString
     uint32_t code;                                  // key to string for code
     uint32_t nextCode = 258;                        // used to preset string for next
-    uint32_t incoming = (uint32_t)inBa.size();      // count down input chars
+    uint32_t incoming = (uint32_t)size;      // count down input chars
     int n = 0;                                      // output byte counter
     uint32_t iBuf = 0;                              // incoming bit buffer
     int32_t nBits = 0;                              // incoming bits in the buffer
@@ -126,9 +128,9 @@ bool decompressLZW(uchar* input, offu64 size, buffer& result)
             sEnd = s[code] + psLen + 1;
         }
 
-        if (predictor)
+//        if (predictor)
         {
-            for (uint32_t i = 0; i != (uint32_t)sLen[code]; i++
+            for (uint32_t i = 0; i != (uint32_t)sLen[code]; i++)
             {
                 if (n % bytesPerRow < 3)
                 {
@@ -150,17 +152,17 @@ bool decompressLZW(uchar* input, offu64 size, buffer& result)
                 */
             }
         }
-        else {
-            for (uint32_t i = 0; i != (uint32_t)sLen[code]; i++)
-            {
-                uchar b = (uchar)*(s[code] + i);
-                *out++ = *(s[code] + i);
-                if (n == 26400) {
-                    int xxx = 0;
-                }
-                ++n;
-            }
-        }
+//        else {
+//            for (uint32_t i = 0; i != (uint32_t)sLen[code]; i++)
+//            {
+//                uchar b = (uchar)*(s[code] + i);
+//                *out++ = *(s[code] + i);
+//                if (n == 26400) {
+//                    int xxx = 0;
+//                }
+//                ++n;
+//            }
+//        }
 
         // add string to nextCode (prevString + strings[code][0])
         // copy prevString
