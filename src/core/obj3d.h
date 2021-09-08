@@ -11,7 +11,7 @@
 
 #include "face3d.h"
 #include "tiffreader.h"
-
+#include <memory>
 
 #define USE_ROW
 
@@ -38,8 +38,8 @@ class Obj3d
 	QString name;
 	float *data[2];
 #ifdef USE_ROW
-	objoff *currNullRow;
-	objoff *prevNullRow;
+	staticArray<objoff> currNullRow;
+	staticArray<objoff> prevNullRow;
 //	objoff* nullRow[2];
 	objoff getIndex(int x, int y, int /*realH*/)
 	{
@@ -109,7 +109,7 @@ public:
 
 		QTextStream stream(&out);
 
-		int BUFFER = 5000;
+		int BUFFER_SIZE = 4000;
 		QString sw;
 		sw = "";
 		sw.append("o Main");
@@ -131,15 +131,12 @@ public:
 		nulls.push_back(NullIndex(0, -1));
 #else
 		objoff counter = 0;
-		const objoff typeSize = sizeof(objoff);
 
-		prevNullRow = new objoff[sWidth + 1];
-		currNullRow = new objoff[sWidth + 1];
+		prevNullRow.allocate(sWidth + 1);
+		currNullRow.allocate(sWidth + 1);
 
-		const objoff cursize = sWidth * typeSize + 1;
-
-		memset(prevNullRow, 0, cursize);
-		memset(currNullRow, 0, cursize);
+		prevNullRow.setToZero();
+		currNullRow.setToZero();
 #endif
 
 		float scale = 1.f / step;
@@ -166,17 +163,17 @@ public:
 				nulls.remove(1, lastCount);
 				lastCount = nulls.size() - 1;
 #else
-				objoff *temp = prevNullRow;
+				auto temp = prevNullRow;
 				prevNullRow = currNullRow;
 				currNullRow = temp;
-				memset(currNullRow, 0, cursize);
+				currNullRow.setToZero();
 #endif
 				if (data[0] != nullptr)
 					delete[] data[0];
 				data[0] = data[1];
 			}
 			// not cached row, allocated memory, need to delete
-			data[1] =reader->getRowData(h);
+			data[1] = reader->getRowData(h);
 
 			QString vers;
 			float *dataPointer = data[1];
@@ -261,7 +258,7 @@ public:
 					}
 				}
 
-				if (sw.length() >= BUFFER)
+				if (sw.length() >= BUFFER_SIZE)
 				{
 					stream << sw;
 					sw.clear();
@@ -270,8 +267,8 @@ public:
 
 //			if (h % 50 == 0)
 //				qDebug() << h;
-
 		}
+
 		reader->max = max;
 		reader->min = min;
 		qDebug() << "Min:" << min << " Max:" << max;
@@ -282,8 +279,8 @@ public:
 		if (data[0]) delete[] data[0];
 		if (data[1]) delete[] data[1];
 #ifdef USE_ROW
-		delete[] prevNullRow;
-		delete[] currNullRow;
+		prevNullRow.release();
+		currNullRow.release();
 #else
 		nulls.clear();
 #endif

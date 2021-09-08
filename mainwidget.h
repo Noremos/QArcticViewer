@@ -131,7 +131,8 @@ private:
 	bool shitfp;
 	bool ctrl;
 	bool keys[1024];
-	int pressed = 0;
+	bool pressed[1024];
+	bool polyLine = false;
 	qreal aspect;
 	QVector3D cameraStartPos;
 
@@ -151,8 +152,9 @@ private:
 
     QMatrix4x4 projection;
 
-    QVector2D mousePressPosition;
-    QVector3D rotationAxis;
+	QVector2D mousePressPosition;
+	QVector2D mouseCurrentPosition;
+	QVector3D rotationAxis;
     qreal angularSpeed = 0;
 	QQuaternion rotation;
 

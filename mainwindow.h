@@ -98,6 +98,8 @@ private slots:
 
 	void on_simpithithion_valueChanged(int arg1);
 
+	void on_chShowMarker_stateChanged(int arg1);
+
 private:
 	Ui::MainWindow *ui;
 	Project* proj;

@@ -41,7 +41,7 @@ public:
 	Project *proj;
 	Object3d obj;
 	uint faceSize = 0;
-	QVector<QMatrix4x4> boundydata;
+	QVector<MatrixData> boundydata;
 
 	QOpenGLVertexArrayObject vao;
 	FileBuffer buff;

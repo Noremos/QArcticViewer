@@ -133,6 +133,11 @@ QVector3D MainWidget::mouseCast(QMatrix4x4& projection, QMatrix4x4& view,  int m
 {
 	float x = (2.0f * mouse_x) /  this->width() - 1.0f;
 	float y = 1.0f - (2.0f * mouse_y) /  this->height();
+
+//	QVector4D r = projection * QVector4D(x, y, 0, 1);
+//	QVector3D rdir = view.transposed() * r.toVector3D();
+
+//	return rdir;
 //	float z = 1.0f;
 	QVector4D ray_clip(x, y, -1.0, 1.0);
 	QVector4D ray_eye = projection.inverted() * ray_clip;
@@ -141,6 +146,10 @@ QVector3D MainWidget::mouseCast(QMatrix4x4& projection, QMatrix4x4& view,  int m
 	QVector4D worldPos = (view.inverted() * ray_eye);
 	// don't forget to normalise the vector at some point
 	QVector3D ray_wor = worldPos.toVector3D().normalized();
+//	ray_wor.setX(ray_wor.x() * 0.8);
+//	ray_wor.setY(ray_wor.y() * 0.8);
+//	ray_wor.setZ(ray_wor.z() * 0.8);
+
 	return ray_wor;
 }
 
@@ -188,7 +197,7 @@ QVector3D MainWidget::getMouseCast(const QVector2D &mousePos)
 
 	QVector3D rayEndPosition;
 	float hei = 0;
-	while (divis > 1)
+	while (divis >= 1)
 	{
 		rayEndPosition = rayStartPositon + ray * off;
 		hei = terra->getValue(rayEndPosition.x(), rayEndPosition.z());
@@ -199,8 +208,11 @@ QVector3D MainWidget::getMouseCast(const QVector2D &mousePos)
 			off += divis;
 		divis /= 2;
 	}
+//	ray.setX(ray.x() * 0.85);
+//	ray.setZ(ray.z() * 0.85);
 	rayEndPosition = rayStartPositon + ray * off;
-
+//	rayEndPosition.setX(rayEndPosition.x() * 0.8);
+//	rayEndPosition.setZ(rayEndPosition.z() * 0.8);
 //	qDebug() << ray << rayEndPosition;
 	rayEndPosition.setY(hei);
 	return rayEndPosition;
@@ -214,11 +226,9 @@ void MainWidget::mousePressEvent(QMouseEvent *e)
 	mousePressPosition = QVector2D(e->localPos());
 //	QVector2D vec(mousePressPosition.x() * width(), mousePressPosition.y() * height());
 
-	if (e->button() != Qt::MouseButton::RightButton)
-		return;
-#ifdef ENABLE_MARKERS
-	userMarkers->addBoundy(getMouseCast(mousePressPosition));
-#endif
+//	if (e->button() != Qt::MouseButton::RightButton)
+//		return;
+
 }
 
 void MainWidget::mouseReleaseEvent(QMouseEvent *e)
@@ -238,17 +248,18 @@ void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 void MainWidget::mouseMoveEvent(QMouseEvent *event)
 {
 //	sky->mouseMoveEvent(event);
-	QVector2D vec(event->localPos());
-	camera->ProcessMouseMovement(vec.x(), vec.y(), deltaTime);
+	mouseCurrentPosition = QVector2D(event->localPos());
+	camera->ProcessMouseMovement(mouseCurrentPosition.x(), mouseCurrentPosition.y(), deltaTime);
 //	qDebug() << vec;
 #ifdef ENABLE_MARKERS
-	if (userMarkers->enable)
+
+	if (userMarkers->enable && Project::getProject()->showMarkers)
 	{
 		//		vec.setX(event->localPos().x() * width());
 		//		vec.setY(event->localPos().y() * height());
 //		QVector2D vecs(event->localPos().x() * width(), event->localPos().y() * height());
 
-		userMarkers->move(0, getMouseCast(vec));
+		userMarkers->move(0, getMouseCast(mouseCurrentPosition));
 	}
 #endif
 
@@ -460,12 +471,20 @@ void MainWidget::paintGL()
 
 	if (drawTerra)
 	{
+//		if (polyLine)
+//			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 		terra->drawFull(view, projection);
 		markers->renderGL(view, projection);
+
 #ifdef ENABLE_MARKERS
-		userMarkers->renderGL(view, projection);
+		if (Project::getProject()->showMarkers)
+			userMarkers->renderGL(view, projection);
 #endif
-//		line.renderGL(view, projection);
+//		if (polyLine)
+//			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		//		line.renderGL(view, projection);
 	}
 
 	if (drawZones)
@@ -511,6 +530,54 @@ void MainWidget::Do_Movement()
 		camera->Yaw -= 50 * deltaTime;
 		camera->updateCameraVectors();
 	}
+
+	if (keys[Qt::Key::Key_P])
+	{
+		polyLine = !polyLine;
+	}
+
+
+#ifdef ENABLE_MARKERS
+	if (Project::getProject()->showMarkers)
+	{
+		//calls only ones
+		if (keys[Qt::Key::Key_Space])
+		{
+			if (!pressed[Qt::Key::Key_Space])
+			{
+				userMarkers->addBoundy(getMouseCast(mouseCurrentPosition));
+				pressed[Qt::Key::Key_Space] = true;
+				qDebug() << "Marker added";
+			}
+		}
+		else
+			pressed[Qt::Key::Key_Space] = false;
+
+
+		if (keys[Qt::Key::Key_M] || keys[Qt::Key::Key_Y])
+		{
+			if (!pressed[Qt::Key::Key_M])
+			{
+				for (int i = 1; i < userMarkers->boundydata.size(); ++i)
+				{
+					float x = userMarkers->boundydata[i].getX();
+					float z = userMarkers->boundydata[i].getZ();
+
+					QVector3D pos = getMouseCast(mouseCurrentPosition);
+					if (abs(pos.x() - x) <= 5 && abs(pos.z() - z) <= 5)
+					{
+						userMarkers->boundydata.remove(i);
+						break;
+					}
+				}
+				pressed[Qt::Key::Key_M] = true;
+				qDebug() << "Marker added";
+			}
+		}
+		else
+			pressed[Qt::Key::Key_M] = false;
+	}
+#endif
 
 	if(keys[38])
 		camera->ProcessKeyboard(FORWARD, deltaTime, factor);

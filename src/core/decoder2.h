@@ -9,12 +9,7 @@
 #include <iomanip>
 #include <algorithm>
 
-const unsigned int CLEAR_CODE = 256;
-const unsigned int EOF_CODE = 257;
-const unsigned int MAXCODE = 4095;      // 12 bit max less some head room
 
-#define LZW_STRING_SIZE 256
-#define LZW_STRINGS_SIZE 128000
 
 //make shure result have enough size
 bool decompressLZW(uchar* input, offu64 size, buffer& result, int bytesPerRow)
@@ -23,6 +18,13 @@ bool decompressLZW(uchar* input, offu64 size, buffer& result, int bytesPerRow)
 */
 {
 //    result.reserve(bytesPerRow);
+    const unsigned int CLEAR_CODE = 256;
+    const unsigned int EOF_CODE = 257;
+    const unsigned int MAXCODE = 4095;      // 12 bit max less some head room
+
+    #define LZW_STRING_SIZE 256
+    #define LZW_STRINGS_SIZE 128000
+
     bool ret = false;
     // input and output pointers
     char* c = reinterpret_cast<char*>(input);

@@ -216,6 +216,7 @@ enum class tifftype
 	tiff_void		// undefined data format
 
 };
+#include <string>
 
 struct GeoTiffTags
 {
@@ -508,7 +509,7 @@ class ImageReader
 {
 public:
 	virtual rowptr getRowData(int ri)=0;
-	virtual bool open(const wchar_t *path)=0;
+	virtual bool open(const char *path)=0;
 	virtual void close()=0;
 	virtual ImageType getType()=0;
 	virtual int widght()=0;
@@ -550,6 +551,36 @@ struct CoordProjection
 	}
 };
 
+struct bytebuffer
+{
+	uchar *tempbuffer = nullptr;
+	size_t capasity = 0;
+	void allocate(size_t newCap)
+	{
+		if (newCap > capasity)
+		{
+			if (tempbuffer != nullptr)
+				delete[] tempbuffer;
+			capasity = newCap;
+			tempbuffer = new uchar[capasity];
+		}
+	}
+
+	void setLast3ToSero()
+	{
+		tempbuffer[capasity - 3] = 0;
+		tempbuffer[capasity - 2] = 0;
+		tempbuffer[capasity - 1] = 0;
+	}
+	~bytebuffer()
+	{
+		if (tempbuffer != nullptr)
+			delete tempbuffer;
+
+		capasity = 0;
+	}
+};
+
 class TiffReader: public ImageReader
 {
 	FILE * pFile;
@@ -557,20 +588,37 @@ class TiffReader: public ImageReader
 	int compressType = 1;
 	PointerArrayCache<rowptr> cachedTiles;
 
+	bytebuffer tempbuffer;
+
 	void **checkTileInCache(int x, int y);
 
 	template<class T>
 	rowptr setData(uchar *in, int len)
 	{
 		T outT;
-		float *out = new float[len];
+		T *out = reinterpret_cast<T*>(in);
 		for (int i = 0; i < len; ++i)
 		{
 			convert(in + i * sizeof(T), outT);
 			out[i] = outT;
 		}
 
-		return out;
+		return reinterpret_cast<rowptr>(out);
+	}
+
+	int getSampleTypeSize()
+	{
+		switch (tiff.SampleFormat)
+		{
+		case tifftype::tiff_short:
+			return 2;
+		case tifftype::tiff_uint:
+		case tifftype::tiff_float:
+			return 4;
+		case tifftype::tiff_void:
+		default:
+			std::exception();
+		}
 	}
 public:
 	TiffTags tiff;
@@ -578,7 +626,7 @@ public:
 
 	TiffReader();
 
-	bool open(const wchar_t *path) override;
+	bool open(const char *path) override;
 	void close() override;
 	virtual ~TiffReader();
 	void printValue(int x, int y);
@@ -607,10 +655,12 @@ public:
 
 	ImageType getType() override;
 
-	rowptr getTile(int x, int y);
-	rowptr getTile(int ind);
+	rowptr getTiffTile(int x, int y);
+	rowptr getTiffTile(int ind);
 	void removeTileFromCache(int ind);
 	rowptr processData(uchar *bytes, int len);
+
+	int getBytesInRowToTile();
 
 	QVector3D getMaxModelSize()
 	{

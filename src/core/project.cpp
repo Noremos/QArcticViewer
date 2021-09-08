@@ -44,9 +44,9 @@ bool Project::saveProject()
 		QDir().mkdir(pas);
 	}
 
-#ifdef ENABLE_MAKERS
+#ifdef ENABLE_MARKERS
 	widget->userMarkers->save();
-	widget->userMarkers->openFile();
+	widget->userMarkers->openFile();//useless
 #endif
 
 	return true;
@@ -224,6 +224,63 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	boundStream.close();
 
 }
+
+
+
+template<class T>
+void Project::checkCorrect(int totalSize, const QVector<T> &target, bool skipFirst)
+{
+	int wrong = 0;
+	int correct = 0;
+	int notFound = 0;
+
+	float corrVal = static_cast<float>(glColor::Green);
+
+	for (int i =skipFirst?1:0, targetSize = target.size(); i < targetSize; ++i)
+	{
+		float x_target = target[i].getX();
+		float y_target = target[i].getZ();
+
+		foreach (const InstanceData &bbfound, spotZones->boundydata)
+		{
+			float x_found = bbfound.getX();
+			float y_found = bbfound.getZ();
+			float x_size = bbfound.getWid() * 2;
+			float y_size = bbfound.getLen() * 2;
+
+			if (bbfound.val != corrVal)
+				continue;
+
+			if (abs(y_found - y_target) < y_size && abs(x_found - x_target) < x_size)
+			{
+				++correct;
+				break;
+			}
+		}
+	}
+
+	notFound = target.size() - correct;
+
+	// Всего выделено  - сколько выделено правильно
+	wrong = totalSize - correct;
+	//	QString filename = "D:\\re.txt";
+	//	QFile fileout(filename);
+	//	if (fileout.open(QFile::ReadWrite | QFile::Text)){
+	//		QTextStream out(&fileout);
+	//		foreach (const auto &vec, realshape)
+	//		{
+	//			out << vec.x() << " " << vec.y() << Qt::endl;
+	//		}
+
+	//		fileout.close();
+	//	}
+
+	status = QString("Result: correct  wrong notFound;\n %1 %2 %3\nTotal (real/fnd): %4 %5").arg(correct).arg(wrong).arg(notFound).arg(correct + wrong).arg(correct + notFound);
+	qDebug() << "Result: correct  wrong notFound;";
+	qDebug() <<"Result:" << correct << wrong << notFound;
+	qDebug() <<"Total (Fnd/trgt):" <<totalSize << target.size();
+}
+
 
 
 #include <QJsonArray>
@@ -495,54 +552,13 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	}
 
 	qDebug() << "Found: " << k << " from " << l;
-#ifdef CHECK_CORRECT
-	int wrong = 0;
-	int correct = 0;
-	int notFound = 0;
 
-	float corrVal = static_cast<float>(glColor::Green);
-	QVector<int> foundCorret;
-	QVector<int> foundTarged;
-	foreach (const InstanceData &bbshape, widget->markers->boundydata)
-	{
-		float x_target = bbshape.getX();
-		float y_target = bbshape.getZ();
 
-		foreach (const InstanceData &bbfound, spotZones->boundydata)
-		{
-			float x_found = bbfound.getX();
-			float y_found = bbfound.getZ();
-			float x_size = bbfound.getWid() * 2;
-			float y_size = bbfound.getLen() * 2;
-
-			if (bbfound.val != corrVal)
-				continue;
-
-			if (abs(y_found - y_target) < y_size && abs(x_found - x_target) < x_size)
-			{
-				++correct;
-				break;
-			}
-		}
-	}
-	notFound = widget->markers->boundydata.size() - correct;
-	wrong = k - correct;
-//	QString filename = "D:\\re.txt";
-//	QFile fileout(filename);
-//	if (fileout.open(QFile::ReadWrite | QFile::Text)){
-//		QTextStream out(&fileout);
-//		foreach (const auto &vec, realshape)
-//		{
-//			out << vec.x() << " " << vec.y() << Qt::endl;
-//		}
-
-//		fileout.close();
-//	}
-
-	qDebug() << "Result: correct  wrong notFound;";
-	qDebug() <<"Result:" << correct << wrong << notFound;
-	qDebug() <<"Total (real/fnd):" << correct + wrong << notFound + correct;
+//	checkCorrect(k, widget->markers->boundydata);
+#ifdef ENABLE_MARKERS
+	checkCorrect(k, widget->userMarkers->boundydata, true);
 #endif
+
 	saveProject();
 }
 
@@ -756,37 +772,39 @@ void Project::readMyGeo()
 void Project::readMarkers()
 {
 	QFile listFile(Project::getPath(BackPath::markers));
-	if (!listFile.open(QIODevice::ReadOnly))
+	if (listFile.open(QIODevice::ReadOnly))
 	{
-		return;
+		char rawtoken[500];
+		const char *token;
+		while (!listFile.atEnd())
+		{
+			int size = listFile.readLine(rawtoken, 500);
+			if (size <= 2)
+				continue;
+
+			token = rawtoken;
+			float x = 0, y = 0, z = 0;
+
+			int len = Object3d::getWord(token);
+			fast_float::from_chars(token, token + len, x);
+			token += len + 1;
+
+			len = Object3d::getWord(token);
+			fast_float::from_chars(token, token + len, y);
+			token += len + 1;
+
+			len = Object3d::getWord(token);
+			fast_float::from_chars(token, token + len, z);
+
+			widget->userMarkers->addBoundy(x, y, z);
+		}
+
+
+		listFile.close();
 	}
 
-	char rawtoken[500];
-	const char *token;
-	while (!listFile.atEnd())
-	{
-		int size = listFile.readLine(rawtoken, 500);
-		if (size <= 2)
-			continue;
-
-		token = rawtoken;
-		float x = 0, y = 0, z = 0;
-
-		int len = Object3d::getWord(token);
-		fast_float::from_chars(token, token + len, x);
-		token += len + 1;
-
-		len = Object3d::getWord(token);
-		fast_float::from_chars(token, token + len, y);
-		token += len + 1;
-
-		len = Object3d::getWord(token);
-		fast_float::from_chars(token, token + len, z);
-
-		widget->userMarkers->addBoundy(x, y, z);
-	}
-
-	listFile.close();
+	if (widget->userMarkers->boundydata.size() == 0)
+		widget->userMarkers->addBoundy(1, 1, 1);
 
 	widget->userMarkers->openFile();
 }

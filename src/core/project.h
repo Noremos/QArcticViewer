@@ -55,7 +55,7 @@ public:
 		silense();
 	}
 public:
-
+	bool showMarkers = false;
 	bool block = false;
 	int modelWid;
 	int modelHei;
@@ -100,13 +100,15 @@ public:
 			reader = new TiffReader();
 
 		if (!reader->ready)
-			reader->open(getPath(BackPath::heimap).toStdWString().c_str());
+			reader->open(getPath(BackPath::heimap).toStdString().c_str());
 	}
 
 	SpotZones *spotZones;
 	Text2d *text;
 
 	static Project *proj;
+
+	QString status;
 public:
 	SeachingSettings searchSetts;
 	//= "D:\\Programs\\Barcode\\_bar\\";
@@ -210,6 +212,8 @@ signals:
 private:
 	void write(QJsonObject &json) const;
 	void read(const QJsonObject &json);
+	template<class T>
+	void checkCorrect(int totalSize, const QVector<T> &target, bool skipFirst = false);
 };
 
 #endif

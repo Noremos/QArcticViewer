@@ -25,7 +25,7 @@ std::unordered_map<int, CoordProjection> CoordProjection::map{{4326, {1,-1}}};
 
 string dectodeTEST(uchar* buffer, int len);
 TiffReader::TiffReader()
- :pFile(NULL), tiff(0)
+ :pFile(NULL)
 {
 }
 
@@ -435,16 +435,18 @@ int TiffReader::getTileWid(int x)
 }
 
 //Offsets are ordered left-to-right and top-to-bottom.
-rowptr TiffReader::getTile(int x, int y)
+rowptr TiffReader::getTiffTile(int x, int y)
 {
 	int TilesInWid = getAddnl(tiff.ImageWidth, tiff.TileWidth);
 	//	int TilesInHei = getAddnl(tiff.ImageLength, tiff.TileLength);
 	int tileNum = y * TilesInWid + x;
-	return getTile(tileNum);
+	return getTiffTile(tileNum);
 }
 
 
-rowptr TiffReader::getTile(int ind)
+
+
+rowptr TiffReader::getTiffTile(int ind)
 {
 	rowptr null = nullptr;
 
@@ -454,33 +456,31 @@ rowptr TiffReader::getTile(int ind)
 	if (data == null)
 	{
 		//offset tile
-		uchar buffer[8];
+		uchar bbuffer[8];
 
 		char sie = getTypeSize(tiff.TileOffsetsType);
-		read(buffer, tiff.TileOffsets + (ind) * sie, sie);
-		size_t off = (sie==4? toInt(buffer) : toInt64(buffer));
+		read(bbuffer, tiff.TileOffsets + (ind) * sie, sie);
+		size_t off = (sie==4? toInt(bbuffer) : toInt64(bbuffer));
 		//************
 
 		//Count
 		sie = getTypeSize(tiff.TileOffsetsType);
-		read(buffer, tiff.TileByteCounts + (ind) * sie, sie);
-		size_t count = (sie==4? toInt(buffer) : toInt64(buffer));
+		read(bbuffer, tiff.TileByteCounts + (ind) * sie, sie);
+		size_t count = (sie==4? toInt(bbuffer) : toInt64(bbuffer));
 
 		//data
-		uchar *buff = new uchar[count + 3];
-		read(buff, off, count);
-		buff[count] = 0;
-		buff[count + 1] = 0;
-		buff[count + 2] = 0;
+
+		tempbuffer.allocate(count + 3);
+		read(tempbuffer.tempbuffer, off, count);
+		tempbuffer.setLast3ToSero();
 	
 		decorder decod(tiff.Compression);
 
-		vector<uchar> temp;
-		decod.decompress(buff, count, temp); // (rowInTile + 1) * bytsInTileWid
-		delete[] buff;
+		vbuffer returnTemp;
+		decod.decompress(tempbuffer.tempbuffer, count, returnTemp, getBytesInRowToTile()); // (rowInTile + 1) * bytsInTileWid
 
 //		size_t ft = bytsInTileWid * tiff.TileLength;
-		data = processData(temp.data(), tiff.TileWidth* tiff.TileLength);
+		data = processData(returnTemp.data(), tiff.TileWidth* tiff.TileLength);
 		cachedTiles.storeData(ind, data);
 	}
 
@@ -501,7 +501,7 @@ rowptr TiffReader::processData(uchar* bytes, int len)
 	switch (getType())
 	{
 	case ImageType::int16:
-		data = (rowptr)setData<short>(bytes, len);
+		data = setData<short>(bytes, len);
 		break;
 	case ImageType::float32:
 		data = setData<float>(bytes, len);
@@ -510,6 +510,18 @@ rowptr TiffReader::processData(uchar* bytes, int len)
 		break;
 	}
 	return data;
+}
+
+int TiffReader::getBytesInRowToTile()
+{
+	if (tiff.TileWidth != 0)
+	{
+		return tiff.TileWidth * tiff.TileLength * getTypeSize(tiff.TileOffsetsType);
+	}
+	else
+	{
+		return tiff.ImageWidth * getSampleTypeSize();
+	}
 }
 
 rowptr TiffReader::getRowData(int y)
@@ -547,7 +559,7 @@ rowptr TiffReader::getRowData(int y)
 		rowptr imageRow = new float[tiff.ImageWidth];
 		for (int i = 0; i < TilesInRow; ++i)
 		{
-			float* data = getTile(i, colTileNum) + rowInTileas * tiff.TileWidth;
+			float* data = getTiffTile(i, colTileNum) + rowInTileas * tiff.TileWidth;
 			// Add to row
 			//			ret.reserve( ret.size() + bytsInTileWid );
 			const unsigned long currentTileWid = getTileWid(i);
@@ -563,30 +575,27 @@ rowptr TiffReader::getRowData(int y)
 	}
 	else
 	{
-		vector<uchar> ret;
-		ret.reserve(tiff.ImageWidth + 10);
 
-		uchar buffer[4];
+		uchar bbuffer[4];
 
 		char sie = getTypeSize(tiff.StripOffsetsType);
-		read(buffer, tiff.StripOffsets + y * sie, sie);
-		uint off =  sie == 2 ? toShort(buffer) : toInt(buffer);
+		read(bbuffer, tiff.StripOffsets + y * sie, sie);
+		uint off =  sie == 2 ? toShort(bbuffer) : toInt(bbuffer);
 
 		sie = getTypeSize(tiff.StripByteCountsType);
-		read(buffer, tiff.StripByteCounts + y * sie, sie);
-		uint count =  sie == 2 ? toShort(buffer) : toInt(buffer);
+		read(bbuffer, tiff.StripByteCounts + y * sie, sie);
+		uint count =  sie == 2 ? toShort(bbuffer) : toInt(bbuffer);
 
-		uchar *buff = new uchar[count + 3];
-		read(buff, off, count);
-		buff[count] = 0;
-		buff[count + 1] = 0;
-		buff[count + 2] = 0;
+
+		tempbuffer.allocate(count + 3);
+		read(tempbuffer.tempbuffer, off, count);
+		tempbuffer.setLast3ToSero();
 
 		string st = ""; // dectode(buff, count);
 		decorder decod(tiff.Compression);
-		decod.decompress(buff, count, ret);
-		delete[] buff;
-		return processData(ret.data(), widght());
+		vbuffer ret;
+		decod.decompress(tempbuffer.tempbuffer, count, ret, getBytesInRowToTile());
+		return processData(ret.extract(), widght());
 	}
 }
 
@@ -662,17 +671,15 @@ void TiffReader::printValue(int x, int y)
 	read(buffer, tiff.StripByteCounts + y * 4, getTypeSize(tiff.StripByteCountsType));
 	int count = toInt(buffer);
 
-	uchar* buff = new uchar[count + 3];
-	read(buff, off, count);
-	buff[count] = 0;
-	buff[count + 1] = 0;
-	buff[count + 2] = 0;
+	tempbuffer.allocate(count + 3);
+	read(tempbuffer.tempbuffer, off, count);
+	tempbuffer.setLast3ToSero();
 
 
 	string st = "";// dectode(buff, count);
-	vector<uchar> ret;
+	vbuffer ret;
 	decorder decod(tiff.Compression);
-	decod.decompress(buff, count, ret);
+	decod.decompress(tempbuffer.tempbuffer, count, ret, getBytesInRowToTile());
 
 		//tiff_lzw_decode(buff, count, st);
 	OUT << st.length();
@@ -685,13 +692,13 @@ void TiffReader::printValue(int x, int y)
 	OUT << (val) / 10000000.;
 }
 
-bool TiffReader::open(const wchar_t* path)
+bool TiffReader::open(const char* path)
 {
 	uchar buffer[8];
 	ready = false;
 	isTile = false;
 
-	_wfopen_s(&pFile, path, L"rb");
+	fopen_s(&pFile, path, "rb");
 	if (pFile == NULL)
 	{
 		perror("Error opening file");
@@ -718,6 +725,7 @@ bool TiffReader::open(const wchar_t* path)
 			printBigIFD(idfOffset);
 		}
 	}
+//	tempbuffer = new uchar[count]
 	ready = true;
 	return true;
 }

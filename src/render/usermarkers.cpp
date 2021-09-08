@@ -11,7 +11,7 @@ UserMarkers::UserMarkers()
 
 UserMarkers::~UserMarkers()
 {
-	buffer.close();
+//	buffer.close();
 }
 
 void UserMarkers::initGL()
@@ -33,8 +33,8 @@ void UserMarkers::addBoundy(float x, float y, float z)
 	matr.translate(x, y, z);
 	matr.scale(1,10,1);
 
-	boundydata.append(matr);
-	buffer.writeLine(QString("%1 %2 %3").arg(x).arg(y).arg(z));
+	boundydata.append(MatrixData(matr));
+//	buffer.writeLine(QString("%1 %2 %3").arg(x).arg(y).arg(z));
 }
 
 void UserMarkers::addBoundy(const QVector3D &vec)
@@ -117,7 +117,7 @@ void UserMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 
 	for (size_t i = 0, total = boundydata.size(); i < total; ++i)
 	{
-		mshader.setUniformValue("model", boundydata[i]);
+		mshader.setUniformValue("model", boundydata[i].toMatrix());
 		f->glDrawArrays(GL_TRIANGLES, 0, faceSize);
 	}
 	vao.release();
@@ -126,12 +126,17 @@ void UserMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 
 void UserMarkers::save()
 {
+	buffer.openFileStream(Project::getProject()->getPath(BackPath::markers), 1000);
+
+	for (size_t i = 0, total = boundydata.size(); i < total; ++i)
+	{
+		buffer.writeLine(QString("%1 %2 %3").arg(boundydata[i].getX()).arg(boundydata[i].getY()).arg(boundydata[i].getZ()));
+	}
 	buffer.dowrite();
 }
 
 void UserMarkers::openFile()
 {
-	buffer.openFileStream(Project::getProject()->getPath(BackPath::markers), 1000, (QIODevice::WriteOnly | QIODevice::Append));
 	enable = true;
 }
 

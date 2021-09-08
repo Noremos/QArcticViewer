@@ -84,7 +84,8 @@ void MainWindow::on_pbOpenProject_clicked()
 {
 	// openProject("D:\\Progs\\temp\\bar\\proj.qwr");
 #ifndef RELEASE_AV
-	openProject("D:\\Programs\\Barcode\\_bar\\bar\\proj.qwr");
+//	openProject("D:\\Programs\\Barcode\\_bar\\bar\\proj.qwr");
+	openProject();
 #else
 	openProject();
 #endif
@@ -316,6 +317,8 @@ void MainWindow::findByParamsAsyncEnd()
 
 	ui->glWidget->update();
 
+//	ui->searchResult->setText(proj->status);
+
 	delete watcher;
 	watcher = nullptr;
 }
@@ -538,4 +541,9 @@ void MainWindow::on_cbUseRegion_stateChanged(int /*arg1*/)
 void MainWindow::on_simpithithion_valueChanged(int /*arg1*/)
 {
 //	proj->displayFactor = arg1;
+}
+
+void MainWindow::on_chShowMarker_stateChanged(int /*arg1*/)
+{
+//	proj->showMarkers = ui->chShowMarker->isChecked();
 }

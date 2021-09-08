@@ -98,25 +98,30 @@ public:
 	}
 
 };
-
-struct InstanceData
+struct MatrixData
 {
 	QVector4D v0;
 	QVector4D v1;
 	QVector4D v2;
 	QVector4D v3;
-	//	QMatrix4x4 model;
-	float val;
-	//	int zer1;
 	//	int zer2;
-	InstanceData(QMatrix4x4 matr, int val)
+	MatrixData(const QMatrix4x4& matr)
 	{
 		//		model = matr;
 		v0 = matr.column(0);
 		v1 = matr.column(1);
 		v2 = matr.column(2);
 		v3 = matr.column(3);
-		this->val = val;
+	}
+
+	QMatrix4x4 toMatrix()
+	{
+		QMatrix4x4 matr;
+		matr.setColumn(0, v0);
+		matr.setColumn(1, v1);
+		matr.setColumn(2, v2);
+		matr.setColumn(3, v3);
+		return matr;
 	}
 
 	float getX() const { return v3[0];}
@@ -125,5 +130,17 @@ struct InstanceData
 
 	float getWid() const { return v0[0];}
 	float getLen() const { return v2[2];}
+};
+
+struct InstanceData : public MatrixData
+{
+	//	QMatrix4x4 model;
+	float val;
+	//	int zer1;
+	//	int zer2;
+	InstanceData(QMatrix4x4 matr, int val) : MatrixData(matr)
+	{
+		this->val = val;
+	}
 };
 #endif // !GLINSTANSE_H

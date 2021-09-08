@@ -91,7 +91,7 @@ Img ImageSearcher::getTile(int tx, int ty)
 				img.data[i] = -9999;
 
 
-			float *data = reader->getTile(index);
+			float *data = reader->getTiffTile(index);
 
 			for (int j = 0; j < lenY; ++j)
 			{
@@ -151,8 +151,8 @@ void findBootm()
 boundy ImageSearcher::getBounty(barline<float> *line)
 {
 	auto &points = line->matr;
-	int minX = points[0].getX(), maxX = points[0].getX();
-	int minY = points[0].getY(), maxY = points[0].getY();
+	int minX = points[0].getX(line->getWid()), maxX = points[0].getX(line->getWid());
+	int minY = points[0].getY(line->getWid()), maxY = points[0].getY(line->getWid());
 	// f255t0: end is the top, start is a bottom, e.g. [st,end]=[255,3]
 	// float minT = line->end(), maxT = line->start;
 	float maxT = line->start, minT =  line->start -  line->len;
@@ -177,17 +177,17 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 //		Wif (maxT - val.second >= 2)
 //			continue;
 
-		if (minX > val.getX())
-			minX = val.getX();
+		if (minX > val.getX(line->getWid()))
+			minX = val.getX(line->getWid());
 
-		if (maxX < val.getX())
-			maxX = val.getX();
+		if (maxX < val.getX(line->getWid()))
+			maxX = val.getX(line->getWid());
 
-		if (minY > val.getY())
-			minY = val.getY();
+		if (minY > val.getY(line->getWid()))
+			minY = val.getY(line->getWid());
 
-		if (maxY < val.getY())
-			maxY = val.getY();
+		if (maxY < val.getY(line->getWid()))
+			maxY = val.getY(line->getWid());
 	}
 
 	boundy b(minX, minY, maxX, maxY);
@@ -214,24 +214,24 @@ void check(void *ptr)
 #include <QPixmap>
 
 
-void ImageSearcher::mark(bc::barvector<float>& matr, int ind, const int &tx, const int &ty)
+void ImageSearcher::mark(bc::barvector<float>& matr, int /*ind*/, const int &tx, const int &ty)
 {
 
-	static cv::Vec3b colors[8]{
-		{0, 0, 255},
-		{0, 255, 0},
-		{255, 0, 0},
-		{0, 255, 255},
-		{255, 0, 255},
-		{255, 255, 0},
-		{0, 255, 255},
-		{255, 255, 255},
-		};
-	auto &col = colors[ind % 8];
+//	static cv::Vec3b colors[8]{
+//		{0, 0, 255},
+//		{0, 255, 0},
+//		{255, 0, 0},
+//		{0, 255, 255},
+//		{255, 0, 255},
+//		{255, 255, 0},
+//		{0, 255, 255},
+//		{255, 255, 255},
+//		};
+//	auto &col = colors[ind % 8];
 	for (auto& a : matr)
 	{
-		int y = ty + a.getY();
-		int x = tx + a.getX();
+		int y = ty + a.getY(this->reader->widght());
+		int x = tx + a.getX(this->reader->widght());
 		if (x>= this->reader->widght() || y >= reader->height())
 			continue;
 		// Если хотя бы одно не 0, значи тут уже есть цвет
