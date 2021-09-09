@@ -57,11 +57,15 @@ void processFile(QString path)
         return;
 
     parser.addSkipWordToken('(', ')');
+    parser.addSkipWordToken('{', '}');
 
     parser.addWordToken("uniform");
     parser.addWordToken("import");
     parser.addWordToken("#version");
     parser.addSingleToken(';');
+
+    parser.addWordToken("main");
+    parser.addWordToken("void");
 
 
     QTextStream stream(&out);
