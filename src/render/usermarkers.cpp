@@ -4,17 +4,17 @@
 #include <QVector2D>
 #include <src/core/project.h>
 
-UserMarkers::UserMarkers()
+DynamicMarkers::DynamicMarkers()
 {
 	proj = Project::getProject();
 }
 
-UserMarkers::~UserMarkers()
+DynamicMarkers::~DynamicMarkers()
 {
 //	buffer.close();
 }
 
-void UserMarkers::initGL()
+void DynamicMarkers::initGL()
 {
 	initializeOpenGLFunctions();
 	f = QOpenGLContext::currentContext()->extraFunctions();
@@ -25,7 +25,7 @@ void UserMarkers::initGL()
 }
 
 
-void UserMarkers::addBoundy(float x, float y, float z)
+void DynamicMarkers::addBoundy(float x, float y, float z)
 {
 	QMatrix4x4 matr;
 	matr.setToIdentity();
@@ -37,12 +37,12 @@ void UserMarkers::addBoundy(float x, float y, float z)
 //	buffer.writeLine(QString("%1 %2 %3").arg(x).arg(y).arg(z));
 }
 
-void UserMarkers::addBoundy(const QVector3D &vec)
+void DynamicMarkers::addBoundy(const QVector3D &vec)
 {
 	addBoundy(vec.x(), vec.y(), vec.z());
 }
 
-void UserMarkers::move(size_t i, const QVector3D &pos)
+void DynamicMarkers::move(size_t i, const QVector3D &pos)
 {
 	if (abs(pos.y()) == 9999)
 		return;
@@ -56,7 +56,7 @@ void UserMarkers::move(size_t i, const QVector3D &pos)
 }
 
 
-void UserMarkers::initArrays()
+void DynamicMarkers::initArrays()
 {
 	obj.readFile(":/resources/objects/makr.obj");
 
@@ -99,7 +99,7 @@ void UserMarkers::initArrays()
 
 }
 
-void UserMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
+void DynamicMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 {
 	if (boundydata.size()==0)
 		return;
@@ -109,8 +109,8 @@ void UserMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 	//projection * view * model * vec4(position, 1.0f);
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
-	mshader.setUniformValue("factor", proj->heiFactor);
-	mshader.setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
+	mshader.setUniformValue("factor", proj->u_heiFactor);
+	mshader.setUniformValue("minHei", proj->getImgMinVal() / proj->u_displayFactor);
 	//	mshader.setUniformValue("opacity", 1.0f);
 
 	vao.bind();
@@ -124,7 +124,7 @@ void UserMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 	mshader.release();
 }
 
-void UserMarkers::save()
+void DynamicMarkers::save()
 {
 	buffer.openFileStream(Project::getProject()->getPath(BackPath::markers), 1000);
 
@@ -135,7 +135,7 @@ void UserMarkers::save()
 	buffer.dowrite();
 }
 
-void UserMarkers::openFile()
+void DynamicMarkers::openFile()
 {
 	enable = true;
 }

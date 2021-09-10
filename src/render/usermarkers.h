@@ -30,11 +30,11 @@
 
 class Project;
 
-class UserMarkers : public glinstanse
+class DynamicMarkers : public glinstanse
 {
 public:
-	UserMarkers();
-	~UserMarkers();
+	DynamicMarkers();
+	~DynamicMarkers();
 
 	FileBuffer buffer;
 public:

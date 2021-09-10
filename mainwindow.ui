@@ -122,6 +122,24 @@ background-color: &quot;#a4a4a4&quot;;
           </item>
           <item row="0" column="2">
            <widget class="QPushButton" name="pbOpenProject">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>Открыть проект</string>
             </property>
@@ -148,6 +166,24 @@ background-color: &quot;#a4a4a4&quot;;
           </item>
           <item row="1" column="2" rowspan="2">
            <widget class="QPushButton" name="pbOpenDTM">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>Импорт ЦМР</string>
             </property>
@@ -389,39 +425,46 @@ background-color: &quot;#a4a4a4&quot;;
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pbSave">
-         <property name="enabled">
-          <bool>true</bool>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetMinimumSize</enum>
          </property>
-         <property name="maximumSize">
-          <size>
-           <width>92</width>
-           <height>46</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Сохранить
+         <item>
+          <widget class="QPushButton" name="pbSave">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>92</width>
+             <height>46</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Сохранить
 изменени</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="fpsLabel">
-         <property name="maximumSize">
-          <size>
-           <width>30</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">#fpsLabel{
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="fpsLabel">
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">#fpsLabel{
 color:red;
 }</string>
-         </property>
-         <property name="text">
-          <string>fps</string>
-         </property>
-        </widget>
+           </property>
+           <property name="text">
+            <string>fps</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -794,11 +837,40 @@ border.width:3</string>
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="checkBox">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>Загрузить geojson</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="progressStatus">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
-           <width>200</width>
+           <width>100</width>
            <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>16777215</height>
           </size>
          </property>
          <property name="text">

@@ -99,7 +99,8 @@ public:
 	Terrain *terra = nullptr;
 	SpotZones* zones;
 	StaticMarkers *markers;
-	UserMarkers *userMarkers;
+	DynamicMarkers *userMarkers;
+	std::unique_ptr<StaticMarkers> importedMakrers;
 	Line line;
 
 	bool drawTerra = false;

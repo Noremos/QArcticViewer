@@ -20,8 +20,9 @@ MainWidget::MainWidget(QWidget */*parent*/)
 
 	markers = new StaticMarkers();
 #ifdef ENABLE_MARKERS
-	userMarkers = new UserMarkers();
+	userMarkers = new DynamicMarkers();
 #endif
+	importedMakrers.reset(new StaticMarkers());
 
 	useTimer = false;
 	Project::getProject()->widget = this;
@@ -253,7 +254,7 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
 //	qDebug() << vec;
 #ifdef ENABLE_MARKERS
 
-	if (userMarkers->enable && Project::getProject()->showMarkers)
+	if (userMarkers->enable)
 	{
 		//		vec.setX(event->localPos().x() * width());
 		//		vec.setY(event->localPos().y() * height());
@@ -478,10 +479,14 @@ void MainWidget::paintGL()
 		markers->renderGL(view, projection);
 
 #ifdef ENABLE_MARKERS
-		if (Project::getProject()->showMarkers)
+		if (userMarkers->enable)
 			userMarkers->renderGL(view, projection);
 #endif
-//		if (polyLine)
+
+		if (importedMakrers->enable)
+			importedMakrers->renderGL(view, projection);
+
+		//		if (polyLine)
 //			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 		//		line.renderGL(view, projection);
@@ -538,7 +543,7 @@ void MainWidget::Do_Movement()
 
 
 #ifdef ENABLE_MARKERS
-	if (Project::getProject()->showMarkers)
+	if (userMarkers->enable)
 	{
 		//calls only ones
 		if (keys[Qt::Key::Key_Space])

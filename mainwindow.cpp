@@ -167,6 +167,8 @@ void MainWindow::openProjectAsync()
 	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
 
 	ui->glWidget->terra->obj.readFastfile(callback, proj->getPath(BackPath::object));
+
+	proj->readGeojson();
 }
 
 void MainWindow::openProjectAsyncEnd()
@@ -475,9 +477,9 @@ void MainWindow::on_textureLoder_clicked()
 	ui->glWidget->terra->setTexture(ui->mattype->currentIndex() - 2, fileName);
 
 	if (ui->mattype->currentIndex() - 2 == 0)
-		proj->texturePath = fileName;
+		proj->u_texturePath = fileName;
 	if (ui->mattype->currentIndex() - 2 == 1)
-		proj->texture2Path = fileName;
+		proj->u_texture2Path = fileName;
 
 	saveSettings();
 }
@@ -506,7 +508,7 @@ void MainWindow::on_pbSave_clicked()
 
 void MainWindow::on_heightSpin_valueChanged(int arg1)
 {
-	proj->heiFactor = arg1;
+	proj->u_heiFactor = arg1;
 //	ui->glWidget->zones->factor = arg1;
 //	qDebug() << ui->glWidget->zones->factor;
 }
@@ -546,4 +548,20 @@ void MainWindow::on_simpithithion_valueChanged(int /*arg1*/)
 void MainWindow::on_chShowMarker_stateChanged(int /*arg1*/)
 {
 //	proj->showMarkers = ui->chShowMarker->isChecked();
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+	QString fileName = QFileDialog::getOpenFileName(0, "Импорт geojsob", QString(), tr("JSON (*.geojson *.json)"));
+	if (fileName.length() == 0)
+		return;
+
+	proj->u_geojsonPath = fileName;
+	proj->readGeojson();
+
+}
+
+void MainWindow::on_checkBox_stateChanged(int arg1)
+{
+	ui->glWidget->importedMakrers->enable = static_cast<bool>(arg1);
 }
