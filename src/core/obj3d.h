@@ -109,7 +109,7 @@ public:
 
 		QTextStream stream(&out);
 
-		int BUFFER_SIZE = 4000;
+		int BUFFER_SIZE = 5000;
 		QString sw;
 		sw = "";
 		sw.append("o Main");
@@ -157,15 +157,19 @@ public:
 					break;
 			}
 
+
 			if (h != 0)
 			{
 #ifndef USE_ROW
 				nulls.remove(1, lastCount);
 				lastCount = nulls.size() - 1;
 #else
-				auto temp = prevNullRow;
-				prevNullRow = currNullRow;
-				currNullRow = temp;
+				auto temp = std::move(prevNullRow);
+				prevNullRow = std::move(currNullRow);
+				currNullRow = std::move(temp);
+				// objoff *temp = prevNullRow.buffer;
+				// prevNullRow.buffer = currNullRow.buffer;
+				// currNullRow.buffer = temp;
 				currNullRow.setToZero();
 #endif
 				if (data[0] != nullptr)

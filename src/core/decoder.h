@@ -338,7 +338,7 @@ public:
 	{
 		const unsigned int CLEAR_CODE = 256;
 		const unsigned int EOF_CODE = 257;
-		const unsigned int MAXCODE = 4095;      // 12 bit max less some head room
+//		const unsigned int MAXCODE = 4095;      // 12 bit max less some head room
 
 		#define LZW_STRING_SIZE 256
 		#define LZW_STRINGS_SIZE 128000
@@ -373,7 +373,7 @@ public:
 		int32_t nBits = 0;                              // incoming bits in the buffer
 		int32_t codeBits = 9;                           // number of bits to make code (9-12)
 		uint32_t nextBump = 511;                        // when to increment code size 1st time
-		uint32_t pBuf = 0;                              // previous out bit buffer
+//		uint32_t pBuf = 0;                              // previous out bit buffer
 		uint32_t mask = (1 << codeBits) - 1;            // extract code from iBuf
 
 		uint32_t* pSrc;                                 // ptr to src for word copies

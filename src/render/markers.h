@@ -32,6 +32,7 @@ class StaticMarkers : public glinstanse
 public:
 	StaticMarkers();
 public:
+	bool enable = true;
 	Project *proj;
 	Object3d obj;
 	uint faceSize = 0;

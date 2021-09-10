@@ -619,6 +619,7 @@ class TiffReader: public ImageReader
 		default:
 			std::exception();
 		}
+		return 0;
 	}
 public:
 	TiffTags tiff;

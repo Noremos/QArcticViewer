@@ -58,56 +58,97 @@ struct PrjgBarCallback
 template<class T>
 struct staticArray
 {
-	T* buffer = nullptr;
-	uint _size = 0;
+private:
+	T* m_buffer = nullptr;
+	uint m_size = 0;
+
+
+public:
+	staticArray() {}
+	staticArray(const staticArray &other) /*: s(other.s)*/
+	{
+		allocate(other.m_size);
+		std::copy(other.m_buffer, other.m_buffer + other.m_size, m_buffer);
+	}
+ /*std::cout << "move failed!\n";*/
+	 staticArray(staticArray&& other) /*: s(std::move(o.s))*/
+	 {
+		 m_buffer = std::exchange(other.m_buffer, nullptr); // leave other in valid state
+		 m_size = std::exchange(other.m_size, 0);
+	 }
 
 	uchar *data()
 	{
-		return buffer;
+		return m_buffer;
 	}
 
 	T* extract()
 	{
-		T* temp = buffer;
-		_size = 0;
+		T* temp = m_buffer;
+		m_size = 0;
 
-		buffer = nullptr;
+		m_buffer = nullptr;
 		return temp;
 	}
 
-	void allocate(uint size)
+	void allocate(uint nsize)
 	{
 //		assert(size != 0);
 
 		release();
-		this->_size = size;
-		buffer = new T[size];
+		this->m_size = nsize;
+		m_buffer = new T[nsize];
 	}
 
 	uint size()
 	{
-		return _size;
+		return m_size;
 	}
 
 	void setToZero()
 	{
-		memset(buffer, 0, _size * sizeof(T));
+		memset(m_buffer, 0, m_size * sizeof(T));
 	}
 
 	T& operator[](std::size_t idx)
 	{
-		assert(idx < _size);
-		return buffer[idx];
+		assert(idx < m_size);
+		return m_buffer[idx];
+	}
+
+	// copy assignment
+	staticArray &operator=(const staticArray &other)
+	{
+		// Guard self assignment
+		if (this == &other)
+			return *this;
+
+		allocate(other.m_size);
+
+		std::copy(other.m_buffer, other.m_buffer + other.m_size, m_buffer);
+		return *this;
+	}
+
+	// move assignment
+	staticArray& operator=(staticArray&& other) noexcept
+	{
+		// Guard self assignment
+		if (this == &other)
+			return *this; // delete[]/size=0 would also be ok
+
+		m_buffer = std::exchange(other.m_buffer, nullptr); // leave other in valid state
+		m_size = std::exchange(other.m_size, 0);
+		return *this;
 	}
 
 	void release()
 	{
-		if (buffer)
+		if (m_buffer)
 		{
-			delete[] buffer;
-			buffer = nullptr;
+			delete[] m_buffer;
+			m_buffer = nullptr;
 		}
-		_size = 0;
+		m_size = 0;
 	}
 
 	~staticArray()

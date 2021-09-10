@@ -159,12 +159,12 @@ bool Project::checkHolm(boundy &bb, Img &tile, int offX, int offY)
 
 float Project::getImgMinVal() const
 {
-	return imgMinVal;
+	return u_imgMinVal;
 }
 
 float Project::getImgMaxVal() const
 {
-	return imgMaxVal;
+	return u_imgMaxVal;
 }
 
 void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int end)
@@ -327,17 +327,27 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 	//!###############################EXPORT##########################
 	QPixmap image;
-	QPainter *painter;
-    float xfactor = displayFactor;
-    float yfactor = displayFactor;
+	std::unique_ptr<QPainter> painter;
+	float xfactor = u_displayFactor;
+	float yfactor = u_displayFactor;
+
+	QPen penGreen;
+	penGreen.setWidth(3);
+	penGreen.setColor(Qt::green);
+
+	QPen penPurpure;
+	penPurpure.setWidth(3);
+	penPurpure.setColor(Qt::green);
+
+	QPen penBlue;
+	penBlue.setWidth(3);
+	penBlue.setColor(Qt::green);
+
 	if (exportImg)
 	{
-		image.load("D:/Learning/BAR/Moscow/50_60_1_2_2m_v3.0-20201116T184630Z-001/test.png");
-		painter = new QPainter(&image);
-		QPen pen;
-		pen.setWidth(3);
-		pen.setColor(Qt::red);
-		painter->setPen(pen);
+		QString texture = getPath(BackPath::texture1);
+		image.load(texture);
+		painter.reset(new QPainter(&image));
 	}
 
 //    closeReader();
@@ -480,8 +490,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 //			Beaf::exportDataAsPng("D:/out.png", bimg);
 
-			if (exportImg)
-				painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
+//			if (exportImg)
+//				painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
 
 			auto *retf = creator.createBarcode(&bimg, constr);
 			std::unique_ptr<bc::Baritem<float>> baritem(retf->exractItem(0));
@@ -501,8 +511,13 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 //			qDebug() <<"max:" <<  maxRet;
 			if (maxRet < POROG)
 			{
-				spotZones->addBoundy(bb.bb,displayFactor, glColor::Purpure);
+				spotZones->addBoundy(bb.bb,u_displayFactor, glColor::Purpure);
 				rectImg.release();
+				if (exportImg)
+				{
+					painter->setPen(penPurpure);
+					painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
+				}
 				continue;
 			}
 		}
@@ -511,7 +526,12 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		{
 			if (!imgsrch.checkCircle(rectImg, searchSetts.height.start, eps))
 			{
-				spotZones->addBoundy(bb.bb,displayFactor, glColor::Blue);
+				spotZones->addBoundy(bb.bb,u_displayFactor, glColor::Blue);
+				if (exportImg)
+				{
+					painter->setPen(penBlue);
+					painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
+				}
 				rectImg.release();
 				continue;
 			}
@@ -523,7 +543,12 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
 
 		rectImg.release();
-		spotZones->addBoundy(bb.bb, displayFactor, glColor::Green);
+		spotZones->addBoundy(bb.bb, u_displayFactor, glColor::Green);
+		if (exportImg)
+		{
+			painter->setPen(penGreen);
+			painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
+		}
 //		text->addText(bb.bb);
 		//			model->boundydata.append(bb);
 		k++;
@@ -539,8 +564,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	{
 		painter->save();
 		painter->end();
-        image.save(getPath(BackPath::project) + "rest.jpg");
-		delete painter;
+		image.save(getPath(BackPath::project) + "result.jpg");
+		painter.release();
 	}
 
 	if (checkBar3d)
@@ -574,8 +599,8 @@ void Project::loadImage(const PrjgBarCallback &pbCallback, QString path, int ste
 
 	closeReader();
 
-	this->modelPath = "map.obj";
-	this->heimapPath = path;
+	this->u_modelPath = "map.obj";
+	this->u_heimapPath = path;
 
 	openReader();
 	if (!reader->ready)
@@ -586,9 +611,9 @@ void Project::loadImage(const PrjgBarCallback &pbCallback, QString path, int ste
 	object.setStep(step);
 	object.write(pbCallback, getPath(BackPath::object), start, end);
 
-	this->imgMinVal = reader->min;
-	this->imgMaxVal = reader->max;
-	this->displayFactor = step;
+	this->u_imgMinVal = reader->min;
+	this->u_imgMaxVal = reader->max;
+	this->u_displayFactor = step;
 
 	notifySettings();
 	saveProject();
@@ -615,52 +640,72 @@ bool Project::loadProject(QString path)
 //	qDebug() << searchSetts.heightMin();
 
 	openReader();
-	modelWid = reader->widght() / displayFactor;
-	modelHei = reader->height() / displayFactor;
+	modelWid = reader->widght() / u_displayFactor;
+	modelHei = reader->height() / u_displayFactor;
 
 	notifySettings();
 	return true;
 }
+static const char* jsn_modelPath = "modelPath";
+static const char* jsn_heimapPath = "heimapPath";
+static const char* jsn_texturePath = "texturePath";
+static const char* jsn_texture2Path = "texture2Path";
+static const char* jsn_displayFacto = "step";
+static const char* jsn_imgMinVal	 = "imgMinVal";
+static const char* jsn_imgMaxVal	 = "imgMaxVal";
+static const char* jsn_materialType = "materialType";
+static const char* jsn_geojsonPath  = "geojsonPath";
+
+static const char* jsns_searchingSettings  = "searchingSettings";
+static const char* jsns_coof  = "coof";
+static const char* jsns_diametrMin  = "diametrMin";
+static const char* jsns_diametrMax  = "diametrMax";
+static const char* jsns_heightMin  = "heightMin";
+static const char* jsns_heightMax  = "heightMax";
+static const char* jsns_bottom  = "bottom";
+
 
 void Project::read(const QJsonObject &json)
 {
-	this->modelPath		= json["modelPath"].toString();
-	this->heimapPath	= json["heimapPath"].toString();
-	this->texturePath	= json["texturePath"].toString();
-	this->texture2Path	= json["texture2Path"].toString();
-	this->displayFactor	= json["step"].toInt();
-	this->imgMinVal		= json["imgMinVal"].toDouble();
-	this->imgMaxVal		= json["imgMaxVal"].toDouble();
-	this->materialType  = json["materialType"].toInt();
+	this->u_modelPath = json[jsn_modelPath].toString();
+	this->u_heimapPath = json[jsn_heimapPath].toString();
+	this->u_texturePath = json[jsn_texturePath].toString();
+	this->u_texture2Path = json[jsn_texture2Path].toString();
+	this->u_displayFactor = json[jsn_displayFacto].toInt();
+	this->u_imgMinVal = json[jsn_imgMinVal].toDouble();
+	this->u_imgMaxVal = json[jsn_imgMaxVal].toDouble();
+	this->u_materialType = json[jsn_materialType].toInt();
+	this->u_geojsonPath = json[jsn_geojsonPath].toString("");
 
-	QJsonObject setts = json["searchingSettings"].toObject();
-	searchSetts.coof = setts["coof"].toDouble();
-	searchSetts.setDiametrMin(setts["diametrMin"].toInt());
-	searchSetts.setDiametrMax(setts["diametrMax"].toInt());
-	searchSetts.setHeightMin(setts["heightMin"].toDouble());
-	searchSetts.setHeightMax(setts["heightMax"].toDouble());
-	searchSetts.bottomProc = setts["bottom"].toInt();
+	QJsonObject setts = json[jsns_searchingSettings].toObject();
+	searchSetts.coof = setts[jsns_coof].toDouble();
+	searchSetts.setDiametrMin(setts[jsns_diametrMin].toInt());
+	searchSetts.setDiametrMax(setts[jsns_diametrMax].toInt());
+	searchSetts.setHeightMin(setts[jsns_heightMin].toDouble());
+	searchSetts.setHeightMax(setts[jsns_heightMax].toDouble());
+	searchSetts.bottomProc = setts[jsns_bottom].toInt();
 }
 
 void Project::write(QJsonObject &json) const
 {
-	json["modelPath"]		= this->modelPath;
-	json["heimapPath"]	= this->heimapPath;
-	json["texturePath"] = this->texturePath;
-	json["texture2Path"] = this->texture2Path;
-	json["step"]		= this->displayFactor;
-	json["imgMaxVal"]	= this->imgMaxVal;
-	json["imgMinVal"]	= this->imgMinVal;
-	json["materialType"] = this->materialType;
+	json[jsn_modelPath]		= this->u_modelPath;
+	json[jsn_heimapPath]	= this->u_heimapPath;
+	json[jsn_texturePath] = this->u_texturePath;
+	json[jsn_texture2Path] = this->u_texture2Path;
+	json[jsn_displayFacto]		= this->u_displayFactor;
+	json[jsn_imgMaxVal]	= this->u_imgMaxVal;
+	json[jsn_imgMinVal]	= this->u_imgMinVal;
+	json[jsn_materialType] = this->u_materialType;
+	json[jsn_geojsonPath] = this->u_geojsonPath;
 
 	QJsonObject setts;
-	setts["coof"] = searchSetts.coof;
-	setts["diametrMin"] = searchSetts.diamert.start;
-	setts["diametrMax"] = searchSetts.diamert.end;
-	setts["heightMin"] = searchSetts.height.start;
-	setts["heightMax"] = searchSetts.height.end;
-	setts["bottom"] = searchSetts.bottomProc;
-	json["searchingSettings"] = setts;
+	setts[jsns_coof] = searchSetts.coof;
+	setts[jsns_diametrMin] = searchSetts.diamert.start;
+	setts[jsns_diametrMax] = searchSetts.diamert.end;
+	setts[jsns_heightMin] = searchSetts.height.start;
+	setts[jsns_heightMax] = searchSetts.height.end;
+	setts[jsns_bottom] = searchSetts.bottomProc;
+	json[jsns_searchingSettings] = setts;
 
 
 //	QJsonObject setts;
@@ -676,9 +721,9 @@ int normal(float val, int factor)
 	return  static_cast<int>(val/factor);
 }
 
-void Project::readGeoshape()
+void Project::readGeojson()
 {
-	QFile jsonFile(":/resources/shape.geojson");
+	QFile jsonFile(getPath(BackPath::geojson));
 	if (!jsonFile.open(QIODevice::ReadOnly))
 	{
 		return;
@@ -729,15 +774,15 @@ Tag: 34735 ; Value:  2692054518
 		if (coord.x() < 0 || coord.z() < 0 || coord.x() >= reader->widght() || coord.z() >=reader->height())
 			continue;
 
-		int x = normal(coord.x(), displayFactor);
-		int z = normal(coord.z(), displayFactor);
+		int x = normal(coord.x(), u_displayFactor);
+		int z = normal(coord.z(), u_displayFactor);
 		coord.setY(widget->terra->getValue(x, z));
 
-		widget->markers->addBoundy(coord, displayFactor);
+		widget->importedMakrers->addBoundy(coord, u_displayFactor);
 	}
 	jsonFile.close();
 
-	widget->markers->updateBuffer();
+	widget->importedMakrers->updateBuffer();
 }
 
 

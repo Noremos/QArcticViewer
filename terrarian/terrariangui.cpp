@@ -153,7 +153,7 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 		curshader = &this->heimapShader;
 		curshader->bind();
 //		curshader->setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
-		curshader->setUniformValue("maxHei", proj->getImgMaxVal() / proj->displayFactor);
+		curshader->setUniformValue("maxHei", proj->getImgMaxVal() / proj->u_displayFactor);
 
 
 		break;
@@ -179,8 +179,8 @@ void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
 	model.scale(1, 1, 1);
 	model.translate(0, 0, 0);
 
-	curshader->setUniformValue("factor", proj->heiFactor);
-	curshader->setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
+	curshader->setUniformValue("factor", proj->u_heiFactor);
+	curshader->setUniformValue("minHei", proj->getImgMinVal() / proj->u_displayFactor);
 
 	curshader->setUniformValue("projection", projection);
 	curshader->setUniformValue("view", view);

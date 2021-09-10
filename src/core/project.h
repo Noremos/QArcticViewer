@@ -28,7 +28,8 @@ enum class BackPath
 	heimap,
 	tiles,
 	root,
-	markers
+	markers,
+	geojson
 };
 
 
@@ -36,14 +37,14 @@ class Project : public QObject
 {
 public:
 	Q_OBJECT
-	Q_PROPERTY(QString modelPath MEMBER modelPath NOTIFY modelChanged)
-	Q_PROPERTY(QString heimapPath MEMBER heimapPath NOTIFY heimapChanged)
-	Q_PROPERTY(QString texturePath MEMBER texturePath NOTIFY textureChanged)
-	Q_PROPERTY(QString texture2Path MEMBER texture2Path NOTIFY texture2Changed)
-	Q_PROPERTY(int displayFactor MEMBER displayFactor)
-    Q_PROPERTY(float imgMinVal MEMBER imgMinVal NOTIFY imgMinValChanged)
-    Q_PROPERTY(float imgMaxVal MEMBER imgMaxVal NOTIFY imgMaxValChanged)
-	Q_PROPERTY(int materialType MEMBER materialType NOTIFY meterialtypeChanged)
+	Q_PROPERTY(QString u_modelPath MEMBER u_modelPath NOTIFY modelChanged)
+	Q_PROPERTY(QString u_heimapPath MEMBER u_heimapPath NOTIFY heimapChanged)
+	Q_PROPERTY(QString u_texturePath MEMBER u_texturePath NOTIFY textureChanged)
+	Q_PROPERTY(QString u_texture2Path MEMBER u_texture2Path NOTIFY texture2Changed)
+	Q_PROPERTY(int u_displayFactor MEMBER u_displayFactor)
+	Q_PROPERTY(float u_imgMinVal MEMBER u_imgMinVal NOTIFY imgMinValChanged)
+	Q_PROPERTY(float u_imgMaxVal MEMBER u_imgMaxVal NOTIFY imgMaxValChanged)
+	Q_PROPERTY(int u_materialType MEMBER u_materialType NOTIFY meterialtypeChanged)
 //	Q_PROPERTY(SeachingSettings* searchSetts READ getSerchSetts)
 //	Q_PROPERTY(SeachingSettings searchSetts MEMBER searchSetts)
 //	SeachingSettings* getSerchSetts(){return &searchSetts;}
@@ -55,7 +56,6 @@ public:
 		silense();
 	}
 public:
-	bool showMarkers = false;
 	bool block = false;
 	int modelWid;
 	int modelHei;
@@ -63,24 +63,25 @@ public:
 	bool saveProject();
 	void notifySettings()
 	{
-		emit heimapChanged(heimapPath);
-		emit textureChanged(texturePath);
-		emit texture2Changed(texture2Path);
-        emit modelChanged(modelPath);
-        emit imgMinValChanged(imgMinVal);
-        emit imgMaxValChanged(imgMaxVal);
+		emit heimapChanged(u_heimapPath);
+		emit textureChanged(u_texturePath);
+		emit texture2Changed(u_texture2Path);
+		emit modelChanged(u_modelPath);
+		emit imgMinValChanged(u_imgMinVal);
+		emit imgMaxValChanged(u_imgMaxVal);
 //        emit meterialtypeChanged(materialType);
     }
 
 
-	QString modelPath;
-	QString heimapPath;
-	QString texturePath, texture2Path;
-	int displayFactor=10;
-	int heiFactor=10;
-	float imgMaxVal;
-	float imgMinVal;
-	int materialType=0;
+	QString u_modelPath;
+	QString u_heimapPath;
+	QString u_texturePath, u_texture2Path;
+	int u_displayFactor=10;
+	int u_heiFactor=10;
+	float u_imgMaxVal;
+	float u_imgMinVal;
+	int u_materialType=0;
+	QString u_geojsonPath;
 
 	TiffReader *reader = nullptr;
 
@@ -171,17 +172,20 @@ public:
 		case BackPath::roilist:
 			return projectPath + "bds.lst";
 		case BackPath::texture1:
-			return texturePath;
+			return u_texturePath;
 		case BackPath::texture2:
-			return texture2Path;
+			return u_texture2Path;
 		case BackPath::object:
-			return projectPath + modelPath;
+			return projectPath + u_modelPath;
 		case BackPath::heimap:
-			return heimapPath;
+			return u_heimapPath;
 		case BackPath::root:
 			return projectPath;
 		case BackPath::markers:
 			return projectPath + "markers.lst";
+		case BackPath::geojson:
+			return u_geojsonPath;
+				break;
 		default:
 			return "";
 		}
@@ -198,7 +202,7 @@ public:
 	float getImgMinVal() const;
 
 
-	void readGeoshape();
+	void readGeojson();
 	void readMarkers();
 	void readMyGeo();
 signals:

@@ -297,7 +297,7 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		assert(count == 16);
 		uchar buffer[16 * sizeof(double)];
 		read(buffer, value, count * sizeof(double));
-		for (size_t i = 0; i < count; ++i)
+		for (size_t i = 0; i < (size_t)count; ++i)
 		{
 			this->tiff.ModelTransformationTag[i] = toDouble(buffer + sizeof(double) * i);
 		}
@@ -480,7 +480,7 @@ rowptr TiffReader::getTiffTile(int ind)
 		decod.decompress(tempbuffer.tempbuffer, count, returnTemp, getBytesInRowToTile()); // (rowInTile + 1) * bytsInTileWid
 
 //		size_t ft = bytsInTileWid * tiff.TileLength;
-		data = processData(returnTemp.data(), tiff.TileWidth* tiff.TileLength);
+		data = processData(returnTemp.extract(), tiff.TileWidth* tiff.TileLength);
 		cachedTiles.storeData(ind, data);
 	}
 
@@ -523,6 +523,8 @@ int TiffReader::getBytesInRowToTile()
 		return tiff.ImageWidth * getSampleTypeSize();
 	}
 }
+
+//#include "decoder2.h"
 
 rowptr TiffReader::getRowData(int y)
 {
@@ -595,6 +597,13 @@ rowptr TiffReader::getRowData(int y)
 		decorder decod(tiff.Compression);
 		vbuffer ret;
 		decod.decompress(tempbuffer.tempbuffer, count, ret, getBytesInRowToTile());
+
+//		vbuffer ret2;
+//		decompressLZW(tempbuffer.tempbuffer, count, ret2, getBytesInRowToTile());
+//		int r = memcmp(ret.data(), ret2.data(), getBytesInRowToTile());
+
+//		assert(r == 0);
+
 		return processData(ret.extract(), widght());
 	}
 }
@@ -685,7 +694,7 @@ void TiffReader::printValue(int x, int y)
 	OUT << st.length();
 	//string vals = st.substr(x * 4, 4);
 	//float temp = toFloat((uchar*)vals.c_str());
-	float temp = toFloat(ret.data() +  x*4);
+	float temp = toFloat(ret.data() +  x * getSampleTypeSize());
 
 	int val = (int)round(temp * 10000000);
 	OUT << val;

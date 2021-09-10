@@ -117,8 +117,8 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	//projection * view * model * vec4(position, 1.0f);
 	mshader.setUniformValue("projection", projection);
 	mshader.setUniformValue("view", view);
-	mshader.setUniformValue("factor", proj->heiFactor);
-	mshader.setUniformValue("minHei", proj->getImgMinVal()/ proj->displayFactor);
+	mshader.setUniformValue("factor", proj->u_heiFactor);
+	mshader.setUniformValue("minHei", proj->getImgMinVal()/ proj->u_displayFactor);
 
 	vao.bind();
 	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 24, boundySize);

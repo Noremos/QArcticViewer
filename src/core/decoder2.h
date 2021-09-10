@@ -12,7 +12,7 @@
 
 
 //make shure result have enough size
-bool decompressLZW(uchar* input, offu64 size, buffer& result, int bytesPerRow)
+bool decompressLZW(uchar* input, offu64 size, vbuffer& result, int bytesPerRow)
 /*
     Works for RGB but not for RRGGBB (planarConfiguration = 2).  Requires tweak to pBuf.
 */
@@ -23,7 +23,9 @@ bool decompressLZW(uchar* input, offu64 size, buffer& result, int bytesPerRow)
     const unsigned int MAXCODE = 4095;      // 12 bit max less some head room
 
     #define LZW_STRING_SIZE 256
-    #define LZW_STRINGS_SIZE 128000
+	#define LZW_STRINGS_SIZE 128000
+
+	result.allocate(bytesPerRow);
 
     bool ret = false;
     // input and output pointers
