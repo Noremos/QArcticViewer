@@ -77,7 +77,7 @@ public:
 		 m_size = std::exchange(other.m_size, 0);
 	 }
 
-	uchar *data()
+	T *data()
 	{
 		return m_buffer;
 	}
@@ -100,9 +100,13 @@ public:
 		m_buffer = new T[nsize];
 	}
 
-	uint size()
+	uint size() { return m_size; }
+
+	void setData(T *newData, size_t size)
 	{
-		return m_size;
+		release();
+		m_size = size;
+		m_buffer = newData;
 	}
 
 	void setToZero()
