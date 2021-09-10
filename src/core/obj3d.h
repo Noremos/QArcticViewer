@@ -36,7 +36,7 @@ class Obj3d
 	ProcessMode mode = ProcessMode::performance;
 	ImageReader *reader;
 	QString name;
-	float *data[2];
+	staticArray<float> data[2];
 #ifdef USE_ROW
 	staticArray<objoff> currNullRow;
 	staticArray<objoff> prevNullRow;
@@ -80,8 +80,8 @@ public:
 	Obj3d(ImageReader *reader)
 	{
 		this->reader = reader;
-		data[0] = nullptr;
-		data[1] = nullptr;
+//		data[0] = nullptr;
+//		data[1] = nullptr;
 
 		width = reader->widght();
 		height =reader->height();
@@ -121,7 +121,9 @@ public:
 
 		NAN_VALUE = reader->getNullValue();
 
-		data[0] = nullptr;
+		//		data[0] = nullptr;
+		data[0].release();
+		data[1].release();
 		const objoff sWidth = width / this->step;
 #ifndef USE_ROW
 		objoff nullCounter = 0;
@@ -172,18 +174,16 @@ public:
 				// currNullRow.buffer = temp;
 				currNullRow.setToZero();
 #endif
-				if (data[0] != nullptr)
-					delete[] data[0];
-				data[0] = data[1];
+				data[0].release();
+				data[0] = std::move(data[1]);
 			}
 			// not cached row, allocated memory, need to delete
-			data[1] = reader->getRowData(h);
+			data[1].setData(reader->getRowData(h), width);
 
 			QString vers;
-			float *dataPointer = data[1];
-			for (int w = 0; w < width; w += step, dataPointer+=step)
+			for (int w = 0; w < width; w += step)
 			{
-				float value = *dataPointer;
+				float value =  data[1][w];
 
 				if (value == NAN_VALUE)
 				{
@@ -280,8 +280,8 @@ public:
 		stream << sw;
 		out.close();
 		sw.clear();
-		if (data[0]) delete[] data[0];
-		if (data[1]) delete[] data[1];
+		data[0].release();
+		data[1].release();
 #ifdef USE_ROW
 		prevNullRow.release();
 		currNullRow.release();
