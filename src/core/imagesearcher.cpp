@@ -283,9 +283,6 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		Barcontainer<float> *bars = creator.searchHoles(img.data, wid, hei);
 		Baritem<float> *item = bars->getItem(0);
 
-
-
-
 		int tx = (i % tilesInWid) * tileWid;
 		int ty = (i / tilesInWid) * tileHei;
 		std::string out = "[ ";
@@ -408,7 +405,40 @@ struct Direction
 		{
 			sm += abs(dirs[i]);
 		}
-		return static_cast<float>(sm) / totalSum;
+		return   1.0f -  static_cast<float>(sm) / totalSum;
+	}
+};
+
+struct DirectionCircle
+{
+	static const int COUNT = 8;
+	DirectionCircle() { memset(dirs, 0, COUNT * sizeof(int)); }
+	int dirs[COUNT];
+	int totalSum = 0;
+	void add(int x, int y)
+	{
+		if (x == 0 && y == 0)
+		{
+			qDebug() << "Ass";
+		}
+		//(-1 -1) = 0; (-1  0) = 1; (-1 1) = 2; (0 -1) = 3;
+		//( 0  1) = 5; ( 1 -1) = 6; ( 1 0) = 7; (1  1) = 8;
+		int off = (y + 1) * 3 + (x + 1);
+		++dirs[off];
+
+		//		totalSum += (abs(x) + abs(y));
+		totalSum += 1;
+	}
+
+	float sums()
+	{
+		int sm = 0;
+		int as_avg = totalSum / COUNT;
+		for (int i = 0; i < COUNT; ++i)
+		{
+			sm += abs(dirs[i] - as_avg);
+		}
+		return  1.0f -  static_cast<float>(sm) / totalSum;
 	}
 };
 
@@ -452,7 +482,7 @@ bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 	int cur = (contours.size() == 2 && contours[1].size() > contours[0].size()) ? 1 : 0;
 	size_t size = contours[cur].size();
 
-	Direction realsum;
+	DirectionCircle realsum;
 	cv::Point prevc = contours[cur][0];
 	int minx = contours[cur][0].x, miny = contours[cur][0].y, maxx = contours[cur][0].x, maxy = contours[cur][0].y;
 	for (size_t i = 1; i < size; ++i)
@@ -473,7 +503,7 @@ bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 	int dy = maxy - miny;
 
 //	show(mat);
-	float tcoof = 1.0f - realsum.sums();
+	float tcoof =realsum.sums();
 	return tcoof >= coof && cehckCoof(dx, dy);
 	//	return coofX >= ds && coofY >= ds;
 }

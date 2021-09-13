@@ -22,7 +22,7 @@ SpotZones::SpotZones() :
 //	  ,goodBuff(QOpenGLBuffer::Type::VertexBuffer)
 {
 	proj = Project::getProject();
-	proj->spotZones = this;
+	// proj->spotZones = this;
 }
 
 void SpotZones::updateBuffer()
@@ -106,11 +106,13 @@ void SpotZones::updateBuffer()
 	indexBuf.release();
 	mshader.release();
 
-	boundydata.clear();
+//	boundydata.clear();
 }
 
 void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 {
+	if (!show)
+		return;
 	// draw meteorites
 	mshader.bind();
 

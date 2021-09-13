@@ -123,13 +123,23 @@ struct TRange
 	{}
 };
 
+// enum class glColor {
+// 	Green = 0, // vec3(0.0, 1.0, 0.0);
+// 	Purpure = 2, // vec3(0.54, 0.0, 0.5);
+// 	Blue = 4, // vec3(0.0, 0.3, 0.7);
+// 	Red = 8, //vec3(1.0, 0.0, 0.0);
+// 	Brown = 16, //vec3(0.58, 0.29, 0.0);
+// 	Oragne = 32 //vec3(1.0, 0.5, 0.0);
+// };
+
 enum class glColor {
-	Green = 0, // vec3(0.0, 1.0, 0.0);
-	Purpure, // vec3(0.54, 0.0, 0.5);
-	Blue, // vec3(0.0, 0.3, 0.7);
-	Red, //vec3(1.0, 0.0, 0.0);
-	Brown, //vec3(0.58, 0.29, 0.0);
-	Oragne //vec3(1.0, 0.5, 0.0);
+	Green = 1, // vec3(0.0, 1.0, 0.0);
+	Purpure = 2, // vec3(0.54, 0.0, 0.5);
+	Blue = 3, // vec3(0.0, 0.3, 0.7);
+	Red = 4, //vec3(1.0, 0.0, 0.0);
+	Brown = 5, //vec3(0.58, 0.29, 0.0);
+	Oragne = 6, //vec3(1.0, 0.5, 0.0);
+	null = 7
 };
 
 #endif // !TYPES_H

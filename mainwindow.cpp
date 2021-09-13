@@ -36,6 +36,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 	opened = false;
 	proj = Project::getProject();
+	proj->badZones = ui->glWidget->badZones;
+	proj->spotZones = ui->glWidget->zones;
+	on_comboBox_currentIndexChanged(0);
 	// side menu
     connectSettsD(ui->coofSB, &SeachingSettings::setCoof)
 
@@ -166,9 +169,10 @@ void MainWindow::openProjectAsync()
 	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
 	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
 
+	ui->glWidget->userMarkers->show = isChecked(ui->chShowUserMarkers);
 	ui->glWidget->terra->obj.readFastfile(callback, proj->getPath(BackPath::object));
 
-	proj->readGeojson();
+	ui->glWidget->importedMakrers->show = isChecked(ui->cbShowImportedMarkrs);
 }
 
 void MainWindow::openProjectAsyncEnd()
@@ -177,17 +181,15 @@ void MainWindow::openProjectAsyncEnd()
 	ui->glWidget->terra->initArrays();
 	ui->glWidget->terra->setTexture(0, proj->getPath(BackPath::texture1));
 	ui->glWidget->terra->setTexture(1, proj->getPath(BackPath::texture2));
-//	ui->glWidget->terra->displayTexture(0);
+	ui->glWidget->terra->displayTexture(0);
 
 #ifdef ENABLE_MARKERS
 	proj->readMarkers();
 #endif
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 
-#ifdef ENABLE_SHAPE
-//	proj->readMyGeo();
-//	proj->readGeoshape();
-#endif
+	// Shape
+	proj->readGeojson();
 
 	ui->glWidget->doneCurrent();
 
@@ -304,6 +306,7 @@ void MainWindow::findByParamsAsyncEnd()
 {
 	ui->glWidget->makeCurrent();
 
+	proj->badZones->updateBuffer();
 	proj->spotZones->updateBuffer();
 	proj->text->updateBuffer();
 	ui->glWidget->drawZones = true;
@@ -513,15 +516,15 @@ void MainWindow::on_heightSpin_valueChanged(int arg1)
 //	qDebug() << ui->glWidget->zones->factor;
 }
 
-void MainWindow::on_chShowFinded_stateChanged(int /*arg1*/)
-{
-	if (finded)
-	{
-		ui->glWidget->drawZones = ui->chShowFinded->checkState() == Qt::CheckState::Checked;
-		ui->glWidget->update();
-	}
+//void MainWindow::on_chShowFinded_stateChanged(int /*arg1*/)
+//{
+//	if (finded)
+//	{
+//		ui->glWidget->drawZones = ui->chShowFinded->checkState() == Qt::CheckState::Checked;
+//		ui->glWidget->update();
+//	}
 
-}
+//}
 
 void MainWindow::on_pbStopButton_clicked()
 {
@@ -536,7 +539,7 @@ void MainWindow::timerEvent(QTimerEvent */*event*/)
 
 void MainWindow::on_cbUseRegion_stateChanged(int /*arg1*/)
 {
-    ui->gbZones->setEnabled(ui->chShowFinded->checkState() == Qt::CheckState::Checked);
+	ui->gbZones->setEnabled(ui->glWidget->drawZones);
 
 }
 
@@ -545,23 +548,72 @@ void MainWindow::on_simpithithion_valueChanged(int /*arg1*/)
 //	proj->displayFactor = arg1;
 }
 
-void MainWindow::on_chShowMarker_stateChanged(int /*arg1*/)
-{
-//	proj->showMarkers = ui->chShowMarker->isChecked();
-}
-
 void MainWindow::on_pushButton_clicked()
 {
-	QString fileName = QFileDialog::getOpenFileName(0, "Импорт geojsob", QString(), tr("JSON (*.geojson *.json)"));
+	QString fileName = QFileDialog::getOpenFileName(0, "Импорт geojsob", QString(), tr("JSON (*.geojson *.json *.lst)"));
 	if (fileName.length() == 0)
 		return;
 
 	proj->u_geojsonPath = fileName;
-	proj->readGeojson();
 
+	if (fileName.endsWith(".lst"))
+	{
+		proj->readMyGeo(false);
+	}
+	else
+	{
+		proj->readGeojson();
+	}
+
+	ui->glWidget->importedMakrers->show = isChecked(ui->cbShowImportedMarkrs);
 }
 
-void MainWindow::on_checkBox_stateChanged(int arg1)
+
+void MainWindow::on_chShowUserMarkers_stateChanged(int arg1)
 {
-	ui->glWidget->importedMakrers->enable = static_cast<bool>(arg1);
+	ui->glWidget->userMarkers->show = static_cast<bool>(arg1);
+}
+
+void MainWindow::on_cbShowImportedMarkrs_stateChanged(int arg1)
+{
+	ui->glWidget->importedMakrers->show = static_cast<bool>(arg1);
+}
+
+void MainWindow::on_pbCheckShape_clicked()
+{
+	proj->checkCorrect(ui->glWidget->importedMakrers->getData(), true);
+	ui->progressStatus->setText(proj->status);
+}
+enum class curMarkersShowState { found = 0, bad = 1, all = 2, hide = 3
+};
+
+void MainWindow::on_comboBox_currentIndexChanged(int index)
+{
+	MarkersShowState out;
+	curMarkersShowState cur = static_cast<curMarkersShowState>(index);
+
+	switch (cur)
+	{
+	case curMarkersShowState::found:
+		out = MarkersShowState::found;
+		ui->glWidget->zones->show = true;
+		ui->glWidget->badZones->show = false;
+		break;
+	case curMarkersShowState::bad:
+		out = MarkersShowState::ather;
+		ui->glWidget->zones->show = false;
+		ui->glWidget->badZones->show = true;
+		break;
+	case curMarkersShowState::all:
+		out = MarkersShowState::all;
+		ui->glWidget->zones->show = true;
+		ui->glWidget->badZones->show = true;
+		break;
+	case curMarkersShowState::hide:
+		out = MarkersShowState::none;
+		ui->glWidget->zones->show = false;
+		ui->glWidget->badZones->show = false;
+		break;
+	}
+	proj->markersShowState = out;
 }

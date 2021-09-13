@@ -57,18 +57,23 @@ public:
 
 	void initArrays();
 
-	bool enable = false;
+	bool show = false;
 	// glinstanse interface
 public:
 	void initGL() override;
 	void renderGL(QMatrix4x4& view, QMatrix4x4& projection) override;
 	void initModel();
 
-	void save();
-	void openFile();
 	void addBoundy(const QVector3D& vec);
 
 	void move(size_t i, const QVector3D &pos);
+};
+
+class UserMarkers : public DynamicMarkers
+{
+public:
+	void save();
+	bool enable = false;
 };
 
 #endif // USER_MARKERS_H

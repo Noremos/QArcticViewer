@@ -27,7 +27,7 @@ class Project;
 
 
 
-
+//TODO: Remove it and use StaticMarkers inster
 class SpotZones :protected QOpenGLFunctions
 {
 public:
@@ -52,7 +52,7 @@ public:
 	void initSpotModel();
 
 	float minVal = 9999;
-
+	bool show = true;
 	Project * proj;
 	void printErrors()
 	{

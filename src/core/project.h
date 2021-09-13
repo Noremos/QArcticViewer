@@ -17,6 +17,37 @@ class SpotZones;
 class Text2d;
 class MainWidget;
 
+enum MarkersShowState { found = 0, ather, barcodeNotPassed, circleNotPassed, boundyNotPassed, holmNotPassed, allExceptRed, all, none };
+
+static glColor getBCColor(MarkersShowState state)
+{
+	switch (state)
+	{
+	case found:
+		return glColor::Green;
+
+	case ather:
+		return glColor::Red;
+
+	case holmNotPassed:
+		return glColor::Brown;
+
+	case boundyNotPassed:
+		return glColor::Red;
+
+	case barcodeNotPassed:
+		return  glColor::Purpure;
+
+	case circleNotPassed:
+		return  glColor::Blue;
+
+	default:
+		std::exception();
+		break;
+	}
+	return glColor::null;
+}
+
 enum class BackPath
 {
 	texture1,
@@ -105,13 +136,16 @@ public:
 	}
 
 	SpotZones *spotZones;
+	SpotZones *badZones;
 	Text2d *text;
 
 	static Project *proj;
 
 	QString status;
 public:
+	MarkersShowState markersShowState = MarkersShowState::found;
 	SeachingSettings searchSetts;
+
 	//= "D:\\Programs\\Barcode\\_bar\\";
 
 	void setProjectPath(const QString &path)
@@ -204,7 +238,9 @@ public:
 
 	void readGeojson();
 	void readMarkers();
-	void readMyGeo();
+	void readMyGeo(bool reinitY);
+
+	void checkCorrect(const QVector<InstanceData> &target, bool skipFirst = false);
 signals:
 	void meterialtypeChanged(int);
 	void heimapChanged(QString);
@@ -216,8 +252,6 @@ signals:
 private:
 	void write(QJsonObject &json) const;
 	void read(const QJsonObject &json);
-	template<class T>
-	void checkCorrect(int totalSize, const QVector<T> &target, bool skipFirst = false);
 };
 
 #endif

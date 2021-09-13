@@ -181,6 +181,7 @@ public:
 	// uchar *result;
 	uchar *arry;
 	short code;
+	int debugD = 0;
 
 	std::vector<stopPair> stops;
 public:
@@ -189,9 +190,9 @@ public:
 		stops.insert(stops.begin(), n, _stops);
 	}
 
-	void decompress(uchar* input, offu64 size, vbuffer& _result, int bytesPerRow, size_t offset = 0, size_t maxSize = UINT64_MAX)
+	void decompress(uchar* input, offu64 size, vbuffer& _result, size_t bytesPerRow, size_t offset = 0, size_t maxSize = UINT64_MAX)
 	{
-		_result.allocate(bytesPerRow);
+		_result.allocate(bytesPerRow + 12);
 		if (comprType == 1)
 		{
 			memcpy(_result.data(), input + offset, (maxSize == UINT64_MAX? size: MIN(maxSize, size)));
@@ -327,6 +328,11 @@ public:
 				}
 			}
 			getNext();
+		}
+
+		if (bytesPerRow >= resultSize + 13)
+		{
+			++debugD;
 		}
 	}
 

@@ -16,6 +16,55 @@ struct Img
 	Img(int widgth, int height) : wid(widgth), hei(height) { data = new float[wid * hei]; }
 	~Img()
 	{}
+
+//	Img(const Img &other) : wid(other.wid), hei(other.hei), maxVal(other.maxVal), minVal(other.minVal) /*: s(other.s)*/
+//	{
+//		assert(false);
+//		data = new float[wid * hei];
+//		memcmp(data, other.data, wid * hei * sizeof(float));
+//	}
+//	/*std::cout << "move failed!\n";*/
+//	Img(Img &&other) : minVal(other.minVal),  maxVal(other.maxVal) /*: s(std::move(o.s))*/
+//	{
+//		data = std::exchange(other.data, nullptr); // leave other in valid state
+//		wid = std::exchange(other.wid, 0); // leave other in valid state
+//		hei = std::exchange(other.hei, 0); // leave other in valid state
+//	}
+
+//	// copy assignment
+//	Img &operator=(const Img &other)
+//	{
+//		// Guard self assignment
+//		if (this == &other)
+//			return *this;
+
+//		wid = other.wid; // leave other in valid state
+//		hei = other.hei; // leave other in valid state
+
+//		maxVal = other.maxVal;
+//		minVal = other.minVal;
+//		memcmp(data, other.data, wid * hei * sizeof(float));
+//		return *this;
+//	}
+
+//	// move assignment
+//	Img &operator=(Img &&other) noexcept
+//	{
+//		// Guard self assignment
+//		if (this == &other)
+//			return *this; // delete[]/size=0 would also be ok
+
+//		wid = std::exchange(other.wid, 0); // leave other in valid state
+//		hei = std::exchange(other.hei, 0); // leave other in valid state
+//		data = std::exchange(other.data, nullptr); // leave other in valid state
+
+//		maxVal = other.maxVal;
+//		minVal = other.minVal;
+
+//		return *this;
+//	}
+
+
 	float get(int off) const { return data[off]; }
 	float get(int x, int y) const { return data[y * wid + x]; }
 
@@ -43,28 +92,35 @@ struct Img
 	}
 
 	void set(int x, int y, float val) { data[y * wid + x] = val; }
+
 	inline Img clone() const
 	{
 		Img clo(new float[wid * hei], wid, hei);
 		memcpy(clo.data, data, wid * hei * sizeof(float));
+		clo.maxVal = maxVal;
+		clo.minVal = minVal;
 		return clo;
 	}
+
 	inline uint getTotal()
 	{
 		return wid*hei;
 	}
 
 	void zeroing() { memset(data, 0, wid * hei * sizeof(float)); }
+
 	void setInRow(int y, int offsetInDest, float* inputData, int len)
 	{
 		memcpy(data + wid*y +offsetInDest, inputData, len* sizeof(float));
 	}
+
 	inline Img zeroClone() const
 	{
 		Img clo(new float[wid * hei], wid, hei);
 		clo.zeroing();
 		return clo;
 	}
+
 	inline void release()
 	{
 		if (data)
@@ -73,7 +129,6 @@ struct Img
 			data = nullptr;
 		}
 	}
-
 
     void getRect(int x, int y, int wid, int hei, Img& ret)
 	{

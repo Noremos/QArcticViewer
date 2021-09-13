@@ -38,10 +38,7 @@ void StaticMarkers::updateBuffer()
 {
 	obj.readFile(":/resources/objects/makr.obj");
 
-	vao.destroy();
-	indexBuf.destroy();
-	arrBuf.destroy();
-	modelsBuf.destroy();
+	destroyVideoBuffers();
 
 	mshader.create();
 	glinstanse::initShader(mshader, ":/shaders/spotZone.vert", ":/shaders/spotZone.frag");
@@ -52,7 +49,6 @@ void StaticMarkers::updateBuffer()
 	indexBuf.create();
 
 	vao.bind();
-
 	mshader.bind();
 
 	QVector<lvertex> vect;
@@ -138,7 +134,16 @@ void StaticMarkers::updateBuffer()
 
 	// mast be at end
 	boundySize = boundydata.size();
-//	boundydata.clear();
+	//! We do not delete this because we need data to check correct
+	//TODO: add GetData func to extract data from buffer
+	//boundydata.clear();
+}
+
+void StaticMarkers::release()
+{
+	destroyVideoBuffers();
+	boundydata.clear();
+	boundySize = 0;
 }
 
 void StaticMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
@@ -177,5 +182,13 @@ void StaticMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 void StaticMarkers::initModel()
 {
 
+}
+
+void StaticMarkers::destroyVideoBuffers()
+{
+	vao.destroy();
+	indexBuf.destroy();
+	arrBuf.destroy();
+	modelsBuf.destroy();
 }
 

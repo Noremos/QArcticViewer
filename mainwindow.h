@@ -3,6 +3,7 @@
 
 #include <QAbstractSpinBox>
 #include <QBasicTimer>
+#include <QCheckBox>
 #include <QFutureWatcher>
 #include <QMainWindow>
 #include <QSpinBox>
@@ -90,7 +91,7 @@ private slots:
 
 	void on_heightSpin_valueChanged(int arg1);
 
-	void on_chShowFinded_stateChanged(int arg1);
+	// void on_chShowFinded_stateChanged(int arg1);
 
 	void on_pbStopButton_clicked();
 
@@ -98,17 +99,26 @@ private slots:
 
 	void on_simpithithion_valueChanged(int arg1);
 
-	void on_chShowMarker_stateChanged(int arg1);
-
 	void on_pushButton_clicked();
 
-	void on_checkBox_stateChanged(int arg1);
+	void on_chShowUserMarkers_stateChanged(int arg1);
+
+	void on_cbShowImportedMarkrs_stateChanged(int arg1);
+
+	void on_pbCheckShape_clicked();
+
+	void on_comboBox_currentIndexChanged(int index);
 
 private:
 	Ui::MainWindow *ui;
 	Project* proj;
 
 	bool opened = false;
+
+	bool isChecked(QCheckBox* chbox)
+	{
+		return chbox->checkState() == Qt::CheckState::Checked;
+	}
 
 	// QPaintDevice interface
 public:

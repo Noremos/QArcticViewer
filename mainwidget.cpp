@@ -16,11 +16,12 @@ MainWidget::MainWidget(QWidget */*parent*/)
 	camera = new CameraGui(cameraStartPos, QVector3D(0,1,0), 56, -32.25);
 	terra = new Terrain();
 	zones = new SpotZones();
+	badZones = new SpotZones();
 	text = new Text2d();
 
 	markers = new StaticMarkers();
 #ifdef ENABLE_MARKERS
-	userMarkers = new DynamicMarkers();
+	userMarkers = new UserMarkers();
 #endif
 	importedMakrers.reset(new StaticMarkers());
 
@@ -37,6 +38,7 @@ MainWidget::~MainWidget()
 	delete terra;
 	delete camera;
 	delete zones;
+	delete badZones;
 	delete text;
 	delete markers;
 #ifdef ENABLE_MARKERS
@@ -92,6 +94,7 @@ void MainWidget::initializeGL()
 	terra->initGL();
 
 	zones->initGL();
+	badZones->initGL();
 	text->initGL();
 
 	markers->initGL();
@@ -99,7 +102,9 @@ void MainWidget::initializeGL()
 	userMarkers->initGL();
 #endif
 
-//	line.initGL();
+	importedMakrers->initGL();
+
+	//	line.initGL();
 
 	emit startTimer();
 //		terra->readfile("D:\2.obj");
@@ -254,7 +259,7 @@ void MainWidget::mouseMoveEvent(QMouseEvent *event)
 //	qDebug() << vec;
 #ifdef ENABLE_MARKERS
 
-	if (userMarkers->enable)
+	if (userMarkers->show)
 	{
 		//		vec.setX(event->localPos().x() * width());
 		//		vec.setY(event->localPos().y() * height());
@@ -479,11 +484,11 @@ void MainWidget::paintGL()
 		markers->renderGL(view, projection);
 
 #ifdef ENABLE_MARKERS
-		if (userMarkers->enable)
+		if (userMarkers->show)
 			userMarkers->renderGL(view, projection);
 #endif
 
-		if (importedMakrers->enable)
+		if (importedMakrers->show)
 			importedMakrers->renderGL(view, projection);
 
 		//		if (polyLine)
@@ -495,7 +500,9 @@ void MainWidget::paintGL()
 	if (drawZones)
 	{
 		zones->renderGL(view, projection);
-		text->renderGL(view, projection);
+//		text->renderGL(view, projection);
+
+		badZones->renderGL(view, projection);
 	}
 
 	///skybox
@@ -543,7 +550,7 @@ void MainWidget::Do_Movement()
 
 
 #ifdef ENABLE_MARKERS
-	if (userMarkers->enable)
+	if (userMarkers->show)
 	{
 		//calls only ones
 		if (keys[Qt::Key::Key_Space])

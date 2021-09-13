@@ -46,7 +46,6 @@ bool Project::saveProject()
 
 #ifdef ENABLE_MARKERS
 	widget->userMarkers->save();
-	widget->userMarkers->openFile();//useless
 #endif
 
 	return true;
@@ -225,31 +224,22 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 
 }
 
-
-
-template<class T>
-void Project::checkCorrect(int totalSize, const QVector<T> &target, bool skipFirst)
+void checSpotZone(const QVector<InstanceData> &target, SpotZones* spotZones, int corrVal, bool skipFirst, int& correct, int& totalSize)
 {
-	int wrong = 0;
-	int correct = 0;
-	int notFound = 0;
-
-	float corrVal = static_cast<float>(glColor::Green);
-
-	for (int i =skipFirst?1:0, targetSize = target.size(); i < targetSize; ++i)
+	foreach (const InstanceData &bbfound, spotZones->boundydata)
 	{
-		float x_target = target[i].getX();
-		float y_target = target[i].getZ();
+		if (bbfound.val != corrVal && corrVal != INT_MAX)
+			continue;
 
-		foreach (const InstanceData &bbfound, spotZones->boundydata)
+		float x_found = bbfound.getX();
+		float y_found = bbfound.getZ();
+		float x_size = bbfound.getWid() * 2;
+		float y_size = bbfound.getLen() * 2;
+
+		for (int i =skipFirst?1:0, targetSize = target.size(); i < targetSize; ++i)
 		{
-			float x_found = bbfound.getX();
-			float y_found = bbfound.getZ();
-			float x_size = bbfound.getWid() * 2;
-			float y_size = bbfound.getLen() * 2;
-
-			if (bbfound.val != corrVal)
-				continue;
+			float x_target = target[i].getX();
+			float y_target = target[i].getZ();
 
 			if (abs(y_found - y_target) < y_size && abs(x_found - x_target) < x_size)
 			{
@@ -257,7 +247,33 @@ void Project::checkCorrect(int totalSize, const QVector<T> &target, bool skipFir
 				break;
 			}
 		}
+
+		++totalSize;
 	}
+}
+
+void Project::checkCorrect(const QVector<InstanceData> &target, bool skipFirst)
+{
+	int wrong = 0;
+	int correct = 0;
+	int notFound = 0;
+	int totalSize = 0;
+
+	if (this->markersShowState == MarkersShowState::none)
+	{
+		return;
+	}
+
+	int corrVal = (int)getBCColor(this->markersShowState); //MarkersShowState::all
+	if (this->markersShowState == MarkersShowState::all)
+	{
+		corrVal = INT_MAX;
+	}
+
+	checSpotZone(target, spotZones, corrVal, skipFirst, correct, totalSize);
+
+	checSpotZone(target, badZones, corrVal, skipFirst, correct, totalSize);
+
 
 	notFound = target.size() - correct;
 
@@ -275,10 +291,10 @@ void Project::checkCorrect(int totalSize, const QVector<T> &target, bool skipFir
 	//		fileout.close();
 	//	}
 
-	status = QString("Result: correct  wrong notFound;\n %1 %2 %3\nTotal (real/fnd): %4 %5").arg(correct).arg(wrong).arg(notFound).arg(correct + wrong).arg(correct + notFound);
-	qDebug() << "Result: correct  wrong notFound;";
-	qDebug() <<"Result:" << correct << wrong << notFound;
-	qDebug() <<"Total (Fnd/trgt):" <<totalSize << target.size();
+	status = QString("Cor|wrg|nt fnd;\n%1 %2 %3\nTtl (Fnd/trgt): %4 %5").arg(correct).arg(wrong).arg(notFound).arg(correct + wrong).arg(correct + notFound);
+	qDebug() << "Cor |  wrng | nt fnd;";
+	qDebug() << correct << wrong << notFound;
+	qDebug() <<"Ttl (Fnd/trgt):" <<totalSize << target.size();
 }
 
 
@@ -311,11 +327,13 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	}
 
 	//!###############################SETS##########################
-	bool exportImg = false;
+	bool exportImg = true;
 
 	bool checkBoundy = true;
     bool checkBar3d = false;
-    bool checkSyrcl = false;
+	bool checkSyrcl = false;
+
+	bool addAnother = true;
 
     checkBoundy = useBoundyChec;
     checkBar3d = useBarcoed;
@@ -337,17 +355,22 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 	QPen penPurpure;
 	penPurpure.setWidth(3);
-	penPurpure.setColor(Qt::green);
+	penPurpure.setColor(Qt::red);
 
 	QPen penBlue;
 	penBlue.setWidth(3);
-	penBlue.setColor(Qt::green);
+	penBlue.setColor(Qt::blue);
 
 	if (exportImg)
 	{
 		QString texture = getPath(BackPath::texture1);
 		image.load(texture);
 		painter.reset(new QPainter(&image));
+
+		xfactor = (float)image.width() / reader->widght();
+		yfactor = (float)image.height() / reader->height();
+		qDebug() << "X Factor:" << xfactor;
+		qDebug() << "Y Factor:" << yfactor;
 	}
 
 //    closeReader();
@@ -400,9 +423,13 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	int k = 0, l = 0;
 
 	if (pbCallback.cbSetMax)
-		pbCallback.cbSetMax(imgsrch.getMaxTiles()-1);
+		pbCallback.cbSetMax(imgsrch.getMaxTiles() - 1);
 
-    int tileindex = 0;
+	spotZones->boundySize = 0;
+	spotZones->boundydata.clear();
+	badZones->boundydata.clear();
+	badZones->boundySize = 0;
+	int tileindex = 0;
 	Img tile;
 	while (stream.readLineInto(&line))
     {
@@ -431,7 +458,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 //            if (checkBar3d || checkSyrcl)
 			{
-				tile.release();
+//				tile.release(); //TODO is it correct?
 				tile = imgsrch.getTile(tileindex);
 			}
 //			l = 0;
@@ -456,7 +483,10 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 		if (!checkBounty(bb.bb))
 		{
-//				spotZones->addBoundy(bb.bb,displayFactor, 0);
+			if (addAnother)
+			{
+				badZones->addBoundy(bb.bb, u_displayFactor, getBCColor(MarkersShowState::boundyNotPassed));
+			}
 			continue;
 		}
 
@@ -466,7 +496,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			imgsrch.getOffset(tileindex, offX, offY);
 			if (!checkHolm(bb.bb, tile, offX, offY))
 			{
-				// spotZones->addBoundy(bb.bb,displayFactor, glColor::Brown);
+//				if (addAnother)
+				spotZones->addBoundy(bb.bb, u_displayFactor, getBCColor(MarkersShowState::holmNotPassed));
 				continue;
 			}
 //		}
@@ -511,7 +542,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 //			qDebug() <<"max:" <<  maxRet;
 			if (maxRet < POROG)
 			{
-				spotZones->addBoundy(bb.bb,u_displayFactor, glColor::Purpure);
+				spotZones->addBoundy(bb.bb, u_displayFactor, getBCColor(MarkersShowState::barcodeNotPassed));
 				rectImg.release();
 				if (exportImg)
 				{
@@ -526,7 +557,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		{
 			if (!imgsrch.checkCircle(rectImg, searchSetts.height.start, eps))
 			{
-				spotZones->addBoundy(bb.bb,u_displayFactor, glColor::Blue);
+				spotZones->addBoundy(bb.bb,u_displayFactor, getBCColor(MarkersShowState::circleNotPassed));
 				if (exportImg)
 				{
 					painter->setPen(penBlue);
@@ -541,14 +572,14 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		// xScale -- восколько у нас уменьшина карта. Сейчас у нас рельные пиксельные размеры
 		// И чтобы их корректно отобразить, надо поделить всё на процент уменьшения.
 		// 100 и 100 станут 10 и10 и нормальн отобразятся на уменьшенной в 10 раз карте
-
-		rectImg.release();
-		spotZones->addBoundy(bb.bb, u_displayFactor, glColor::Green);
 		if (exportImg)
 		{
 			painter->setPen(penGreen);
-			painter->drawRect(bb.bb.x*xfactor,bb.bb.y*yfactor, bb.bb.wid()*xfactor, bb.bb.hei()*yfactor);
+			painter->drawRect(bb.bb.x * xfactor, bb.bb.y * yfactor, bb.bb.wid() * xfactor, bb.bb.hei() * yfactor);
 		}
+
+		rectImg.release();
+		spotZones->addBoundy(bb.bb, u_displayFactor, getBCColor(MarkersShowState::found));
 //		text->addText(bb.bb);
 		//			model->boundydata.append(bb);
 		k++;
@@ -564,8 +595,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	{
 		painter->save();
 		painter->end();
-		image.save(getPath(BackPath::project) + "result.jpg");
-		painter.release();
+		image.save(getPath(BackPath::root) + "result.jpg");
 	}
 
 	if (checkBar3d)
@@ -580,9 +610,9 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 
 //	checkCorrect(k, widget->markers->boundydata);
-#ifdef ENABLE_MARKERS
-	checkCorrect(k, widget->userMarkers->boundydata, true);
-#endif
+// #ifdef ENABLE_MARKERS
+// 	checkCorrect(k, widget->importedMakrers->boundydata, true);
+// #endif
 
 	saveProject();
 }
@@ -761,6 +791,7 @@ Tag: 34735 ; Value:  2692054518
 				reader->tiff.ModelTiepointTag.points[0].Y <<
 				maxsize.x() << maxsize.y();
 
+	widget->importedMakrers->release();
 //	Size2 size = imgsrch.getTileSize();
 	foreach (auto f, features)
 	{
@@ -789,9 +820,9 @@ Tag: 34735 ; Value:  2692054518
 #include "side-src/fast_float/fast_float.h"
 
 
-void Project::readMyGeo()
+void Project::readMyGeo(bool reinitY)
 {
-	QFile inputFile("D:\\re.txt");
+	QFile inputFile(getPath(BackPath::geojson));
 	if (!inputFile.open(QIODevice::ReadOnly))
 	{
 		return;
@@ -802,9 +833,15 @@ void Project::readMyGeo()
 	{
 		QString line = in.readLine();
 		auto splo = line.split(' ');
-		QVector3D coord(splo[0].toFloat(), 0, splo[1].toFloat());
+		if (splo.size()!=3)
+			continue; // skip t K
 
-		coord.setY(widget->terra->getValue(coord.x(), coord.z()));
+		QVector3D coord(splo[0].toFloat(), splo[1].toFloat(), splo[2].toFloat());
+
+		if (reinitY)
+		{
+			coord.setY(widget->terra->getValue(coord.x(), coord.z()));
+		}
 
 		widget->markers->addBoundy(coord, 1);
 	}
@@ -850,8 +887,6 @@ void Project::readMarkers()
 
 	if (widget->userMarkers->boundydata.size() == 0)
 		widget->userMarkers->addBoundy(1, 1, 1);
-
-	widget->userMarkers->openFile();
 }
 
 

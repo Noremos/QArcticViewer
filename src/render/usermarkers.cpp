@@ -124,7 +124,7 @@ void DynamicMarkers::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 	mshader.release();
 }
 
-void DynamicMarkers::save()
+void UserMarkers::save()
 {
 	buffer.openFileStream(Project::getProject()->getPath(BackPath::markers), 1000);
 
@@ -133,10 +133,5 @@ void DynamicMarkers::save()
 		buffer.writeLine(QString("%1 %2 %3").arg(boundydata[i].getX()).arg(boundydata[i].getY()).arg(boundydata[i].getZ()));
 	}
 	buffer.dowrite();
-}
-
-void DynamicMarkers::openFile()
-{
-	enable = true;
 }
 

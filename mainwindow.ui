@@ -408,17 +408,28 @@ background-color: &quot;#a4a4a4&quot;;
             </property>
            </widget>
           </item>
-          <item row="2" column="1" colspan="2">
-           <widget class="QCheckBox" name="chShowFinded">
-            <property name="text">
-             <string>Показать найденные</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-            <property name="tristate">
-             <bool>false</bool>
-            </property>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="comboBox">
+            <item>
+             <property name="text">
+              <string>Найденные</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Непрошедшие</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Все</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Скрыть</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -681,6 +692,13 @@ background-color: &quot;#d4d1d1&quot;;
              </widget>
             </item>
             <item>
+             <widget class="Line" name="line">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="verticalSpacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -688,7 +706,7 @@ background-color: &quot;#d4d1d1&quot;;
               <property name="sizeHint" stdset="0">
                <size>
                 <width>20</width>
-                <height>40</height>
+                <height>20</height>
                </size>
               </property>
              </spacer>
@@ -767,6 +785,36 @@ background-color: &quot;#d4d1d1&quot;;
            </property>
           </widget>
          </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Отображение</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="chShowUserMarkers">
+           <property name="text">
+            <string>Маркеры</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -837,7 +885,7 @@ border.width:3</string>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="checkBox">
+        <widget class="QCheckBox" name="cbShowImportedMarkrs">
          <property name="text">
           <string/>
          </property>
@@ -850,6 +898,16 @@ border.width:3</string>
         <widget class="QPushButton" name="pushButton">
          <property name="text">
           <string>Загрузить geojson</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbCheckShape">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
