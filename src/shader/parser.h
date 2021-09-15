@@ -10,7 +10,7 @@ using namespace std;
 struct argInfo
 {
 public:
-     argInfo(int _typeId = 0, string _name = "", string _defValue = "")
+    argInfo(int _typeId = 0, string _name = "", string _defValue = "")
     {
         type = _typeId;
         name = _name;
@@ -22,8 +22,6 @@ public:
     string defaultValue;
 };
 
-
-
 struct baseFunc
 {
 public:
@@ -33,12 +31,12 @@ public:
 };
 
 struct Constr : public baseFunc
-{ };
+{
+};
 
 struct Destruct : baseFunc
 {
 };
-
 
 struct func : baseFunc
 {
@@ -74,12 +72,13 @@ enum ps : psid
     _ifel = 2,          // {_ifel, n, m, e} = if next n symbls are exists, the next m symbols must be in the stmt else 'e' symbls must be in the stmt
     repitable = 3,      // {repitable, n} = the next n symbols can be repited some times
     skipUntell = 4,     // {skipUntill, OP} = skip all words until the OP wont be found
-    skipUntellSafe = 5,     // {skipUntillSafe, OP1, OP2} = e.g.{skipUntillSafe, '(', ')' } //  s + (3+4)) = OK (Last skob) // s + (3+4) = FAIL
+    skipUntellSafe = 5, // {skipUntillSafe, OP1, OP2} = e.g.{skipUntillSafe, '(', ')' } //  s + (3+4)) = OK (Last skob) // s + (3+4) = FAIL
+    specChar,           // single special char
     skip,               // skip next symbols check and return true
     end,                // end of stmt (must be in base and input strs)
 
-    word,               //any word
-    skip_word,          //any skip word
+    word,      //any word
+    skip_word, //any skip word
 
     //================== user def
     fig_skob_op, // {
@@ -88,7 +87,7 @@ enum ps : psid
     pslast
 };
 
-template<class T>
+template <class T>
 struct psbase
 {
     psid id;
@@ -102,7 +101,6 @@ struct psbase
     }
 };
 
-
 struct psSkipword : public psbase<char>
 {
     char secondToken;
@@ -112,23 +110,33 @@ struct psSkipword : public psbase<char>
     }
 };
 
-
 using psSingleinfo = psbase<char>;
 using psWordinfo = psbase<string>;
+
+#include<string.h>
 
 struct signature
 {
 private:
-    ps* sign = nullptr;
+    ps *sign = nullptr;
     int _size;
 
 public:
     signature()
-    {}
+    {
+    }
 
     int size() const
     {
         return _size;
+    }
+
+    void init(ps* data, int size)
+    {
+        release();
+        _size = size;
+        sign = new ps[size];
+        memcpy(this->sign, data, size * sizeof(ps));
     }
 
     psid get(unsigned int index) const
@@ -144,13 +152,17 @@ public:
         return get(index);
     }
 
+    void release()
+    {
+        if (sign != nullptr)
+        {
+            delete[] sign;
+            sign = nullptr;
+        }
+    }
     ~signature()
     {
-        if (sign!= nullptr)
-            {
-                delete sign;
-                sign = nullptr;
-            }
+        release();
     }
     /* data */
 };
@@ -159,20 +171,28 @@ class parcInfo
 {
     friend class Uparser;
     parcInfo()
-    {}
+    {
+    }
 
     void pushPsRange(psid oper, int st, int ed)
     {
         pozs.push_back(Range(st, ed));
         sign.push_back(oper);
     }
+
+    void pushPs(psid oper, int st)
+    {
+        pozs.push_back(Range(st, st + 1));
+        sign.push_back(oper);
+    }
+
+
 public:
     string line;
     vector<psid> sign;
     vector<Range> pozs;
 
-
-    Range* getRangeWhere(psid bc_ind, int start = 0)
+    Range *getRangeWhere(psid bc_ind, int start = 0)
     {
         for (; start < sign.size(); ++start)
         {
@@ -208,7 +228,8 @@ public:
     int getLen()
     {
         int i = 0;
-        while (/*i < sign.Length &&*/ sign[i++] != ps::end) ;
+        while (/*i < sign.Length &&*/ sign[i++] != ps::end)
+            ;
         return i;
     }
     Range getLast()
@@ -246,7 +267,6 @@ public:
     // }
 };
 
-
 struct savePair
 {
     int baseInd = 0;
@@ -264,14 +284,16 @@ private:
     psid glob_id;
     unordered_map<string, psWordinfo> wordParser;
     unordered_map<char, psSingleinfo> singleParser;
+    unordered_map<char, psSingleinfo> specialCharsParser;
     unordered_map<char, psSkipword> skipWordParser;
     // vector<psSingleinfo> singleTokens;
     // vector<psWordinfo> wordTokens;
     // vector<psSkipword> skipWordTokens;
     std::unique_ptr<parcInfo> lineInfo;
     int userDefStart = 0;
-
 public:
+    char specChar = '\\';
+
     Uparser()
     {
         // tokens.push_back(psSingleinfo(ps::zero, '0'));
@@ -280,7 +302,7 @@ public:
         // singleTokens.push_back(psSingleinfo(ps::fig_skob_cl, '}'));
         // addSingleToken()
         // singleTokens.push_back(psSingleinfo(ps::je, ';'));
-        
+
         // skipWordTokens.push_back(psSkipword(glob_id++, '"', '"'));
         // skipWordTokens.push_back(psSkipword(glob_id++, '\'', '\''));
         // skipWordTokens.push_back(psSkipword(glob_id++, '(', ')'));
@@ -289,7 +311,7 @@ public:
     // returns assigned token id
     int addWordToken(string token, int id = 0)
     {
-        if (id==0)
+        if (id == 0)
             id = glob_id++;
 
         wordParser.insert(pair<string, psWordinfo>(token, psWordinfo(id, token)));
@@ -297,19 +319,22 @@ public:
         return id;
     }
 
-    int addSingleToken(char token, int id = 0)
+    int addSingleToken(char token, int id = 0, bool isSpecial = false)
     {
-        if (id==0)
+        if (id == 0)
             id = glob_id++;
 
-        singleParser.insert(pair<char, psSingleinfo>(token, psSingleinfo(id, token)));
+        if (isSpecial)
+            specialCharsParser.insert(pair<char, psSingleinfo>(token, psSingleinfo(id, token)));
+        else
+            singleParser.insert(pair<char, psSingleinfo>(token, psSingleinfo(id, token)));
 
         return id;
     }
 
     int addSkipWordToken(char firstToken, char secondToken, int id = 0)
     {
-        if (id==0)
+        if (id == 0)
             id = glob_id++;
 
         skipWordParser.insert(pair<char, psSkipword>(firstToken, psSkipword(id, firstToken, secondToken)));
@@ -317,7 +342,7 @@ public:
         return id;
     }
 
-    bool compireSigs(const signature& baseSig, const signature& inputSig)
+    bool compireSigs(const signature &baseSig, const signature &inputSig)
     {
         //if (inputSig. > baseSig.Length)
         //    return false;
@@ -338,7 +363,6 @@ public:
                 savePoint.push(savePair(ind.baseInd + 2, ind.inpInd));
                 ++ind.baseInd;
             }
-
 
             psid baseChar = baseSig.get(ind.baseInd);
             psid inpChar = inputSig.get(ind.inpInd);
@@ -370,7 +394,7 @@ public:
     }
 
 private:
-    void closeWord(parcInfo* inLineInf, int workSt, int poz, bool initNew = false)
+    void closeWord(parcInfo *inLineInf, int workSt, int poz, bool initNew = false)
     {
         if (workSt != -1)
         {
@@ -385,7 +409,6 @@ private:
 
             workSt = -1;
             //word = false;
-
         }
         else if (initNew)
             workSt = poz;
@@ -414,14 +437,25 @@ private:
         return getCharType(base) != getCharType(another);
     }
 
+    struct skipFiner
+    {
+        psSkipword *word;
+        Range* rangeref = 0;
+        skipFiner(psSkipword *oword = nullptr, Range* range) : word(word), rangeref(range)
+        {
+        }
+    };
+
+    using SkipFinderStack = stack<skipFiner>;
+
     parcInfo *getInnerSign(string line, bool &multiComment)
     {
+        pLine = line;
+        unordered_map<char, unique_ptr<SkipFinderStack>> skipWordFinder;
 
-
-        parcInfo* inLineInf;
+        parcInfo *inLineInf;
         inLineInf->line = line;
-        // inLineInf.sign = new psid[30];
-        // inLineInf.pozs = new Range[30];
+
 
         int curl = 0;
         //bool word = false;
@@ -436,7 +470,7 @@ private:
             switch (c)
             {
             case '/':
-                if (i +1 < line.length())
+                if (i + 1 < line.length())
                 {
                     if (line[i + 1] == '/')
                         break;
@@ -444,10 +478,16 @@ private:
                     if (line[i + 1] == '*')
                     {
                         multiComment = true;
+                        for (int k = i + 2; k < line.length() - 1; k++)
+                            if (line[k] == '*' && line[k] == '/')
+                            {
+                                multiComment = false;
+                                break;
+                            }
                         break;
                     }
                 }
-                break;//und
+                break; //und
 
             case '\t':
             case ' ':
@@ -456,49 +496,78 @@ private:
                 closeWord(inLineInf, workSt, i);
                 continue;
 
-        }
-
-        auto ftoken = singleParser.find(c);
-
-        if (ftoken != singleParser.end())
-        {
-            if (ftoken->second.sep)
-            {
-                bool sep = true;
-                if (i>0)
-                    sep &= checkSeparateChar(line[i], line[i - 1]);
-                if (i + 1 < line.size())
-                    sep &= checkSeparateChar(line[i], line[i + 1]);
-
-                if (!sep)
-                    continue;
+            case specChar:
+                if (i + 1 < line.length())
+                {
+                    auto cpIter = specialCharsParser.find(line[i + 1]);
+                    if (cpIter != specialCharsParser.end())
+                    {
+                        inLineInf->pushPsRange(cpIter->second.id, i, i + 2);
+                    }
+                    else
+                    {
+                        inLineInf->pushPs(ps::specChar, i);
+                    }
+                }
             }
-            closeWord(inLineInf, workSt, i);
-            inLineInf->pushPsRange(ftoken->second.id, i, i + 1);
-            break;
-        }
 
-        // "dssdds "
-        int ccount = 0;
-        auto stoken = skipWordParser.find(c);
-        {
-            int st = i;
-            while (i < line.length() && (line[i] != c || ccount != 1))
+            if (multiComment)
+                break;
+
+            auto ftoken = singleParser.find(c);
+
+            if (ftoken != singleParser.end())
             {
-                if (line[i] == c)
-                    ++ccount;
+                if (ftoken->second.sep)
+                {
+                    bool sep = true;
+                    if (i > 0)
+                        sep &= checkSeparateChar(line[i], line[i - 1]);
+                    if (i + 1 < line.size())
+                        sep &= checkSeparateChar(line[i], line[i + 1]);
 
-                if (line[i] == stoken->second.secondToken)
-                    --ccount;
-
-                ++i;
+                    if (!sep)
+                        continue;
+                }
+                // closeWord(inLineInf, workSt, i);
+                inLineInf->pushPs(ftoken->second.id, i);
+                break;
             }
-            inLineInf->pushPsRange(ftoken->second.id, st, i);
 
-            break;
-        }
-        if (workSt == -1)
-            workSt = i;
+            //  ((((())))) Смысл в том, чтобы складывать в стак начало и символ.
+            // Без стака нельзя, т.к. символы могут повторяется (будет 2 одинаковых ключа)
+            // "dssdds "
+
+            auto stoken = skipWordParser.find(c);
+            if (stoken != skipWordParser.end())
+            {
+                auto stokenSecond = skipWordFinder.find(c);
+                if (stokenSecond == skipWordFinder.end())
+                {
+                    stokenSecond = skipWordFinder.insert(stoken->second.secondToken, make_unique<SkipFinderStack>())
+                }
+                // Предварительно пихаем, но потом конечный символ изменим.
+
+                inLineInf->pushPsRange(ftoken->second.id, i, i);
+                Range* ref = &inLineInf->pozs.back();
+                stokenSecond->second->push(skipFiner(&stoken->second, ref));
+                break;
+            }
+
+            // Если нашли завершающий символ пары -- берём верхний уровень из стака.
+            auto stokenSecond = skipWordFinder.find(c);
+            if (stokenSecond != skipWordFinder.end())
+            {
+                skipFiner obj = stokenSecond->second->top()
+                stokenSecond->second->pop();
+
+                // Указывает конец пароного символа
+                obj.rangeref->End = i + 1;
+                break;
+            }
+
+            if (workSt == -1)
+                workSt = i;
         }
 
         closeWord(inLineInf, workSt, line.length());
@@ -508,10 +577,32 @@ private:
 
 public:
 
-    string pLine;
-    bool processLine(string line, bool& multiComment)
+    // word in [AWORD] is a optional word. * for any symbols User \ to ecrane it
+    void getStatementSignature(signature& sig, string line, Uparser* parserList = nullptr)
     {
-        pLine = line;
+        unique_ptr<Uparser> parser;
+
+        if (parserList)
+        {
+            parser.reset(parserList);
+        }
+        else
+            parser.reset(new Uparser());
+
+        int ecr = up.addSingleToken('*');
+        int opWord = up.addSkipWordToken('[', ']');
+
+        parser->processLine(line);
+
+        bool mult;
+        parcInfo* info = parser->getInnerSign(line, mult);
+
+        sig.init(info->sign.data(), info->sign.size());
+    }
+
+    string pLine;
+    bool processLine(string line, bool &multiComment)
+    {
         lineInfo.reset(getInnerSign(line, multiComment));
         return static_cast<bool>(lineInfo);
     }
@@ -555,8 +646,6 @@ public:
     //     return compireSigs(funcFig, lineInfo.sign);
     // }
 };
-
-
 
 // static string getNextWord(string& line, int start = 0)
 // {
@@ -612,7 +701,6 @@ public:
 //         int skobs = 0;
 //         int funSkob = -1, skobsCountWhereClassStarts = -1;
 //         bool multiComm = false;
-
 
 //         void checkSkobsFnd(psid neededSkob, ref int initOfFnd)
 //         {
@@ -679,7 +767,6 @@ public:
 //                     funSkob = -1;
 //             }
 //         }
-
 
 //         int zone = 0;
 
@@ -758,7 +845,6 @@ public:
 //             }
 //             checkZone(line, ref avlZone);
 
-
 //             if (check(classInfo))
 //             {
 
@@ -800,7 +886,6 @@ public:
 //                         checkSkobs();
 //                         continue;
 //                     }
-
 
 //                     //"bc::BarRoot<T>* getRootNode()"
 //                     var func = Uparser.getFunc();
