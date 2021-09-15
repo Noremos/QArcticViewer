@@ -12,12 +12,12 @@ int main(int argc, char *argv[])
 
 //    return a.exec();
     TiffReader tiffr;
-    tiffr.open("/home/art/m/qarctic/QArcticViewer/test/arcticdem_mosaic_1km_v3.0.tif");
+    tiffr.open("D:/Learning/BAR/Moscow/50_59_1_2_2m_v3.0");
 
     tiffr.setRowsCacheSize(100);
     for (int i = 0; i < tiffr.height(); i++)
     {
-        ds1 = tiffr.getRow(i);
+        auto ds1 = tiffr.getRow(i);
     }
     exit(0);
 }
