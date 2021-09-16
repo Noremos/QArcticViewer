@@ -17,6 +17,7 @@ using std::vector;
 
 Project *Project::proj = nullptr;
 
+
 Project::Project()
 {
 	projectPath = "D:\\Programs\\Barcode\\_bar\\_p2\\";
@@ -92,7 +93,7 @@ bool Project::checkBounty(boundy &bb)
 // #include <opencv2/opencv.hpp>
 // #include <opencv2/core/mat.hpp>
 
-bool Project::checkHolm(boundy &bb, Img &tile, int offX, int offY)
+bool Project::checkHolm(boundy &bb, DataRect &tile, int offX, int offY)
 {
 	float dwid = bb.wid();
 	float dhei = bb.hei();
@@ -303,7 +304,7 @@ void Project::checkCorrect(const QVector<InstanceData> &target, bool skipFirst)
 #include <fstream>
 
 
-void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj,bool useCycle, float eps, int start, int endT )
+void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, bool useBarcoed, float minBarShooj,bool useCycle, float eps, int start, int endT)
 {
 	if (block)return;
 
@@ -327,7 +328,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	}
 
 	//!###############################SETS##########################
-	bool exportImg = true;
+	bool exportImg = false;
 
 	bool checkBoundy = true;
     bool checkBar3d = false;
@@ -344,7 +345,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
     // qDebug() << image.width();
 
 	//!###############################EXPORT##########################
-	QPixmap image;
 	std::unique_ptr<QPainter> painter;
 	float xfactor = u_displayFactor;
 	float yfactor = u_displayFactor;
@@ -361,6 +361,8 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	penBlue.setWidth(3);
 	penBlue.setColor(Qt::blue);
 
+#ifdef PAINTER
+	QPixmap image;
 	if (exportImg)
 	{
 		QString texture = getPath(BackPath::texture1);
@@ -372,6 +374,9 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		qDebug() << "X Factor:" << xfactor;
 		qDebug() << "Y Factor:" << yfactor;
 	}
+#else
+	exportImg = false;
+#endif
 
 //    closeReader();
 //	openReader();
@@ -417,7 +422,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		}
 	}
 
-
 	QTextStream stream(&out);
 	QString line;
 	int k = 0, l = 0;
@@ -427,10 +431,10 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 	spotZones->boundySize = 0;
 	spotZones->boundydata.clear();
-	badZones->boundydata.clear();
 	badZones->boundySize = 0;
+	badZones->boundydata.clear();
 	int tileindex = 0;
-	Img tile;
+	DataRect tile;
 	while (stream.readLineInto(&line))
     {
 		++l;
@@ -442,7 +446,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 
 		if (line.startsWith("t"))
 		{
-//			qDebug() << l;
 
 			if (pbCallback.cbIncrValue)
 				pbCallback.cbIncrValue(1);
@@ -453,6 +456,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
             QStringList listw = line.split(" ");
             tileindex = listw[1].toInt();
 
+			qDebug() << tileindex << "/" << endT-1;
 			if (tileindex >= endT-1)
 				break;
 
@@ -481,17 +485,17 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
         if ((int)bb.bb.endZ==9999 || (int)bb.bb.z==9999)
 			continue;
 
-		if (!checkBounty(bb.bb))
+		if (checkBoundy)
 		{
-			if (addAnother)
+			if (!checkBounty(bb.bb))
 			{
-				badZones->addBoundy(bb.bb, u_displayFactor, getBCColor(MarkersShowState::boundyNotPassed));
+				if (addAnother)
+				{
+					badZones->addBoundy(bb.bb, u_displayFactor, getBCColor(MarkersShowState::boundyNotPassed));
+				}
+				continue;
 			}
-			continue;
-		}
 
-//		if (checkBoundy)
-//		{
 			int offX=0, offY=0;
 			imgsrch.getOffset(tileindex, offX, offY);
 			if (!checkHolm(bb.bb, tile, offX, offY))
@@ -500,10 +504,10 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 				spotZones->addBoundy(bb.bb, u_displayFactor, getBCColor(MarkersShowState::holmNotPassed));
 				continue;
 			}
-//		}
+		}
 
 
-		Img rectImg;
+		DataRect rectImg;
 
         if (checkBar3d || checkSyrcl)
 		{
@@ -584,6 +588,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		//			model->boundydata.append(bb);
 		k++;
 	}
+	out.close();
 
 	tile.release();
 
@@ -591,12 +596,14 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 		pbCallback.cbIncrValue(imgsrch.getMaxTiles()-1);
 
 //    closeReader();
+#ifdef PAINTER
 	if (exportImg)
 	{
 		painter->save();
 		painter->end();
 		image.save(getPath(BackPath::root) + "result.jpg");
 	}
+#endif
 
 	if (checkBar3d)
 	{
@@ -607,7 +614,6 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 	}
 
 	qDebug() << "Found: " << k << " from " << l;
-
 
 //	checkCorrect(k, widget->markers->boundydata);
 // #ifdef ENABLE_MARKERS

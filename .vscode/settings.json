@@ -27,6 +27,7 @@
         "queue": "cpp",
         "stack": "cpp",
         "xlocinfo": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "iostream": "cpp"
     }
 }

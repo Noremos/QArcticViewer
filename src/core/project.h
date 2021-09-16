@@ -172,7 +172,7 @@ public:
 		}
 	}
 
-	MainWidget *widget;
+	MainWidget *widget = nullptr;
 private:
 
 	QString projectPath;
@@ -181,7 +181,7 @@ public:
 
 	bool checkBounty(boundy& bb);
 
-	static bool checkHolm(boundy& bb, Img &tile, int offX, int offY);
+	static bool checkHolm(boundy& bb, DataRect &tile, int offX, int offY);
 
 	bool isTileCached(int ind)
 	{

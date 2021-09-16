@@ -1,37 +1,49 @@
 //#include <QtTest/QtTest>
+#define DISABLE_GUI
 
 #include "../src/core/tiffreader.h"
+#include "../mainwidget.h"
+#include "../src/core/project.h"
 
-class TestTiffReader
-	//: public QObject
+#include <QObject>
+#include <QPixmap>
+
+//#define QT_NO_DEBUG_OUTPUT
+
+class TestTiffReader//: public QObject
 {
-//    Q_OBJECT
+//	Q_OBJECT
+	TiffReader tiffr;
+	Project *proj;
 public:
+	TestTiffReader()
+	{
+		tiffr.open("D:/Learning/BAR/Moscow/50_59_1_2_2m_v3.0/50_59_1_2_2m_v3.0_reg_dem.tif");
+		proj = Project::getProject();
+		proj->badZones = new SpotZones();
+		proj->spotZones = new SpotZones();
+	}
 	void readAllWithCache();
 	void checkBadRow();
 	void compireDecoders();
+	void openAndFind();
+	void openAndProcess();
 	virtual ~TestTiffReader() {};
 };
 
 void TestTiffReader::readAllWithCache()
 {
-	TiffReader tiffr;
-	tiffr.open("D:/Learning/BAR/Moscow/50_59_1_2_2m_v3.0/50_59_1_2_2m_v3.0_reg_dem.tif");
 
 	tiffr.setRowsCacheSize(100);
-	int l = tiffr.height();
 	for (int i = 161; i < tiffr.height(); i++)
 	{
-		auto ds1 = tiffr.getRow(i);
+		tiffr.getRow(i);
 	}
 	//	QCOMPARE(true, true);
 }
 
 void TestTiffReader::checkBadRow()
 {
-	TiffReader tiffr;
-	tiffr.open("D:/Learning/BAR/Moscow/50_59_1_2_2m_v3.0/50_59_1_2_2m_v3.0_reg_dem.tif");
-
 	tiffr.setRowsCacheSize(100);
 	//	int l = tiffr.height();
 	int i = 161;
@@ -51,9 +63,6 @@ void TestTiffReader::checkBadRow()
 
 void TestTiffReader::compireDecoders()
 {
-	TiffReader tiffr;
-	tiffr.open("D:/Learning/BAR/Moscow/50_59_1_2_2m_v3.0/50_59_1_2_2m_v3.0_reg_dem.tif");
-
 	for (int i = 0; i < tiffr.height(); i++)
 	{
 		tiffr.MODE = 0;
@@ -69,11 +78,74 @@ void TestTiffReader::compireDecoders()
 }
 
 
-int main()
+void TestTiffReader::openAndFind()
 {
+	//	MainWidget *glWidget = new MainWidget();
+	//	ui->glWidget->fpsLabel = ui->fpsLabel;
+	proj->loadProject("D:/Programs/Barcode/_bar/arctic/proj.qwr");
+	volatile bool stopAction = false;
+
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+//	callback.cbSetMax = std::bind(&MainWindow::bindSetPorogBarMax, this, _1);
+//	callback.cbIncrValue =  std::bind(&MainWindow::bindIncementProgBarVal, this, _1);
+	proj->findROIsOnHiemap(callback, 1,  100001);
+	//	delete glWidget;
+}
+
+void TestTiffReader::openAndProcess()
+{
+	proj->loadProject("D:/Programs/Barcode/_bar/arctic/proj.qwr");
+	volatile bool stopAction = false;
+
+	using std::placeholders::_1;
+	PrjgBarCallback callback(stopAction);
+	proj->filterROIs(callback, true, false, 0.5, false, 0.5, 0, 25000);
+//	proj->filterROIs(callback, true, false, 0.5, false, 0.5, 0, 25000);
+//	proj->filterROIs(callback, true, false, 0.5, false, 0.5, 0, 25000);
+//	proj->filterROIs(callback, true, false, 0.5, false, 0.5, 0, 25000);
+}
+
+void checkTime()
+{
+	using std::chrono::high_resolution_clock;
+	using std::chrono::duration_cast;
+	using std::chrono::duration;
+	using std::chrono::milliseconds;
+
 	TestTiffReader reader;
-	reader.readAllWithCache();
-//	reader.compireDecoders();
+		auto t1 = high_resolution_clock::now();
+		reader.readAllWithCache();
+		auto t2 = high_resolution_clock::now();
+		auto ms_int = duration_cast<milliseconds>(t2 - t1);
+		std::cout << "time:" << (double) (ms_int.count()) / 1000;
+
+		t1 = high_resolution_clock::now();
+		reader.readAllWithCache();
+		t2 = high_resolution_clock::now();
+		ms_int = duration_cast<milliseconds>(t2 - t1);
+		std::cout << "time:" << (double) (ms_int.count()) / 1000;
+
+		t1 = high_resolution_clock::now();
+		reader.readAllWithCache();
+		t2 = high_resolution_clock::now();
+		ms_int = duration_cast<milliseconds>(t2 - t1);
+		std::cout << "time:" << (double) (ms_int.count()) / 1000;
+
+}
+int main(int argc, char *argv[])
+{
+	system("pause");
+	std::cout << "started" << std::endl;
+	TestTiffReader reader;
+
+	// find ROIS
+//	reader.openAndFind();
+
+	// FILTER
+	reader.openAndProcess();
+
+//	system("pause");
 	return 0;
 }
 

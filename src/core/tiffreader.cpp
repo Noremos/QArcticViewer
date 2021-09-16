@@ -32,10 +32,13 @@ TiffReader::TiffReader()
 
 int TiffReader::printHeader(uchar* buffer)
 {
+	bool print = false;
+	short versNum = toShort(buffer + 2);
+	if (!print)
+		return versNum;
 	OUT << "----Header----";
 	OUT << "Byte order:" << buffer[0] << buffer[1]; //“II”(4949.H)“MM” (4D4D.H).
 
-	short versNum = toShort(buffer + 2);
 	OUT << "Version number :" << (toShort(buffer + 2));
 	if (versNum == 42)
 	{
@@ -95,23 +98,22 @@ size_t TiffReader::getTagIntValue(size_t offOrValue, size_t count, char format, 
 		 */
 void TiffReader::processGeoHeader(uchar *buffer)
 {
-	ushort KeyDirectoryVersion = toShort(buffer);
-	ushort KeyRevision = toShort(buffer + 2);
-	ushort MinorRevision = toShort(buffer + 4);
+//	ushort KeyDirectoryVersion = toShort(buffer);
+//	ushort KeyRevision = toShort(buffer + 2);
+//	ushort MinorRevision = toShort(buffer + 4);
 	ushort NumberOfKeys = toShort(buffer + 6);
-
-	OUT << "";
-	OUT << "KeyDirectoryVersion: " << KeyDirectoryVersion;
-	OUT << "KeyRevision: " << KeyRevision;
-	OUT << "MinorRevision: " << MinorRevision;
-	OUT << "NumberOfKeys: " << NumberOfKeys;
-	OUT << "";
+//	OUT << "";
+//	OUT << "KeyDirectoryVersion: " << KeyDirectoryVersion;
+//	OUT << "KeyRevision: " << KeyRevision;
+//	OUT << "MinorRevision: " << MinorRevision;
+//	OUT << "NumberOfKeys: " << NumberOfKeys;
+//	OUT << "";
 
 	for (int i = 0; i < NumberOfKeys; ++i)
 	{
 		processGeoentry(buffer + 8 + i * 8);
 	}
-	OUT << "";
+//	OUT << "";
 }
 
 void TiffReader::readAsciiFromBuffer(std::string &output, int offset, int Count)
@@ -137,30 +139,30 @@ void TiffReader::processGeoentry(uchar *buffer)
 	{
 	case GeotiffTags::GTModelTypeGeoKey:
 		geotags.GTModelTypeGeoKey = value;
-		OUT << "GTModelTypeGeoKey:" << value;
+//		OUT << "GTModelTypeGeoKey:" << value;
 		break;
 	case GeotiffTags::GTCitationGeoKey:
 		readAsciiFromBuffer(geotags.GTCitationGeoKey, Value_Offset, Count);
-		OUT << "GTCitationGeoKey:" << geotags.GTCitationGeoKey.c_str();
+//		OUT << "GTCitationGeoKey:" << geotags.GTCitationGeoKey.c_str();
 		break;
 	case GeotiffTags::GTRasterTypeGeoKey:
 //		geotags.GTRasterTypeGeoKey = value;
-		OUT << "GTRasterTypeGeoKey (DEPR):" << value;
+//		OUT << "GTRasterTypeGeoKey (DEPR):" << value;
 		break;
 	case GeotiffTags::GeogCitationGeoKey:
 		readAsciiFromBuffer(geotags.GeogCitationGeoKey, Value_Offset, Count);
-		OUT << "GeogCitationGeoKey:" << geotags.GeogCitationGeoKey.c_str();
+//		OUT << "GeogCitationGeoKey:" << geotags.GeogCitationGeoKey.c_str();
 		break;
 	case GeotiffTags::GeographicTypeGeoKey:
 		geotags.GeographicTypeGeoKey = value;
-		OUT << "GeographicTypeGeoKey:" << value;
+//		OUT << "GeographicTypeGeoKey:" << value;
 		break;
 	case GeotiffTags::ProjectedCSTypeGeoKey:
 		geotags.ProjectedCSTypeGeoKey = value;
-		OUT << "ProjectedCSTypeGeoKey:" << value;
+//		OUT << "ProjectedCSTypeGeoKey:" << value;
 		break;
 	default:
-		OUT << "Unknown geotag:" << KeyID << ", Value_Offset = " << Value_Offset;
+//		OUT << "Unknown geotag:" << KeyID << ", Value_Offset = " << Value_Offset;
 //		return;
 		break;
 	}
@@ -171,7 +173,7 @@ void TiffReader::processGeoentry(uchar *buffer)
 //	OUT << "Value_Offset: " << Value_Offset;
 }
 
-#include "side-src/fast_float/fast_float.h"
+#include "fast_float/fast_float.h"
 
 
 float TiffReader::getFloatFromAscii(size_t offOrValue, size_t count, char /*format*/, bool /*is64*/)
@@ -212,15 +214,15 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		break;
 	case Tags::ImageWidth:
 		this->tiff.ImageWidth = getTagIntValue(value, count, type, is64);
-		OUT << "ImageWidth";
+//		OUT << "ImageWidth";
 		break;
 	case Tags::ImageLength:
 		this->tiff.ImageLength = getTagIntValue(value, count, type, is64);
-		OUT << "ImageLength";
+//		OUT << "ImageLength";
 		break;
 	case Tags::PlanarConfiguration:
 		this->tiff.PlanarConfiguration = getTagIntValue(value, count, type, is64);
-		OUT << "PlanarConfiguration";
+//		OUT << "PlanarConfiguration";
 		break;
 	case Tags::TileOffsets:
 		isTile = true;
@@ -234,7 +236,7 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		this->tiff.StripOffsetsType = type;
 //		compressedLen = count;
 //		this->tiff.ImageLength = count;
-		OUT << "StripOffsets";
+//		OUT << "StripOffsets";
 		break;
 
 	case Tags::TileByteCounts:
@@ -248,20 +250,20 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		this->tiff.StripByteCountsType = type;
 //		this->tiff.ImageLength = count;
 
-		OUT << "StripByteCounts";
+//		OUT << "StripByteCounts";
 		break;
 
 	case Tags::BitsPerSample:
 		this->tiff.BitsPerSample = getTagIntValue(value, count, type, is64);
-		OUT << "BitsPerSample";
+//		OUT << "BitsPerSample";
 		break;
 	case Tags::SamplesPerPixel:
 		this->tiff.SamplesPerPixel = getTagIntValue(value, count, type, is64);
-		OUT << "SamplesPerPixel";
+//		OUT << "SamplesPerPixel";
 		break;
 	case Tags::Compression:
 		this->tiff.Compression = getTagIntValue(value, count, type, is64);
-		OUT << "Compression";
+//		OUT << "Compression";
 		break;
 	case Tags::SampleFormat:
 		this->tiff.SampleFormat = static_cast<tifftype>(value);
@@ -278,7 +280,7 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 			this->tiff.ModelTiepointTag.add(buffer + lk * 6 * sizeof(double));
 		}
 		delete[] buffer;
-		OUT << "ModelTiepointTag";
+//		OUT << "ModelTiepointTag";
 		break;
 	}
 	case Tags::ModelPixelScaleTag: {
@@ -290,7 +292,7 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 		this->tiff.ModelPixelScaleTag.y = toDouble(buffer +  sizeof(double));
 		this->tiff.ModelPixelScaleTag.z = toDouble(buffer +  sizeof(double) * 2);
 
-		OUT << "ModelPixelScaleTag";
+//		OUT << "ModelPixelScaleTag";
 		break;
 	}
 	case Tags::ModelTransformationTag: {
@@ -302,12 +304,12 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 			this->tiff.ModelTransformationTag[i] = toDouble(buffer + sizeof(double) * i);
 		}
 
-		OUT << "ModelTransformationTag" << this->tiff.ModelTransformationTag;
+//		OUT << "ModelTransformationTag" << this->tiff.ModelTransformationTag;
 		break;
 	}
 	case Tags::NoData:
 		this->tiff.NoDataValue = getFloatFromAscii(value, count, type, is64);
-		OUT << "Nodata";
+//		OUT << "Nodata";
 		break;
 
 	case Tags::GeoKeyDirectoryTag:
@@ -319,19 +321,19 @@ void TiffReader::printTag(uchar* buffer, bool is64)
 	}
 
 	default:
-		OUT << "Tag:" << (tag) << "; Value: " << value;
+//		OUT << "Tag:" << (tag) << "; Value: " << value;
 		print = false;
 		break;
 	}
 	if (print && false)
 	{
 
-		OUT << "Tag identifying code:" << (tag);
-		OUT << "Datatype of tag data:" << type;//3 - short; 4 -int 12 --ascii
-		OUT << "Number of values:" << count;
-		//	wid = toInt(buffer + 4);
-		//dataOffset = toInt(buffer + 8);
-		OUT << "Tag data or offset to tag data see below:" << value;
+//		OUT << "Tag identifying code:" << (tag);
+//		OUT << "Datatype of tag data:" << type;//3 - short; 4 -int 12 --ascii
+//		OUT << "Number of values:" << count;
+//		//	wid = toInt(buffer + 4);
+//		//dataOffset = toInt(buffer + 8);
+//		OUT << "Tag data or offset to tag data see below:" << value;
 	}
 
 	//In other words, if the tag data is smaller than or equal to 4 bytes, it fits. Otherwise, it is stored elsewhere and pointed to.
@@ -435,7 +437,7 @@ int TiffReader::getTileWid(int x)
 }
 
 //Offsets are ordered left-to-right and top-to-bottom.
-rowptr TiffReader::getTiffTile(int x, int y)
+cachedRow TiffReader::getTiffTile(int x, int y)
 {
 	int TilesInWid = getAddnl(tiff.ImageWidth, tiff.TileWidth);
 	//	int TilesInHei = getAddnl(tiff.ImageLength, tiff.TileLength);
@@ -444,9 +446,7 @@ rowptr TiffReader::getTiffTile(int x, int y)
 }
 
 
-
-
-rowptr TiffReader::getTiffTile(int ind)
+cachedRow TiffReader::getTiffTile(int ind)
 {
 	rowptr null = nullptr;
 
@@ -507,6 +507,7 @@ rowptr TiffReader::processData(uchar* bytes, int len)
 		data = setData<float>(bytes, len);
 		break;
 	default:
+		data = reinterpret_cast<rowptr>(bytes);
 		break;
 	}
 	return data;
@@ -523,8 +524,6 @@ int TiffReader::getBytesInRowToTile()
 		return tiff.ImageWidth * getSampleTypeSize();
 	}
 }
-
-//#include "decoder2.h"
 
 rowptr TiffReader::getRowData(int y)
 {
@@ -577,7 +576,6 @@ rowptr TiffReader::getRowData(int y)
 	}
 	else
 	{
-
 		uchar bbuffer[4];
 
 		char sie = getTypeSize(tiff.StripOffsetsType);
@@ -594,9 +592,17 @@ rowptr TiffReader::getRowData(int y)
 		tempbuffer.setLast3ToSero();
 
 		string st = ""; // dectode(buff, count);
-		decorder decod(tiff.Compression);
 		vbuffer ret;
-		decod.decompress(tempbuffer.tempbuffer, count, ret, getBytesInRowToTile());
+		decorder decod(tiff.Compression);
+
+//		if (MODE==0)
+		{
+			decod.decompress(tempbuffer.tempbuffer, count, ret, getBytesInRowToTile());
+		}
+//		else
+//		{
+//			decod.decompressLZW(tempbuffer.tempbuffer, count, ret, getBytesInRowToTile());
+//		}
 
 //		vbuffer ret2;
 //		decompressLZW(tempbuffer.tempbuffer, count, ret2, getBytesInRowToTile());
@@ -751,4 +757,67 @@ void TiffReader::close()
 
 	cachedRows.clear();
 	cachedTiles.clear();
+}
+
+DataRect TiffReader::getRect(int stX, int stRow, int wid, int hei)
+{
+	if (stX < 0 || stX >= this->widght() || stRow < 0 || stRow >= height())
+		return nullptr;
+
+	int lastX = MIN(stX + wid, this->widght());
+	wid = lastX - stX;
+	int lastRow = MIN(stRow + hei, this->height());
+	hei = lastRow - stRow;
+
+	DataRect img(wid, hei);
+	if (this->tiff.TileWidth != 0)
+	{
+		int tcurX = stX / this->tiff.TileWidth;
+		int tcurRow = stRow / this->tiff.TileLength;
+
+		int tcurXend = lastX / this->tiff.TileWidth;
+		int tcurRowend = lastRow / this->tiff.TileLength;
+
+		// in img
+		int istX = 0, istRow = 0;
+
+		for (; tcurRow < tcurRowend; ++tcurRow)
+		{
+			int rowIntDest = this->tiff.TileLength * istRow++;
+			for (; tcurX < tcurXend; ++tcurX)
+			{
+				int xInDest = this->tiff.TileWidth * istX++;
+				int lenLeft = wid - xInDest;
+				float *data = getTiffTile(tcurX, tcurRow);
+				for (size_t h = 0; h < tiff.TileLength; ++h)
+				{
+					img.setInRow(rowIntDest + h, istX, data + xInDest, lenLeft);
+				}
+			}
+			istX = 0;
+		}
+#ifdef IMPPART
+		exportDataAsBeaf(Project::getProject()->getTilePath(index), img.wid, img.hei, img.data);
+#endif
+		//load 9
+		// * * *
+		// * * *
+		// * * *
+		return img;
+		//		reader->getRowData()
+	}
+	else
+	{
+		size_t rowInDest = 0;
+		for (; stRow < lastRow; ++stRow)
+		{
+			cachedRow data = getRow(stRow);
+			img.setInRow(rowInDest++, 0, data + stX, wid);
+		}
+	}
+#ifdef IMPPART
+	exportDataAsBeaf(Project::getProject()->getTilePath(index), img.wid, img.hei, img.data);
+#endif
+
+	return img;
 }

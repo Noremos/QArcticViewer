@@ -87,7 +87,6 @@ CONFIG += c++20
 
 INCLUDEPATH += $$PWD/side-src/opencv-mingw
 DEPENDPATH += $$PWD/side-src/opencv-mingw
-unix|win32: LIBS += -L$$PWD/side-src/opencv-mingw/ -llibopencv_world452.dll
 
 #win32:!win32-g++: PRE_TARGETDEPS += $$PWD/side-src/opencv-mingw/opencv_core452.a
 #else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/side-src/opencv-mingw/libopencv_core452.a
@@ -103,8 +102,10 @@ RESOURCES += \
     textures.qrc
 
 
+unix|win32: LIBS += -L$$PWD/side-src/opencv-mingw/ -llibopencv_world452.dll
 
-INCLUDEPATH += $$PWD/side-src
+INCLUDEPATH += $$PWD/side-src/opencv-mingw
+DEPENDPATH += $$PWD/side-src/opencv-mingw
 
 target.path = $$PWD/side-src/$$TARGET
 INSTALLS += target

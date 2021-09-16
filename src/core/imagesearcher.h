@@ -18,7 +18,7 @@ class Beaf
 {
 public:
 	static bc::BarImg<float> getFromRawData(int wid, int hei, float *data);
-	static Img importBeafData(const QString &path);
+	static DataRect importBeafData(const QString &path);
 	static void exportDataAsBeaf(const QString &path,  int wid, int hei, float *data);
 	static void exportDataAsPng(const QString &path, bc::BarImg<float> &bimg);
 	static void exportHeightAsPng(const QString &path, const bc::BarImg<float> &bimg, bool vert);
@@ -97,7 +97,7 @@ class ImageSearcher
 	int bottomLevel = 0;
 
 
-	PointerCache<Img *> cachedTiles;
+	PointerCache<DataRect *> cachedTiles;
 	boundy getBounty(barline<float> *line);
 public:
 	ImageSearcher(TiffReader *reader);
@@ -123,10 +123,10 @@ public:
 		reader->setRowsCacheSize(tileHei + diffset + 10);
 	}
 
-	bool checkCircle(Img &ret, float hei, float coof);
+	bool checkCircle(DataRect &ret, float hei, float coof);
 
-	Img getTile(int index);
-	Img getTile(int tx, int ty);
+	DataRect getTile(int index);
+	DataRect getTile(int tx, int ty);
 
 	Size2 getTileSize()
 	{
@@ -152,7 +152,7 @@ public:
        x = (int)bb.x - startX * tileWid;
 	   y = (int)bb.y - startY * tileHei;
 	}
-	bool checkCircle2(Img &ret, float hei, float minDiametr);
+	bool checkCircle2(DataRect &ret, float hei, float minDiametr);
 
 	void savemat();
 	~ImageSearcher();

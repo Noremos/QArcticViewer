@@ -377,9 +377,32 @@ struct TiffTags
 
 #include "decoder.h"
 
+//#define DEBUG_OUT
+
 template<class T>
+class PointerDel
+{
+public:
+	void free(T val)
+	{
+		delete val;
+	}
+};
+
+template<class T>
+class PointerArrayDel
+{
+public:
+	void free(T val)
+	{
+		delete[] val;
+	}
+};
+
+template<class T, class DEL>
 class Cache
 {
+	DEL deallocator;
 protected:
 	std::queue<int> cacheIndexs;
 	std::unordered_map<int, T> cachedData;
@@ -391,10 +414,6 @@ public:
 		  maxElementsSize(maxElemCount), maxCacheSize(maxCachSize), elementSize(sizeOfElement)
 	{ }
 
-	virtual void free(int /*index*/)
-	{
-
-	}
 
 	void setMaxElems(size_t number)
 	{
@@ -407,9 +426,17 @@ public:
 	void remove()
 	{
 		int ol = cacheIndexs.front();
-		free(ol);
 		cacheIndexs.pop();
-		cachedData.erase(ol);
+#ifdef DEBUG_OUT
+		if (ol%5 == 0)
+			qDebug() << "get:" << ol;
+#endif
+
+		auto iter = cachedData.find(ol);
+		T val = std::exchange(iter->second, nullptr);
+
+		deallocator.free(val);
+		cachedData.erase(iter);
 	}
 	void setMaxSize(size_t size)
 	{
@@ -419,6 +446,10 @@ public:
 	}
 	void storeData(int i, T data)
 	{
+#ifdef DEBUG_OUT
+		if (i%5 == 0)
+			qDebug() << "get:" << i;
+#endif
 		size_t s = cachedData.size();
 		if (s > maxElementsSize || s * elementSize > maxCacheSize)
 			remove();
@@ -457,7 +488,7 @@ public:
 	void clear() {
 		for (auto &it : cachedData)
 		{
-			free(it.first);
+			deallocator.free(it.second);
 		}
 		cachedData.clear();
 		std::queue<int> empty;
@@ -466,44 +497,19 @@ public:
 };
 
 template<class T>
-class PointerCache : public Cache<T>
-{
-public:
-	PointerCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T)) :
-		  Cache<T>(maxElemCount, maxCachSize, sizeOfElement) {}
+using PointerArrayCache = Cache<T, PointerArrayDel<T>>;
 
-	void free(int index) override
-	{
-		auto it = this->cachedData.find(index);
-		delete it->second;
-		it->second = nullptr;
-	}
-};
 
 template<class T>
-class PointerArrayCache : public Cache<T>
-{
-public:
-	PointerArrayCache(size_t maxElemCount = 16, size_t maxCachSize = 10000000, size_t sizeOfElement = sizeof(T*)):
-		  Cache<T>(maxElemCount, maxCachSize,sizeOfElement)
-	{  }
+using PointerCache = Cache<T, PointerDel<T>>;
 
-	void free(int index) override
-	{
-		auto it = this->cachedData.find(index);
-		// TODO Fix It
-		if (it->second)
-		{
-			delete[](float *) it->second;
-			it->second = nullptr;
-		}
-//		qDebug() << "FREEE!";
-	}
-};
 
+#include "../types/img.h"
 
 enum class ImageType { int8, int16, int32, float8, float16, float32, float64, rdb8, argb8 };
 typedef float* rowptr;
+
+typedef float* cachedRow;
 
 class ImageReader
 {
@@ -520,7 +526,7 @@ public:
 	float max, min;
 
 	virtual float getNullValue() = 0;
-	rowptr getRow(int i)
+	cachedRow getRow(int i)
 	{
 		rowptr d = nullptr;
 		rowptr data = cachedRows.getData(i, d);
@@ -533,6 +539,10 @@ public:
 			return data;
 		}
 	}
+
+
+	virtual DataRect getRect(int stX, int stRow, int wid, int hei) = 0;
+
 	virtual ~ImageReader()
 	{
 
@@ -625,6 +635,7 @@ public:
 	TiffTags tiff;
 	GeoTiffTags geotags;
 
+	int MODE = 0;
 	TiffReader();
 
 	bool open(const char *path) override;
@@ -648,16 +659,18 @@ public:
 	void read(uchar *buffer, offu64 offset, offu64 len);
 	void setTitleCacheSize(size_t n);
 	void setRowsCacheSize(size_t n);
+
 	// ImageReader interface
 	rowptr getRowData(int ri) override;
+	DataRect getRect(int stX, int stRow, int wid, int hei) override;
 
 	int widght() override;
 	int height() override;
 
 	ImageType getType() override;
 
-	rowptr getTiffTile(int x, int y);
-	rowptr getTiffTile(int ind);
+	cachedRow getTiffTile(int x, int y);
+	cachedRow getTiffTile(int ind);
 	void removeTileFromCache(int ind);
 	rowptr processData(uchar *bytes, int len);
 
@@ -684,7 +697,6 @@ public:
 
 	QVector3D convertRasterToModel(QVector3D rasterCoord)
 	{
-
 		double x = rasterCoord.x();
 		double y = rasterCoord.z();
 		double z = rasterCoord.y();

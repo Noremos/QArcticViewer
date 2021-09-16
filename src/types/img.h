@@ -1,68 +1,80 @@
 #ifndef IMG_H
 #define IMG_H
-#include "src/base.h"
+#include "../base.h"
 #include  <cstring>
 
 #include "types.h"
 
-struct Img
+struct DataRect
 {
 	float minVal = -9999;
 	float maxVal = -9999;
 	float *data;
 	int wid;
 	int hei;
-	Img(float *data = nullptr, int widgth = 0, int height = 0) : data(data), wid(widgth), hei(height) {}
-	Img(int widgth, int height) : wid(widgth), hei(height) { data = new float[wid * hei]; }
-	~Img()
-	{}
+	DataRect(float *data = nullptr, int widgth = 0, int height = 0) : data(data), wid(widgth), hei(height) {}
+	DataRect(int widgth, int height) : wid(widgth), hei(height) { data = new float[wid * hei]; }
+	~DataRect() { release(); }
 
-//	Img(const Img &other) : wid(other.wid), hei(other.hei), maxVal(other.maxVal), minVal(other.minVal) /*: s(other.s)*/
-//	{
-//		assert(false);
-//		data = new float[wid * hei];
-//		memcmp(data, other.data, wid * hei * sizeof(float));
-//	}
-//	/*std::cout << "move failed!\n";*/
-//	Img(Img &&other) : minVal(other.minVal),  maxVal(other.maxVal) /*: s(std::move(o.s))*/
-//	{
-//		data = std::exchange(other.data, nullptr); // leave other in valid state
-//		wid = std::exchange(other.wid, 0); // leave other in valid state
-//		hei = std::exchange(other.hei, 0); // leave other in valid state
-//	}
+	DataRect(const DataRect &other) : minVal(other.minVal), maxVal(other.maxVal),  wid(other.wid), hei(other.hei) /*: s(other.s)*/
+	{
+		assert(false);
+		data = new float[wid * hei];
+		memcpy(data, other.data, wid * hei * sizeof(float));
+	}
 
-//	// copy assignment
-//	Img &operator=(const Img &other)
-//	{
-//		// Guard self assignment
-//		if (this == &other)
-//			return *this;
+	DataRect(DataRect &&other) : minVal(other.minVal),  maxVal(other.maxVal) /*: s(std::move(o.s))*/
+	{
+		data = std::exchange(other.data, nullptr); // leave other in valid state
+		wid = std::exchange(other.wid, 0); // leave other in valid state
+		hei = std::exchange(other.hei, 0); // leave other in valid state
+	}
 
-//		wid = other.wid; // leave other in valid state
-//		hei = other.hei; // leave other in valid state
+	// copy assignment
+	DataRect &operator=(const DataRect &other)
+	{
+		// Guard self assignment
+		if (this == &other)
+			return *this;
 
-//		maxVal = other.maxVal;
-//		minVal = other.minVal;
-//		memcmp(data, other.data, wid * hei * sizeof(float));
-//		return *this;
-//	}
+		maxVal = other.maxVal;
+		minVal = other.minVal;
 
-//	// move assignment
-//	Img &operator=(Img &&other) noexcept
-//	{
-//		// Guard self assignment
-//		if (this == &other)
-//			return *this; // delete[]/size=0 would also be ok
+		if (wid == other.wid || hei == other.hei)
+		{
+			if (data == nullptr)
+				data = new float[wid * hei];
+		}
+		else
+		{
+			wid = other.wid; // leave other in valid state
+			hei = other.hei; // leave other in valid state
+			release();
+			data = new float[wid * hei];
+		}
 
-//		wid = std::exchange(other.wid, 0); // leave other in valid state
-//		hei = std::exchange(other.hei, 0); // leave other in valid state
-//		data = std::exchange(other.data, nullptr); // leave other in valid state
+		memcpy(data, other.data, wid * hei * sizeof(float));
+		return *this;
+	}
 
-//		maxVal = other.maxVal;
-//		minVal = other.minVal;
+	// move assignment
+	DataRect &operator=(DataRect &&other) noexcept
+	{
+		// Guard self assignment
+		if (this == &other)
+			return *this; // delete[]/size=0 would also be ok
 
-//		return *this;
-//	}
+		wid = std::exchange(other.wid, 0); // leave other in valid state
+		hei = std::exchange(other.hei, 0); // leave other in valid state
+
+		release();
+		data = std::exchange(other.data, nullptr); // leave other in valid state
+
+		maxVal = other.maxVal;
+		minVal = other.minVal;
+
+		return *this;
+	}
 
 
 	float get(int off) const { return data[off]; }
@@ -93,9 +105,9 @@ struct Img
 
 	void set(int x, int y, float val) { data[y * wid + x] = val; }
 
-	inline Img clone() const
+	inline DataRect clone() const
 	{
-		Img clo(new float[wid * hei], wid, hei);
+		DataRect clo(new float[wid * hei], wid, hei);
 		memcpy(clo.data, data, wid * hei * sizeof(float));
 		clo.maxVal = maxVal;
 		clo.minVal = minVal;
@@ -114,9 +126,9 @@ struct Img
 		memcpy(data + wid*y +offsetInDest, inputData, len* sizeof(float));
 	}
 
-	inline Img zeroClone() const
+	inline DataRect zeroClone() const
 	{
-		Img clo(new float[wid * hei], wid, hei);
+		DataRect clo(new float[wid * hei], wid, hei);
 		clo.zeroing();
 		return clo;
 	}
@@ -130,7 +142,7 @@ struct Img
 		}
 	}
 
-    void getRect(int x, int y, int wid, int hei, Img& ret)
+	void getRect(int x, int y, int wid, int hei, DataRect& ret)
 	{
         ret.wid = wid;
         ret.hei = hei;

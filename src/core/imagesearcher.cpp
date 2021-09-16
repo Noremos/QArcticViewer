@@ -1,8 +1,8 @@
 #include "imagesearcher.h"
 #include "src/core/project.h"
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/mat.hpp>
+#include "opencv2/opencv.hpp"
+#include "opencv2/core/mat.hpp"
 
 ImageSearcher::ImageSearcher(TiffReader *reader) : reader(reader), image(nullptr)
 {
@@ -34,110 +34,23 @@ ImageSearcher::ImageSearcher(TiffReader *reader) : reader(reader), image(nullptr
 }
 
 
-Img ImageSearcher::getTile(int index)
+DataRect ImageSearcher::getTile(int index)
 {
 	int tx = index % tilesInWid;
 	int ty = index / tilesInWid;
-	return getTile(tx,ty);
-}
-
-Img ImageSearcher::getTile(int tx, int ty)
-{
 
 	if (tx<0 || tx>=tilesInWid || ty<0 || ty>= tilesInHei)
 		return nullptr;
 
-	int index = ty * tilesInWid + tx;
-#ifdef IMPPART
-	if (Project::getProject()->isTileCached(index))
-	{
-		return importBeafData(Project::getProject()->getTilePath(index));
-	}
-#endif
+	return reader->getRect(tx * tileWid, ty * tileHei, tileHei + diffset, tileWid + diffset);
+}
 
+DataRect ImageSearcher::getTile(int tx, int ty)
+{
+	if (tx<0 || tx>=tilesInWid || ty<0 || ty>= tilesInHei)
+		return nullptr;
 
-	if (reader->tiff.TileWidth != 0)
-	{
-
-		char offs[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-		Img img(tileWid + diffset, tileHei + diffset);
-
-
-		for (int i = 0; i < 4; ++i)
-		{
-			int tcurX = tx + offs[i][0];
-			int tcurY = ty + offs[i][1];
-			if (tcurX < 0 || tcurY < 0 || tcurX >= tilesInWid || tcurY >= tilesInHei)
-				continue;
-
-			// in img
-			int istX = 0, istY = 0;
-
-			int lenX = tileWid,
-				lenY = tileHei;
-
-			if (offs[i][0] == 1)
-			{
-				istX = tileWid;
-				lenX = diffset;
-			}
-			if (offs[i][1] == 1)
-			{
-				istY = tileHei;
-				lenX = diffset;
-			}
-
-			for (int i = 0; i < img.wid * img.hei; ++i)
-				img.data[i] = -9999;
-
-
-			float *data = reader->getTiffTile(index);
-
-			for (int j = 0; j < lenY; ++j)
-			{
-				int fromdataOff = j * tileWid;
-				img.setInRow(istY + j, istX, data + fromdataOff, lenX);
-			}
-		}
-#ifdef IMPPART
-		exportDataAsBeaf(Project::getProject()->getTilePath(index), img.wid, img.hei, img.data);
-#endif
-//load 9
-// * * *
-// * * *
-// * * *
-		return img;
-//		reader->getRowData()
-	}
-
-	Img img(tileWid + diffset, tileHei + diffset);
-	for (int i = 0; i < img.wid * img.hei; ++i)
-		img.data[i] = -9999;
-
-	// Pixel    "st=columnNum" is a column number is source image
-	// *  *  *
-	// *  st *
-	// *  *  *
-	int columnNum = tileWid * tx;
-	int len = (tx == tilesInWid - 1 ? tileWid : tileWid + diffset);
-
-	// Pixel  "i=firstRow" is a row number in source image
-	// * * *
-	// i * *
-	// * * *
-	int firstRow = ty * tileHei;
-	int lastRow = std::min((ty + 1) * tileHei + diffset, reader->height());
-	for (int rowInDest = 0; firstRow < lastRow; ++firstRow, ++rowInDest)
-	{
-		float *data = reader->getRow(firstRow);
-		img.setInRow(rowInDest, 0, data + columnNum, len);
-	}
-
-#ifdef IMPPART
-	exportDataAsBeaf(Project::getProject()->getTilePath(index), img.wid, img.hei, img.data);
-#endif
-
-	return img;
+	return reader->getRect(tx * tileWid, ty * tileHei, tileHei + diffset, tileWid + diffset);
 }
 
 int ImageSearcher::getMaxTiles()
@@ -275,7 +188,7 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 
 		// barsOut.writeLine("{num:" + tileNumstr + ", barcodes: { bars:[ ");
 
-		Img img = getTile(i);
+		DataRect img = getTile(i);
 		int wid = img.wid, hei = img.hei;
 
 		bc::BarcodeCreator<float> creator;
@@ -448,7 +361,7 @@ bool cehckCoof(float a, float b)
 	return coof <= 2.0;
 }
 
-bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
+bool ImageSearcher::checkCircle(DataRect &ret, float hei, float coof)
 {
 	cv::Mat mat(ret.hei, ret.wid, CV_8UC1);
 
@@ -510,7 +423,7 @@ bool ImageSearcher::checkCircle(Img &ret, float hei, float coof)
 #include <math.h>
 
 
-bool ImageSearcher::checkCircle2(Img &ret, float hei, float coof)
+bool ImageSearcher::checkCircle2(DataRect &ret, float hei, float coof)
 {
 	cv::Mat mat(ret.hei, ret.wid, CV_8UC1);
 	float maxval = -9999;
@@ -701,7 +614,7 @@ bc::BarImg<float> Beaf::getFromRawData(int wid, int hei, float *data)
 	return bc::BarImg<float>(wid, hei, 1, (uchar *) data, false, false);
 }
 
-Img Beaf::importBeafData(const QString &path)
+DataRect Beaf::importBeafData(const QString &path)
 {
 	QFile file(path);
 
@@ -724,7 +637,7 @@ Img Beaf::importBeafData(const QString &path)
 	}
 	char *flaotData = new char[w * h + 1];
 	file.read(flaotData, w * h);
-	Img ret((float*)flaotData, w, h);
+	DataRect ret((float*)flaotData, w, h);
 
 	return ret;
 }

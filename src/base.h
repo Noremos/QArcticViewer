@@ -3,12 +3,17 @@
 #define LOG
 #include <vector>
 
-
+//#define DISABLE_GUI
 //#define RELEASE_AV
 //#define USE_OPENCV
 
-#define ENABLE_MARKERS
 #define ENABLE_SHAPE
+
+#ifndef DISABLE_GUI
+#define ENABLE_MARKERS
+#define PAINTER
+#endif
+
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -84,10 +89,9 @@ public:
 
 	T* extract()
 	{
-		T* temp = m_buffer;
+		T* temp = std::exchange(m_buffer, nullptr);
 		m_size = 0;
 
-		m_buffer = nullptr;
 		return temp;
 	}
 
