@@ -59,7 +59,7 @@ using psid = char;
 
 enum ps : psid
 {
-    op = -1, // -n: next n symb is optional but only if there is actily this n symbols exsists
+    op = -1, // -n: next n words are optional but only if there is actily this n symbols exsists
              // for example for smt {-2, word, _class, word, je};
 
     // "my class Uparser;"   = {word, _class, word, je}  =  {[word, _class,] word, je} = ok
@@ -75,14 +75,17 @@ enum ps : psid
     skipUntellSafe = 5, // {skipUntillSafe, OP1, OP2} = e.g.{skipUntillSafe, '(', ')' } //  s + (3+4)) = OK (Last skob) // s + (3+4) = FAIL
     specChar,           // single special char
     skip,               // skip next symbols check and return true
+    lineend,            // \n - end of line
     end,                // end of stmt (must be in base and input strs)
-
     word,      //any word
-    skip_word, //any skip word
-
+    skip_stmnt, //any skip word
+    skip_stmnt_end,
+    
+    // sp_op_word, // [WORD] in sign
+    // sp_any,     // '*' - any symbols
     //================== user def
-    fig_skob_op, // {
-    fig_skob_cl, // }
+    // fig_skob_op, // {
+    // fig_skob_cl, // }
 
     pslast
 };
@@ -104,9 +107,11 @@ struct psbase
 struct psSkipword : public psbase<char>
 {
     char secondToken;
-    psSkipword(psid id, char firstToken, char secondToken) : psbase(id, firstToken)
+    bool ignoreInside;
+    psSkipword(psid id, char firstToken, char secondToken, bool ignoreInside = false) : psbase(id, firstToken)
     {
         this->secondToken = secondToken;
+        this->ignoreInside = ignoreInside;
     }
 };
 
@@ -290,7 +295,7 @@ private:
     // vector<psWordinfo> wordTokens;
     // vector<psSkipword> skipWordTokens;
     std::unique_ptr<parcInfo> lineInfo;
-    int userDefStart = 0;
+    const int userDefStart = ps::pslast + 1;
 public:
     char specChar = '\\';
 
@@ -332,12 +337,12 @@ public:
         return id;
     }
 
-    int addSkipWordToken(char firstToken, char secondToken, int id = 0)
+    int addSkipWordToken(char firstToken, char secondToken, int id = 0, bool skipInside = false)
     {
         if (id == 0)
             id = glob_id++;
 
-        skipWordParser.insert(pair<char, psSkipword>(firstToken, psSkipword(id, firstToken, secondToken)));
+        skipWordParser.insert(pair<char, psSkipword>(firstToken, psSkipword(id, firstToken, secondToken, skipInside)));
 
         return id;
     }
@@ -491,9 +496,12 @@ private:
 
             case '\t':
             case ' ':
-            case '\n':
             case '\r':
                 closeWord(inLineInf, workSt, i);
+            case '\n':
+                closeWord(inLineInf, workSt, i);
+                inLineInf->pushPs(ps::lineend, i);
+
                 continue;
 
             case specChar:
@@ -563,6 +571,8 @@ private:
 
                 // Указывает конец пароного символа
                 obj.rangeref->End = i + 1;
+                
+                inLineInf->pushPs(skip_stmnt_end, i);
                 break;
             }
 
@@ -577,8 +587,9 @@ private:
 
 public:
 
-    // word in [AWORD] is a optional word. * for any symbols User \ to ecrane it
-    void getStatementSignature(signature& sig, string line, Uparser* parserList = nullptr)
+    // word in [AWORD] is a optional word. * for any symbols. . -  word  User \ to ecrane it
+    //! AWORD will add to the parser world list
+    unique_ptr<Uparser> addGetStatementSignature(signature& sig, string line, Uparser* parserList = nullptr)
     {
         unique_ptr<Uparser> parser;
 
@@ -589,19 +600,105 @@ public:
         else
             parser.reset(new Uparser());
 
-        int ecr = up.addSingleToken('*');
-        int opWord = up.addSkipWordToken('[', ']');
-
-        parser->processLine(line);
+        int any = parser.addSingleToken('*');
+        int opWord = parser.addSkipWordToken('[', ']');
+        int randomWord =  parser->addSingleToken('.', 0, false);
+        parser->addSingleToken('*', 0, true);
+        parser->addSingleToken('[', 0, true);
+        parser->addSingleToken(']', 0, true);
+        parser->addSingleToken('.', 0, true);
+        parser->processText(line);
 
         bool mult;
         parcInfo* info = parser->getInnerSign(line, mult);
 
         sig.init(info->sign.data(), info->sign.size());
+        
+        std::vector<psid> newSig;
+        psid opPrev = 0;
+        for (size_t i = 0; i < sig.size(); i++)
+        {
+            ps op = sig[i];
+            if (op == ps::word)
+            {
+                if (opPrev == randomWord)
+                {
+                    newSig.push_back(op::word);
+                }
+                else
+                {
+                    int wIndex = parser.addWord(info->getSub(i));
+                    newSig.push_back(wIndex);
+                }
+            }
+            if (op >= userDefStart)
+            {
+                newSig.push_back(op);
+            }
+            if (op == opWord)
+            {
+                ps opS = sig[i++];
+                newSig.push_back(-1);
+
+                if (opS == any)
+                {
+                    newSig.push_back(word);
+                    i++;
+                }
+                else
+                {
+                    int wIndex = parser.addWord(info->getSub(i - 1));
+                    newSig.push_back(wIndex);
+                }
+                assert(sig[i++] == ps::skip_stmnt_end)
+
+                // int cou = 0;
+                // info->getPozSt(i)
+                // size_t k = i + 1, wordCounter = 0;
+                // for (; k < sig.size(); k++)
+                // {
+                //     ps opS = sig[k];
+                //     if (opS == opWord)
+                //     {
+                //         ++cou;
+                //     }
+                //     if (opS == ps::word)
+                //     {
+                //         if (opPrev == randomWord)
+                //         {
+                //             newSig.push_back(op::word);
+                //         }
+                //         else
+                //         {
+                //             int wIndex = parser.addWord(info->getSub(i));
+                //             newSig.push_back(wIndex);
+                //         }
+                //     }
+
+                //     if (opS == ps::skip_stmnt_end)
+                //     {
+                //         if (cou == 0)
+                //             break;
+                //         --cou;
+                //     }
+                // }
+
+                // if (k < sig.size())
+                // {
+                    
+                // }
+            }
+            if (op== any)
+            {
+                
+            }
+        }
+        
+        return parser;
     }
 
     string pLine;
-    bool processLine(string line, bool &multiComment)
+    bool processText(string line, bool &multiComment)
     {
         lineInfo.reset(getInnerSign(line, multiComment));
         return static_cast<bool>(lineInfo);

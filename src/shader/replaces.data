@@ -13,15 +13,15 @@ calcPos()
 #m mobile
 
 @ Вставить униформы высота, проекция и вид
-uniform MPV;
+uniform r_MPV;
 #d
 
 uniform mat4 model;
 uniform mat4 projection;
 uniform mat4 view;
 
-@ Вставить импорт. @1 - тип (vec3) @2 - название, [@name] - передать переменной вывода (создать её)
-import @1 @2 [putToEnd 'out_{@2} = @2;' | initOut 'out_{@2};']
+@ Вставить импорт. @1 - тип (vec3) @2 - название, [@name] - передать переменной вывода (создать её) layout(location = 0) in vec3 a_position;
++import @0 @1 @2 [putToEnd 'out_{@2} = @2;' | initOut 'out_{@2};']
 #d
 
-layout(location = 0) in vec3 a_position;
+layout(location = @0) in @1 @2;

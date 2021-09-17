@@ -22,6 +22,8 @@ public:
     ShaderBuilder(glVersion ver/* args */);
     ~ShaderBuilder();
     
+    QVector<defs> defens;
+    QMap<QString nds, def> defMap;
     
     void loadShader(QString& vert, QString& frag);
     
@@ -32,8 +34,50 @@ private:
     char* preprocess(char* src);
 };
 
+struct defs
+{
+    QString templace;
+    QString mobile;
+    QString desc;
+    /* data */
+};
+
 ShaderBuilder::ShaderBuilder(glVersion ver)
 {
+    QFile out("replaces.data");
+    if (out.exists())
+        out.remove();
+
+    if (!out.open(QFile::WriteOnly | QFile::Truncate))
+        return;
+    
+    QString line;
+    defs def;
+    
+    while (stream.readLineInto(&line))
+    {
+        char fst  = line[0].toStdChar();
+        switch (fst)
+        {
+        case '@':
+            if (!def.templace.empty())
+                defMap[def.templace] = def;
+                defens.append(def);
+            /* code */
+            stream.readLineInto(&def.template)
+            break;
+        case '#'
+            QString ref& = line[1] == 'd' def.desc : def.mobile;
+            while (stream.readLineInto(&line) && line[0] != '#' && line[0] != '@')
+            {
+                ref.append(line);
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
 }
 
 ShaderBuilder::~ShaderBuilder()
@@ -44,7 +88,22 @@ struct replJob
     QString holder;//Что заменить
     QString text;// На что заменить
 };
+QString& strip(QString& imput, QString& beg)
+{
+    for (size_t i = 0; i < imput.size(); ++i)
+    {
+        QChar c = imput[i];
+        if (c = ' ' || c = '\t')
+            beg.append(c);
+        else
+        {
+            imput = imput.sub(i);
+            break;
+        }
+    }
 
+    return imput;
+}
 void processFile(QString path)
 {
     Uparser parser;
@@ -55,6 +114,60 @@ void processFile(QString path)
 
     if (!out.open(QFile::WriteOnly | QFile::Truncate))
         return;
+    
+    QTextStream begin;
+    begin.writeLine("#verion 330");
+
+    QTextStream main;
+
+    QTextStream end;
+    // begin.writeLine("}");// main() {
+
+
+
+    QTextStream res;
+    begin.writeLine("@BEG");// main() {
+    begin.writeLine("@MAIN");// main() {
+    begin.writeLine("@END");// main() {
+        
+    QTextStream stream(&out);
+    QTextStream& curStream = begin;
+    while (stream.readLineInto(&line))
+    {
+        curStream.append(line);
+        if (line.containt("void main"))
+        {
+            stream.readLineInto(&line);//skip {
+            main.append(line);
+                
+            stream.readLineInto(&line);
+            main.append(line);
+            curStream = main;
+            main.write(imports)
+            break;
+        }
+        QString beg;
+        if (strip(line, beg).startsWith("+import"))
+        {
+            QStringList list = line.split(' ');
+            QString sls = "layout(location = %s) in %s %s;".ags(line[0].toString()).ags(line[1].toString()).ags(line[2].toString())
+            imports.append(beg + "sls");
+        }
+    }
+
+    while (stream.readLineInto(&line))
+    {
+        if (line.constains('}'))//&& curStream == main)
+        {
+            curStream.append(ends);
+        }
+        QString beg;
+        if (def.has(strip(line, beg)))
+        {
+            
+        }
+    }
+    //-------------------------------------------
 
     parser.addSkipWordToken('(', ')');
     parser.addSkipWordToken('{', '}');
@@ -67,8 +180,14 @@ void processFile(QString path)
     parser.addWordToken("main");
     parser.addWordToken("void");
 
+    parser.addGetStatementSignature(, "void main()");
+    parser.addGetStatementSignature(, "uniform r_MPV;");
+    parser.addSkipWordToken('\'', '\'', 0, true);
+    parser.addGetStatementSignature(, "+import .@1 .@2 \\[putToEnd 'out_{@2} = @2;'\\]");
+    parser.addGetStatementSignature(, "+import .@1 .@2 \\[initOut 'out_{@2};'\\]");
 
     QTextStream stream(&out);
+    parser.processText(stream.readAllText());
 }
 
 /*
@@ -122,7 +241,7 @@ void ShaderBuilder::loadShader(QString &vertPath, QString &frag)
     QVector<replJob> insertAtMainBeginJobs;
     QVector<replJob> insertFuncsJobs;
 
-    parser.processLine()
+    parser.processText()
 
 
 
