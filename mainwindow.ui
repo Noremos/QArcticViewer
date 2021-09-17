@@ -103,6 +103,12 @@ background-color: &quot;#a4a4a4&quot;;
           </property>
           <item row="0" column="0" rowspan="2" colspan="2">
            <widget class="QLabel" name="label_13">
+            <property name="minimumSize">
+             <size>
+              <width>120</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>200</width>
@@ -339,6 +345,16 @@ background-color: &quot;#a4a4a4&quot;;
           <property name="spacing">
            <number>4</number>
           </property>
+          <item row="1" column="0" rowspan="2">
+           <widget class="QPushButton" name="textureLoder">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Загрузить текстуру</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <widget class="QComboBox" name="mattype">
             <property name="currentIndex">
@@ -369,20 +385,7 @@ background-color: &quot;#a4a4a4&quot;;
             </item>
            </widget>
           </item>
-          <item row="0" column="1" rowspan="2">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Множитель высоты</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2" rowspan="2">
+          <item row="2" column="1">
            <widget class="QSpinBox" name="heightSpin">
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -398,38 +401,24 @@ background-color: &quot;#a4a4a4&quot;;
             </property>
            </widget>
           </item>
-          <item row="1" column="0" rowspan="2">
-           <widget class="QPushButton" name="textureLoder">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
+          <item row="0" column="1" rowspan="2">
+           <widget class="QLabel" name="label_8">
             <property name="text">
-             <string>Загрузить текстуру</string>
+             <string>Множитель высоты</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <widget class="QComboBox" name="comboBox">
-            <item>
-             <property name="text">
-              <string>Найденные</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Непрошедшие</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Все</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Скрыть</string>
-             </property>
-            </item>
+          <item row="2" column="2">
+           <widget class="QCheckBox" name="checkBox">
+            <property name="text">
+             <string>Построить карту</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -809,9 +798,43 @@ background-color: &quot;#d4d1d1&quot;;
           </widget>
          </item>
          <item>
+          <widget class="QComboBox" name="comboBox">
+           <item>
+            <property name="text">
+             <string>Найденные</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Непрошедшие</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Все</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Скрыть</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
           <widget class="QCheckBox" name="chShowUserMarkers">
            <property name="text">
             <string>Маркеры</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cbShowImportedMarkrs">
+           <property name="text">
+            <string>Geojson</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -881,16 +904,6 @@ border.width:3</string>
          </property>
          <property name="text">
           <string>Остановить</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="cbShowImportedMarkrs">
-         <property name="text">
-          <string/>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
          </property>
         </widget>
        </item>

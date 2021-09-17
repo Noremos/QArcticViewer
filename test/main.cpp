@@ -140,11 +140,12 @@ int main(int argc, char *argv[])
 	TestTiffReader reader;
 
 	// find ROIS
-//	reader.openAndFind();
+	//	reader.openAndFind();
 
 	// FILTER
 	reader.openAndProcess();
 
+//	checkTime();
 //	system("pause");
 	return 0;
 }

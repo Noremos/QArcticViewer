@@ -14,6 +14,8 @@
 #define PAINTER
 #endif
 
+// #define ENABLE_EXTRACT_BARIMG
+
 
 typedef unsigned char uchar;
 typedef unsigned int uint;

@@ -26,8 +26,11 @@ ImageSearcher::ImageSearcher(TiffReader *reader) : reader(reader), image(nullptr
 	cachedTiles.setMaxSize(10);
 
 
-//	mat = new cv::Mat(reader->height(), reader->widght(), CV_8UC3);
-//	settings->bottomProc = 0.1f;
+#ifdef ENABLE_EXTRACT_BARIMG
+	mat = new cv::Mat(reader->height(), reader->widght(), CV_8UC3);
+#endif
+
+	//	settings->bottomProc = 0.1f;
 //	settings->coof= 1.7f;
 //	settings->diamert = TRange<int>(10,300);
 //	settings->height = TRange<float>(2,6);
@@ -127,20 +130,20 @@ void check(void *ptr)
 #include <QPixmap>
 
 
-void ImageSearcher::mark(bc::barvector<float>& matr, int /*ind*/, const int &tx, const int &ty)
+void ImageSearcher::mark(bc::barvector<float>& matr, int ind, const int &tx, const int &ty)
 {
+	static cv::Vec3b colors[8]{
+		{0, 0, 255},
+		{0, 255, 0},
+		{255, 0, 0},
+		{0, 255, 255},
+		{255, 0, 255},
+		{255, 255, 0},
+		{0, 255, 255},
+		{255, 255, 255},
+		};
 
-//	static cv::Vec3b colors[8]{
-//		{0, 0, 255},
-//		{0, 255, 0},
-//		{255, 0, 0},
-//		{0, 255, 255},
-//		{255, 0, 255},
-//		{255, 255, 0},
-//		{0, 255, 255},
-//		{255, 255, 255},
-//		};
-//	auto &col = colors[ind % 8];
+	auto &col = colors[ind % 8];
 	for (auto& a : matr)
 	{
 		int y = ty + a.getY(this->reader->widght());
@@ -148,15 +151,16 @@ void ImageSearcher::mark(bc::barvector<float>& matr, int /*ind*/, const int &tx,
 		if (x>= this->reader->widght() || y >= reader->height())
 			continue;
 		// Если хотя бы одно не 0, значи тут уже есть цвет
-//		auto &colref = mat->at<cv::Vec3b>(y, x);!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-//		if (colref[0] == 0 && colref[1] == 0 && colref[2] == 0)
-//		{
-//			colref[0] = col[0];
-//			colref[1] = col[1];
-//			colref[2] = col[2];
-//		}
+		auto &colref = mat->at<cv::Vec3b>(y, x); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		if (colref[0] == 0 && colref[1] == 0 && colref[2] == 0)
+		{
+			colref[0] = col[0];
+			colref[1] = col[1];
+			colref[2] = col[2];
+		}
 	}
 }
+
 void ImageSearcher::segment(bc::barline<float> *line, int i, const int &tx, const int &ty)
 {
 
@@ -201,14 +205,17 @@ size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
 		std::string out = "[ ";
 		size_t addded = 0;
 
+//#ifdef ENABLE_EXTRACT_BARIMG
 //		segment(item->getRootNode(), 0, tx, ty);
+//#endif
 
 		for (size_t ib = 0, total = item->barlines.size(); ib < total; ++ib)
 		{
 			bc::barline<float> *line = item->barlines[ib];
 
-			// mark(line->matr, ib, tx, ty);
-
+#ifdef ENABLE_EXTRACT_BARIMG
+			mark(line->matr, ib, tx, ty);
+#endif
 
 			if (line->childrens.size() != 0)
 				continue;

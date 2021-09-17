@@ -82,8 +82,9 @@ namespace cv
 
 class ImageSearcher
 {
-//	cv::Mat* mat;
-
+#ifdef ENABLE_EXTRACT_BARIMG
+	cv::Mat* mat;
+#endif
 	TiffReader *reader;
     int tileWid;
     int tileHei;

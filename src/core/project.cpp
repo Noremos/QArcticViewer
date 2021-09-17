@@ -477,10 +477,7 @@ void Project::filterROIs(const PrjgBarCallback &pbCallback, bool useBoundyChec, 
 			break;
 
 		// data
-		QStringList list = line.split(" ");
-		InstInfo bb(
-			list[0].toInt(), list[1].toInt(), list[2].toFloat(),
-			list[3].toInt(), list[4].toInt(), list[5].toFloat());
+		InstInfo bb(line.toStdString());
 
         if ((int)bb.bb.endZ==9999 || (int)bb.bb.z==9999)
 			continue;

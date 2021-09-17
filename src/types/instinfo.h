@@ -2,8 +2,26 @@
 #define INSTINFO_H
 
 #include "types.h"
+#include <charconv>
 
 #include <QVector3D>
+#include "fast_float/fast_float.h"
+
+// int getWord(QChar *lchars, int total)
+// {
+// 	QChar space = ' ';
+// 	for (int i = 0; i < total; ++i)
+// 	{
+// 		if (lchars == space)
+// 		{
+// 			if (i != 0)
+// 			{
+// 				return i;
+// 			}
+// 		}
+// 	}
+// 	return -1;
+// }
 
 struct InstInfo /*: public QObject*/
 {
@@ -18,6 +36,55 @@ public:
 //		bb = info.bb;
 //		factor = info.factor;
 //	}
+	InstInfo(const std::string& line) : bb(0, 0, 0, 0)
+	{
+		const char *lchars = line.c_str();
+		const char *st = lchars;
+		int num = 0;
+		uint _vali;
+		for (int i = 0, total = line.length(); i < total; ++i, ++lchars)
+		{
+			if (*lchars == ' ')
+			{
+				if (lchars != st)
+				{
+					switch (num++)
+					{
+					case 0:
+						std::from_chars(st, lchars + 1, _vali);
+						bb.x = _vali;
+						break;
+					case 1:
+						std::from_chars(st, lchars + 1, _vali);
+						bb.y = _vali;
+						break;
+					case 2:
+						fast_float::from_chars(st, lchars + 1, bb.z);
+						break;
+					case 3:
+						std::from_chars(st, lchars + 1, _vali);
+						bb.endX = _vali;
+						break;
+					case 4:
+						std::from_chars(st, lchars + 1, _vali);
+						bb.endY = _vali;
+						break;
+					default:
+						break;
+					}
+					st = lchars + 1;
+				}
+			}
+		}
+		fast_float::from_chars(st, lchars + 1, bb.endZ);
+
+		if (bb.endZ < bb.z)
+		{
+			std::swap(bb.endZ, bb.z);
+		}
+		factor = 0;
+	}
+
 	/*explicit*/ InstInfo(uint _x, uint _y, float _z, uint _endX, uint _endY, float _endZ) : /*QObject(NULL),*/ bb(_x, _y, _z, _endX, _endY, _endZ)
 	{
 		factor = 0;

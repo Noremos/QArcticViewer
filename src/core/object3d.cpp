@@ -1,5 +1,4 @@
 #include "object3d.h"
-#include "object3d.h"
 
 #include <QFile>
 #include <QDebug>
@@ -15,7 +14,7 @@
 
 #include <sstream>
 #include <charconv>
-#include "side-src/fast_float/fast_float.h"
+#include "fast_float/fast_float.h"
 
 
 Object3d::Object3d()

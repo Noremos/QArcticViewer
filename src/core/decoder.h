@@ -37,6 +37,32 @@ read a character k;
         }
 
 */
+
+struct RevBuff
+{
+	int curs = -1;
+	uchar buffer[1000];
+	void push_back(uchar val)
+	{
+		buffer[++curs] = val;
+		assert(curs <= 1000);
+	}
+
+	int size() { return curs + 1; }
+
+	int operator[](int i)
+	{
+		assert(i < curs + 1);
+		return buffer[i];
+	}
+	void clear() { curs = -1; }
+
+	uchar back()
+	{
+		return buffer[curs];
+	}
+};
+
 struct stopPair
 {
 	size_t posInSource;
@@ -116,18 +142,20 @@ public:
 	// 	a =b;
 	// 	b = temp;
 	// }
-	revbuffer revTemp;
+	RevBuff revTemp;
 
-	uchar getAppedRev(ushort cod2e)
+	void getAppedRev(ushort cod2e)
 	{
 		revTemp.clear();
 		for (int i = cod2e; i != 4096; i = dictionaryIndex[i])
 		{
 			revTemp.push_back(dictionaryChar[i]);
 		}
-		for (int i = (int)revTemp.size() - 1; i >= 0; --i)
+
+		const int minValConst = revTemp.size() - (maxSize - resultSize);
+		for (int i = (int)revTemp.size() - 1,  minVal = MAX(0, minValConst); i >= minVal; --i)
 			this->result[++resultSize] = (revTemp[i]);
-		return revTemp.back();
+//		return revTemp.back();
 	}
 
 	void appendReversed()
@@ -288,20 +316,17 @@ public:
 				{
 					// getAppedRev(code);
 					// CHECKRET
-
-					getDictionaryReversed(code);
-					appendReversed();
+					getAppedRev(code);
 					if (resultSize >= maxSize)
 						qDebug() << "Overflow:" << resultSize;
-						// return;
 
 					oldCode = code;
 				}
 			}
 			else if (code < dictionaryLength)
 			{
-				getDictionaryReversed(code);
-				appendReversed();
+				getAppedRev(code);
+
 				if (resultSize >= maxSize)
 					return;
 
@@ -312,18 +337,13 @@ public:
 			}
 			else
 			{
-				getDictionaryReversed(oldCode);
-
-				if (revTemp.empty())
-				{
-					throw std::exception(); //"Bogus entry.Not in dictionary, ${ oldCode } / ${ dictionaryLength }, position: ${ position }");
-				}
-				appendReversed();
-				result[++resultSize] = revTemp.back();
+				getAppedRev(oldCode);
+				uchar lastVal = revTemp.back();
+				result[++resultSize] = lastVal;
 				if (resultSize >= maxSize )
 					return;
 
-				addToDictionary(oldCode, revTemp.back());
+				addToDictionary(oldCode, lastVal);
 
 				// CHECKRET
 

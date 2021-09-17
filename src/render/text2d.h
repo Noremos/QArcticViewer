@@ -63,7 +63,7 @@
 class Text2d :protected QOpenGLFunctions
 {
 public:
-	QVector<QMatrix4x4> boundydata;
+	QVector<MatrixData> boundydata;
 	QOpenGLTexture *texture;
 	QOpenGLVertexArrayObject vao;
 	int factor = 10;

@@ -35,7 +35,7 @@ void Text2d::addText(boundy &bb)
 			continue;
 
 		matr(3, 3) = (float)b;
-		boundydata.append(matr);
+		boundydata.append(MatrixData(matr));
 	}
 }
 
