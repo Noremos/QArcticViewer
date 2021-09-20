@@ -13,6 +13,14 @@ void SpotZones::addBoundy(boundy &bb, int displayFactor, glColor type)
 	matr.scale(bb.wid()/2, bb.zei()/2, bb.hei()/2);
 
 	boundydata.append(InstanceData(matr, (int)type));
+
+	if (isTextEnabled)
+		addText(bb);
+}
+
+void SpotZones::addText(boundy &bb)
+{
+	this->text->addText(bb);
 }
 
 SpotZones::SpotZones() :
@@ -22,6 +30,7 @@ SpotZones::SpotZones() :
 //	  ,goodBuff(QOpenGLBuffer::Type::VertexBuffer)
 {
 	proj = Project::getProject();
+	text.reset(new Text2d());
 	// proj->spotZones = this;
 }
 
@@ -106,6 +115,8 @@ void SpotZones::updateBuffer()
 	indexBuf.release();
 	mshader.release();
 
+	this->text->updateBuffer();
+
 //	boundydata.clear();
 }
 
@@ -126,6 +137,9 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 	f->glDrawArraysInstanced(GL_TRIANGLES, 0, 24, boundySize);
 	vao.release();
 	mshader.release();
+
+	if (this->isTextEnabled)
+		this->text->renderGL(view, projection);
 
 }
 
@@ -211,6 +225,7 @@ void SpotZones::initGL()
 	vao.create();
 	arrBuf.create();
 	indexBuf.create();
+	text->initGL();
 //	int index = 0;
 //	float offset = 0.1f;
 //	for(int y = -10; y < 10; y += 2)

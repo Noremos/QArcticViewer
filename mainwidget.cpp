@@ -17,7 +17,6 @@ MainWidget::MainWidget(QWidget */*parent*/)
 	terra = new Terrain();
 	zones = new SpotZones();
 	badZones = new SpotZones();
-	text = new Text2d();
 
 	markers = new StaticMarkers();
 #ifdef ENABLE_MARKERS
@@ -39,7 +38,6 @@ MainWidget::~MainWidget()
 	delete camera;
 	delete zones;
 	delete badZones;
-	delete text;
 	delete markers;
 #ifdef ENABLE_MARKERS
 	delete userMarkers;
@@ -95,7 +93,6 @@ void MainWidget::initializeGL()
 
 	zones->initGL();
 	badZones->initGL();
-	text->initGL();
 
 	markers->initGL();
 #ifdef ENABLE_MARKERS
@@ -500,7 +497,6 @@ void MainWidget::paintGL()
 	if (drawZones)
 	{
 		zones->renderGL(view, projection);
-//		text->renderGL(view, projection);
 
 		badZones->renderGL(view, projection);
 	}

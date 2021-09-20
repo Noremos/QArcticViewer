@@ -146,7 +146,6 @@ private:
 
 	CameraGui *camera;
 	SkyBoxGUI *sky;
-	Text2d *text;
 
 	CubeGui *cubeRot = nullptr;
 

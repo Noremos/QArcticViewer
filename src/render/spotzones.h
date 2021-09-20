@@ -21,6 +21,8 @@
 #include "../types/types.h"
 #include "../types/glinstanse.h"
 
+#include "text2d.h"
+
 // Qmatrix's size is 68! Not is 64!
 
 class Project;
@@ -30,7 +32,10 @@ class Project;
 //TODO: Remove it and use StaticMarkers inster
 class SpotZones :protected QOpenGLFunctions
 {
+	std::unique_ptr<Text2d> text;
+
 public:
+	bool isTextEnabled = false;
 	QVector<InstanceData> boundydata;
 
 	QOpenGLVertexArrayObject vao;
@@ -44,6 +49,7 @@ public:
 	size_t boundySize = 0;
 	// type: 0=bad;1=good; 2= more good, 3=more bad
 	void addBoundy(boundy &bb, int displayFactor, glColor type = glColor::Green);
+	void addText(boundy &bb);
 	SpotZones();
 
 	void updateBuffer();
