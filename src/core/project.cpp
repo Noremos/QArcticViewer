@@ -215,7 +215,9 @@ void Project::findROIsOnHiemap(const PrjgBarCallback &pbCallback, int start, int
 	}
 
 //	QString ds = Project::proj->getPath(BackPath::root);
+#ifdef ENABLE_EXTRACT_BARIMG
 	imgsrch.savemat();
+#endif
 
 	if (pbCallback.cbIncrValue)
 		pbCallback.cbIncrValue(end - start+1);
