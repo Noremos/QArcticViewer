@@ -88,26 +88,28 @@ boundy ImageSearcher::getBounty(barline<float> *line)
 		barvalue<float> &val = points[i];
 
 		// Скорей всего не работает
-		if (abs(val.value) < bottomPorog)
+		if (abs(val.value) < bottomPorog)//TODO CHECK CORRECT
 			continue;
 //		Wif (maxT - val.second >= 2)
 //			continue;
+		auto tempV = val.getX(line->getWid());
+		if (minX > tempV)
+			minX = tempV;
 
-		if (minX > val.getX(line->getWid()))
-			minX = val.getX(line->getWid());
+		if (maxX < tempV)
+			maxX = tempV;
 
-		if (maxX < val.getX(line->getWid()))
-			maxX = val.getX(line->getWid());
+		tempV = val.getY(line->getWid());
 
-		if (minY > val.getY(line->getWid()))
-			minY = val.getY(line->getWid());
+		if (minY > tempV)
+			minY = tempV;
 
-		if (maxY < val.getY(line->getWid()))
-			maxY = val.getY(line->getWid());
+		if (maxY < tempV)
+			maxY = tempV;
 	}
 
 	boundy b(minX, minY, maxX, maxY);
-	b.z = minT;
+	b.z = minT + bottomPorog;//TODO CHECK CORRECT
 	b.endZ = maxT;
 
 //	b.sizeWid = (maxX - minX) * resol;
@@ -143,13 +145,13 @@ void ImageSearcher::mark(bc::barvector<float>& matr, int ind, const int &tx, con
 		{255, 255, 255},
 		};
 
-	auto &col = colors[ind % 8];
+	int tileWidCur = this->tileWid + (tx == (tilesInWid - 1)  * tileWid ? 0 : this->diffset);
+	const auto &col = colors[ind % 8];
 	for (auto& a : matr)
 	{
-		int y = ty + a.getY(this->reader->widght());
-		int x = tx + a.getX(this->reader->widght());
-		if (x>= this->reader->widght() || y >= reader->height())
-			continue;
+		int x = tx + a.getX(tileWidCur);
+		int y = ty + a.getY(tileWidCur);
+		assert(x < this->reader->widght() && y < reader->height());
 		// Если хотя бы одно не 0, значи тут уже есть цвет
 		auto &colref = mat->at<cv::Vec3b>(y, x); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		if (colref[0] == 0 && colref[1] == 0 && colref[2] == 0)
@@ -325,7 +327,7 @@ struct Direction
 		{
 			sm += abs(dirs[i]);
 		}
-		return   1.0f -  static_cast<float>(sm) / totalSum;
+		return 1.0f -  static_cast<float>(sm) / totalSum;
 	}
 };
 
@@ -521,14 +523,18 @@ bool ImageSearcher::checkCircle2(DataRect &ret, float hei, float coof)
 
 void ImageSearcher::savemat()
 {
-//	QString ds = Project::proj->getPath(BackPath::root);
-//	cv::imwrite((ds + "img.jpg").toStdString(), *mat);
-//	mat->release();
+#ifdef ENABLE_EXTRACT_BARIMG
+	QString ds = Project::proj->getPath(BackPath::root);
+	cv::imwrite((ds + "barvision.jpg").toStdString(), *mat);
+	mat->release();
+#endif
 }
 
 ImageSearcher::~ImageSearcher()
 {
-//	delete mat;
+#ifdef ENABLE_EXTRACT_BARIMG
+	delete mat;
+#endif
 }
 
 void Beaf::exportDataAsBeaf(const QString &path, int wid, int hei, float *data)
