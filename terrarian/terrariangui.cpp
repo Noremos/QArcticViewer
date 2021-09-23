@@ -152,15 +152,14 @@ void Terrain::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 	case DisplayMode::Heimap:
 		curshader = &this->heimapShader;
 		curshader->bind();
-//		curshader->setUniformValue("minHei", proj->getImgMinVal() / proj->displayFactor);
 		curshader->setUniformValue("maxHei", proj->getImgMaxVal() / proj->u_displayFactor);
-
-
 		break;
+
 	case DisplayMode::object:
 		curshader = &this->objectShader;
 		curshader->bind();
 		break;
+
 	case DisplayMode::texture:
 		curshader = &this->textureShader;
 		if (textNum < textures.size() && textures[textNum]!=nullptr)

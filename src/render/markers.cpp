@@ -14,13 +14,39 @@ void StaticMarkers::initGL()
 	initializeOpenGLFunctions();
 	f = QOpenGLContext::currentContext()->extraFunctions();
 
+//	initModel();
+}
+
+
+void StaticMarkers::addBoundy(QVector3D& bb, int displayFactor)
+{
+	bb.setX(bb.x() / displayFactor);
+//	bb.setY(bb.y() / displayFactor);
+	bb.setZ(bb.z() / displayFactor);
+	QMatrix4x4 matr;
+	matr.setToIdentity();
+
+	matr.translate(bb.x(), bb.y(), bb.z());
+	matr.scale(1,1,1);
+
+
+	boundydata.append(InstanceData(matr, (int)glColor::Oragne));
+}
+
+
+void StaticMarkers::updateBuffer()
+{
+	obj.readFile(":/resources/objects/makr.obj");
+
+	destroyVideoBuffers();
+
+	mshader.create();
+	glinstanse::initShader(mshader, ":/shaders/spotZone.vert", ":/shaders/spotZone.frag");
+
+	modelsBuf.create();
 	vao.create();
 	arrBuf.create();
 	indexBuf.create();
-	mshader.create();
-
-	obj.readFile(":/resources/objects/makr.obj");
-	glinstanse::initShader(mshader, ":/shaders/spotZone.vert", ":/shaders/spotZone.frag");
 
 	vao.bind();
 	mshader.bind();
@@ -37,7 +63,6 @@ void StaticMarkers::initGL()
 	arrBuf.allocate((const void *)vect.data(), vect.size() * sizeof(lvertex));
 	arrBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 
-
 //	arrBuf.bind();
 //	arrBuf.allocate((const void *)obj.lvetexes.data(), obj.lvetexes.size() * sizeof(lvertex));
 //	arrBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
@@ -52,40 +77,13 @@ void StaticMarkers::initGL()
 	mshader.setAttributeBuffer(vertexLocation, GL_FLOAT, 0, 3, sizeof(lvertex));//sizeof(vertex)
 	mshader.enableAttributeArray(vertexLocation);
 
+	//	vao.release();
+
+	//	mshader.release();
+
 	faceSize = obj.faces.size() * 3;
 	obj.faces.clear();
 	obj.lvetexes.clear();
-
-
-	vao.release();
-	arrBuf.release();
-	indexBuf.release();
-	mshader.release();
-
-//	initModel();
-}
-
-
-void StaticMarkers::addBoundy(QVector3D& bb, int displayFactor)
-{
-	bb.setX(bb.x() / displayFactor);
-//	bb.setY(bb.y() / displayFactor);
-	bb.setZ(bb.z() / displayFactor);
-	QMatrix4x4 matr;
-	matr.setToIdentity();
-
-	matr.translate(bb.x(), bb.y(), bb.z());
-	matr.scale(1,10,1);
-
-
-	boundydata.append(InstanceData(matr, (int)glColor::Oragne));
-}
-
-
-void StaticMarkers::updateBuffer()
-{
-	modelsBuf.destroy();
-	modelsBuf.create();
 
 	int loc, offloc;
 
@@ -119,7 +117,7 @@ void StaticMarkers::updateBuffer()
 	mshader.enableAttributeArray(offloc);
 
 	mshader.setUniformValue("opacity", 0.8f);
-	// mshader.setUniformValue("localMinHei", -1.f);
+	mshader.setUniformValue("localMinHei", -1.f);
 
 	f->glVertexAttribDivisor(loc - 3, 1);
 	f->glVertexAttribDivisor(loc - 2, 1);

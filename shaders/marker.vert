@@ -25,7 +25,6 @@ void main()
     //y  0 0 s t
     //w  0 0 0 1
    rmat[3][1] = rmat[3][1] + (rmat[3][1] - minHei) * factor;
-//   vp.y = localMinHei + (vp.y - localMinHei) * factor;
 
     gl_Position = projection * view * rmat  * vec4(vp, 1.0);
 }

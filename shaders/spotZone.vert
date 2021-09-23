@@ -7,7 +7,7 @@ layout (location = 1) in mat4 instanceMatrix; //vec[0]
 layout (location = 5) in float aColor;
 
 uniform float minHei;
-uniform float localMinHei;
+// uniform float localMinHei;
 uniform int factor;
 
 uniform mat4 projection;

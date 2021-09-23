@@ -63,7 +63,6 @@ public:
 		return boundydata;
 	}
 private:
-	void initModel();
 	void destroyVideoBuffers();
 };
 
