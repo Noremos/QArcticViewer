@@ -64,7 +64,7 @@ void SkyBoxGUI::initializeGL()
 	mProgram.addShaderFromSourceCode(QOpenGLShader::Vertex,
 									 R"(
 				#version 330 core
-				layout(location = 0) in vec3 aPosition;
+				layout(location = 0) in vec3 a_positionition;
 
 				out vec3 vTexCoord;
 
@@ -74,9 +74,9 @@ void SkyBoxGUI::initializeGL()
 
 				void main()
 				{
-					vec4 pos = projection * view * vec4(aPosition, 1.0);
+					vec4 pos = projection * view * vec4(a_positionition, 1.0);
 					gl_Position = pos.xyww;
-					vTexCoord = aPosition;
+					vTexCoord = a_positionition;
 				}
 				)");
 
@@ -119,7 +119,7 @@ void SkyBoxGUI::initializeGL()
 	mVertexBuf.allocate(vertices, 36 * sizeof(QVector3D));
 
 	mProgram.bind();
-	int loc = mProgram.attributeLocation("aPosition");
+	int loc = mProgram.attributeLocation("a_positionition");
 	assert(loc >= 0);
 //	mProgram.setAttributeArray(loc, GL_FLOAT, 0, 3, sizeof(QVector3D));
 	mProgram.setAttributeBuffer(loc, GL_FLOAT, 0, 3, sizeof(QVector3D));

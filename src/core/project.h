@@ -85,6 +85,8 @@ public:
 	{
 		closeReader();
 		silense();
+		getBCColor(MarkersShowState::all);
+
 	}
 public:
 	bool block = false;

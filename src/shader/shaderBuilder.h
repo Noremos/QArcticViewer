@@ -6,6 +6,8 @@
 #include <QVector>
 
 #include "parser.h"
+#include <QDebug>
+#include <QRegularExpression>
 
 enum class glVersion
 {
@@ -14,66 +16,66 @@ enum class glVersion
     opngl_es
 };
 
+
 class ShaderBuilder
 {
+
 private:
+	struct DefTempl
+	{
+		QString templname;
+		//	QString mobile;
+		QString desc;
+		QString preprocess(QString imput, QString beg) const
+		{
+			QStringList st = imput.split(' ');
+			QString dsret = beg + desc;
+			for (int i = 1; i < st.size(); ++i)
+			{
+				dsret = dsret.replace("@" + QString::number(i), st[i]);
+				//			mobile = mobile.replace("@" + QString::number(i), st[i]);
+			}
+
+			QString nbeg = nl + beg;
+			dsret = dsret.replace(QRegularExpression(nl), nbeg); // + nl;
+			if (dsret.endsWith(nbeg))
+			{
+				dsret = dsret.remove(dsret.length() - beg.length(), beg.length());
+			}
+			return dsret;
+		}
+
+		QString finalize()
+		{
+			QStringList st = templname.split(' ');
+			return st[0];
+		}
+		/* data */
+	};
     /* data */
 public:
-    ShaderBuilder(glVersion ver/* args */);
+	static unique_ptr<ShaderBuilder> shaderBuilder;
+
+	ShaderBuilder(glVersion ver/* args */);
     ~ShaderBuilder();
     
+	QVector<DefTempl> defens;
+	QMap<QString, DefTempl> defMap;
     
     void loadShader(QString& vert, QString& frag);
     
-    QString getVertex();
-    QString getFragment();
-    
+    // QString getVertex();
+	// QString getFragment();
+
+	QString processFile(QString path);
 private:
     char* preprocess(char* src);
 };
 
-ShaderBuilder::ShaderBuilder(glVersion ver)
-{
-}
-
-ShaderBuilder::~ShaderBuilder()
-{
-}
-struct replJob
-{
-    QString holder;//Что заменить
-    QString text;// На что заменить
-};
-
-void processFile(QString path)
-{
-    Uparser parser;
-
-    QFile out(path);
-    if (out.exists())
-        out.remove();
-
-    if (!out.open(QFile::WriteOnly | QFile::Truncate))
-        return;
-
-    parser.addSkipWordToken('(', ')');
-    parser.addSkipWordToken('{', '}');
-
-    parser.addWordToken("uniform");
-    parser.addWordToken("import");
-    parser.addWordToken("#version");
-    parser.addSingleToken(';');
-
-    parser.addWordToken("main");
-    parser.addWordToken("void");
-
-
-    QTextStream stream(&out);
-}
 
 /*
 #version 330 core
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec3 a_position;
 layout (location = 1) in vec2 a_texcoord;
 layout (location = 2) in mat4 instanceMatrix;
 
@@ -88,7 +90,7 @@ out vec2 offset;
 void main()
 {
 //    vec2 offset = offsets[gl_InstanceID];
-    //    gl_Position = vec4(aPos + offset, 0.0, 1.0);
+    //    gl_Position = vec4(a_position + offset, 0.0, 1.0);
     // coords of char location
 
 
@@ -103,7 +105,7 @@ void main()
     mat4 rightMatrix = instanceMatrix;
 //    rightMatrix[3][3] = 1.0;
 
-    gl_Position = projection * view * rightMatrix  * vec4(aPos, 1.0);
+    gl_Position = projection * view * rightMatrix  * vec4(a_position, 1.0);
 
     //    v_texcoord = vec2(xstart, ystart);
     v_texcoord = a_texcoord;
@@ -112,29 +114,4 @@ void main()
 
  */
 
-void ShaderBuilder::loadShader(QString &vertPath, QString &frag)
-{
 
-    QMap<QString, QString> simpleTemplate;
-    QVector<replJob> repljobs;
-    QVector<replJob> insertAtEndJobs;
-    QVector<replJob> insertAtFileBeginJobs;
-    QVector<replJob> insertAtMainBeginJobs;
-    QVector<replJob> insertFuncsJobs;
-
-    parser.processLine()
-
-
-
-
-    QString funcClccl = "";
-    /*
-     mat4 rmat = model;
-    vec3 vp = a_position;
-    v_pos = vp;
-//    vp.y *= factor;
-//    rmat[1][1] *= factor;
-    vp.y = minHei + (vp.y - minHei) * factor;
-    gl_Position = projection * view * rmat  * vec4(vp, 1.0);
-     */
-}

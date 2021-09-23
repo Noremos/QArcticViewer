@@ -87,7 +87,7 @@ void DynamicMarkers::initArrays()
 	arrBuf.setUsagePattern(QOpenGLBuffer::UsagePattern::StaticDraw);
 
 	// Position
-	int vertexLocation = mshader.attributeLocation("aPos");
+	int vertexLocation = mshader.attributeLocation("a_position");
 	mshader.setAttributeBuffer(vertexLocation, GL_FLOAT, 0, 3, sizeof(lvertex));//sizeof(vertex)
 	mshader.enableAttributeArray(vertexLocation);
 

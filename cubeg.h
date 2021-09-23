@@ -58,27 +58,30 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLTexture>
 
-class CubeGui : protected QOpenGLFunctions
+#include "src/types/glinstanse.h"
+
+class CubeGui : public glinstanse
 {
 public:
     CubeGui();
     virtual ~CubeGui();
-
-    void drawCubeGeometry(QMatrix4x4 view, QMatrix4x4 projection);
 
 	QMatrix4x4 model;
 	QOpenGLShaderProgram program;
 	QOpenGLTexture *texture = nullptr;
 
 private:
-    void initCubeGeometry();
-
 	QOpenGLVertexArrayObject vao;
     QOpenGLBuffer arrayBuf;
     QOpenGLBuffer indexBuf;
 	QOpenGLExtraFunctions *f;
 	void initTextures();
 	void initShaders();
+
+	// glinstanse interface
+public:
+	void initGL() override;
+	void renderGL(QMatrix4x4 &view, QMatrix4x4 &projection) override;
 };
 
 #endif // CUBEG_H

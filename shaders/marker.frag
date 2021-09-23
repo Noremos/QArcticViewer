@@ -1,4 +1,4 @@
-#version 330 core
+
 
 in float outColor;
 out vec4 fragColor;

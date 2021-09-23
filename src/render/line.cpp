@@ -16,7 +16,7 @@ void Line::setLine(QVector3D start, QVector3D end)
 	VBO.bind();
 	VBO.allocate(vertices.data(), sizeof(vertices));
 
-	int offloc = shaderProgram.attributeLocation("aPos");
+	int offloc = shaderProgram.attributeLocation("a_position");
 	shaderProgram.setAttributeBuffer(offloc, GL_FLOAT, 0, 3 * sizeof(float));
 	shaderProgram.enableAttributeArray(offloc);
 
@@ -59,11 +59,11 @@ void Line::initGL()
 	initializeOpenGLFunctions();
 
 	const char *vertexShaderSource = "#version 330 core\n"
-									 "layout (location = 0) in vec3 aPos;\n"
+									 "layout (location = 0) in vec3 a_position;\n"
 									 "uniform mat4 MVP;\n"
 									 "void main(void)\n"
 									 "{\n"
-									 "   gl_Position = MVP * vec4(aPos, 1.0);\n"
+									 "   gl_Position = MVP * vec4(a_position, 1.0);\n"
 									 "}\0";
 	const char *fragmentShaderSource = "#version 330 core\n"
 									   "out vec4 FragColor;\n"

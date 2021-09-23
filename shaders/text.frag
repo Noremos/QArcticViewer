@@ -6,7 +6,7 @@
 //    gl_FragColor = texture2D(qt_Texture0, qt_TexCoord0.st);
 //}
 
-#version 330 core
+
 
 uniform sampler2D texture0;
 

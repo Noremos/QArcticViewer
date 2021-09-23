@@ -1,0 +1,28 @@
+@ Вычислить корректную высоту с учётом фактора
++calcPos()
+#d desktop
+mat4 rmat = model;
+vec3 vp = a_position;
+//vp.y *= factor;
+//rmat[1][1] *= factor;
+vp.y = minHei + (vp.y - minHei) * factor;
+gl_Position = projection * view * rmat  * vec4(vp, 1.0);
+#m mobile
+
+@ Вставить униформы высота, проекция и вид
++uniform r_MPV;
+#d
+uniform mat4 model;
+uniform mat4 projection;
+uniform mat4 view;
+
+@ Вставить импорт. @1 - тип (vec3) @2 - название, [@name] - передать переменной вывода (создать её) layout(location = 0) in vec3 a_position; [putToEnd 'out_{@2} = @2;' | initOut 'out_{@2};']   //in vec3 vertexPosition;
++import @1 @2 @3
+#d
+layout(location = @1) in @2 @3;
+
+@ UNF
++UNFACTOR
+#d
+uniform float minHei;
+uniform int factor;

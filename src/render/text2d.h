@@ -82,42 +82,6 @@ public:
 	void renderGL(QMatrix4x4 view, QMatrix4x4 projection);
 	void initSpotModel();
 
-
-	void printErrors()
-	{
-		GLenum err;
-		while ((err = glGetError()) != GL_NO_ERROR)
-		{
-			switch (err)
-			{
-			case GL_INVALID_ENUM:
-				qDebug() << "GL_INVALID_ENUM";
-				break;
-			case GL_INVALID_VALUE:
-				qDebug() << "GL_INVALID_VALUE";
-				break;
-			case GL_INVALID_OPERATION:
-				qDebug() << "GL_INVALID_OPERATION";
-				break;
-			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				qDebug() << "GL_INVALID_FRAMEBUFFER_OPERATION";
-				break;
-			case GL_OUT_OF_MEMORY:
-				qDebug() << "GL_OUT_OF_MEMORY";
-				break;
-			case GL_STACK_UNDERFLOW:
-				qDebug() << "GL_STACK_UNDERFLOW";
-				break;
-			case GL_STACK_OVERFLOW:
-				qDebug() << "GL_STACK_OVERFLOW";
-				break;
-			default:
-				break;
-			}
-			// Process/log the error.
-		}
-	}
-
 	void addText(boundy &bb);
 };
 

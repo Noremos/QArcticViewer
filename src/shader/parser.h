@@ -124,19 +124,19 @@ struct signature
 {
 private:
     ps *sign = nullptr;
-    int _size;
+	uint _size = 0;
 
 public:
     signature()
     {
     }
 
-    int size() const
+	uint size() const
     {
         return _size;
     }
 
-    void init(ps* data, int size)
+	void init(ps* data, uint size)
     {
         release();
         _size = size;
@@ -144,15 +144,15 @@ public:
         memcpy(this->sign, data, size * sizeof(ps));
     }
 
-    psid get(unsigned int index) const
-    {
-        if (index > _size)
+	psid get(uint index) const
+	{
+		if (index > _size)
             throw std::exception();
 
         return sign[index];
     }
 
-    psid operator[](unsigned int index)
+	psid operator[](uint index)
     {
         return get(index);
     }
@@ -197,7 +197,7 @@ public:
     vector<psid> sign;
     vector<Range> pozs;
 
-    Range *getRangeWhere(psid bc_ind, int start = 0)
+	Range *getRangeWhere(psid bc_ind, size_t start = 0)
     {
         for (; start < sign.size(); ++start)
         {
@@ -274,9 +274,9 @@ public:
 
 struct savePair
 {
-    int baseInd = 0;
-    int inpInd = 0;
-    savePair(int _baseInd = 0, int _inpInd = 0)
+	uint baseInd = 0;
+	uint inpInd = 0;
+	savePair(uint _baseInd = 0, uint _inpInd = 0)
     {
         this->baseInd = _baseInd;
         this->inpInd = _inpInd;
@@ -446,7 +446,7 @@ private:
     {
         psSkipword *word;
         Range* rangeref = 0;
-		skipFiner(psSkipword *oword = nullptr, Range* range = nullptr) : word(word), rangeref(range)
+		skipFiner(psSkipword *oword = nullptr, Range* range = nullptr) : word(oword), rangeref(range)
         {
         }
     };
@@ -459,18 +459,18 @@ private:
         pLine = line;
 		unordered_map<char, skipPrt> skipWordFinder;
 
-        parcInfo *inLineInf;
+		parcInfo *inLineInf = new parcInfo();
         inLineInf->line = line;
 
 
-        int curl = 0;
+//        int curl = 0;
         //bool word = false;
         int workSt = -1;
         multiComment = false;
 
-        bool sterStarts = true;
+//        bool sterStarts = true;
 
-        for (int i = 0; i < line.length(); i++)
+		for (size_t i = 0; i < line.length(); i++)
         {
             char c = line[i];
             switch (c)
@@ -483,8 +483,8 @@ private:
 
                     if (line[i + 1] == '*')
                     {
-                        multiComment = true;
-                        for (int k = i + 2; k < line.length() - 1; k++)
+						multiComment = true;
+						for (int k = i + 2; k < (int)line.length() - 1; k++)
                             if (line[k] == '*' && line[k] == '/')
                             {
                                 multiComment = false;

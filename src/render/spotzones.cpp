@@ -10,7 +10,7 @@ void SpotZones::addBoundy(boundy &bb, int displayFactor, glColor type)
 	matr.setToIdentity();
 
 	matr.translate(bb.x + bb.wid()/2, bb.z - bb.zei(), bb.y + bb.hei()/2);
-	matr.scale(bb.wid()/2, bb.zei()/2, bb.hei()/2);
+	matr.scale(bb.wid()/2, bb.zei(), bb.hei()/2);
 
 	boundydata.append(InstanceData(matr, (int)type));
 
@@ -145,45 +145,45 @@ void SpotZones::renderGL(QMatrix4x4 view, QMatrix4x4 projection)
 
 void SpotZones::initSpotModel()
 {
-	const float MaxTop = 40.0f;
+	const float MaxTop = 1.0f;
 	// const float MaxTop = 1.0f;
 	static const GLfloat g_vertex_buffer_data[] = {
-		-1.0f,-1.0f,-1.0f, // Треугольник 1 : начало
-		-1.0f,-1.0f, 1.0f,
+		-1.0f, 0.0f,-1.0f, // Треугольник 1 : начало
+		-1.0f, 0.0f, 1.0f,
 		-1.0f, MaxTop, 1.0f, // Треугольник 1 : конец
-		1.0f, MaxTop,-1.0f, // Треугольник 2 : начало
-		-1.0f,-1.0f,-1.0f,
+		 1.0f, MaxTop,-1.0f, // Треугольник 2 : начало
+		-1.0f, 0.0f,-1.0f,
 		-1.0f, MaxTop,-1.0f, // Треугольник 2 : конец
 //		1.0f,-1.0f, 1.0f,//
 //		-1.0f,-1.0f,-1.0f,
 //		1.0f,-1.0f,-1.0f,//
-		1.0f, MaxTop,-1.0f,//
-		1.0f,-1.0f,-1.0f,
-		-1.0f,-1.0f,-1.0f,//
-		-1.0f,-1.0f,-1.0f,//
+		 1.0f, MaxTop,-1.0f,//
+		 1.0f, 0.0f,-1.0f,
+		-1.0f, 0.0f,-1.0f,//
+		-1.0f, 0.0f,-1.0f,//
 		-1.0f, MaxTop, 1.0f,
 		-1.0f, MaxTop,-1.0f,//
 //		1.0f,-1.0f, 1.0f,
 //		-1.0f,-1.0f, 1.0f,
 //		-1.0f,-1.0f,-1.0f,
 		-1.0f, MaxTop, 1.0f,
-		-1.0f,-1.0f, 1.0f,
-		1.0f,-1.0f, 1.0f,
-		1.0f, MaxTop, 1.0f,
-		1.0f,-1.0f,-1.0f,
-		1.0f, MaxTop,-1.0f,
-		1.0f,-1.0f,-1.0f,
-		1.0f, MaxTop, 1.0f,
-		1.0f,-1.0f, 1.0f,
+		-1.0f, 0.0f, 1.0f,
+		 1.0f, 0.0f, 1.0f,
+		 1.0f, MaxTop, 1.0f,
+		 1.0f, 0.0f,-1.0f,
+		 1.0f, MaxTop,-1.0f,
+		 1.0f, 0.0f,-1.0f,
+		 1.0f, MaxTop, 1.0f,
+		 1.0f, 0.0f, 1.0f,
 //		1.0f, 1.0f, 1.0f,
 //		1.0f, 1.0f,-1.0f,
 //		-1.0f, 1.0f,-1.0f,
 //		1.0f, 1.0f, 1.0f,
 //		-1.0f, 1.0f,-1.0f,
 //		-1.0f, 1.0f, 1.0f,
-		1.0f, MaxTop, 1.0f,
+		 1.0f, MaxTop, 1.0f,
 		-1.0f, MaxTop, 1.0f,
-		1.0f,-1.0f, 1.0f
+		 1.0f, 0.0f, 1.0f
 	};
 //	vao.bind();
 
@@ -203,7 +203,7 @@ void SpotZones::initSpotModel()
 //	indexBuf.allocate(cube_elements, 36);
 
 //	mshader.bind();
-	int vertexLocation = mshader.attributeLocation("aPos");
+	int vertexLocation = mshader.attributeLocation("a_position");
 	mshader.setAttributeBuffer(vertexLocation, GL_FLOAT, 0, 3, sizeof(QVector3D));
 	mshader.enableAttributeArray(vertexLocation);
 

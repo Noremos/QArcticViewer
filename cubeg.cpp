@@ -62,7 +62,7 @@ struct VertexData
 //! [0]
 CubeGui::CubeGui(): indexBuf(QOpenGLBuffer::IndexBuffer)
 {
-    initCubeGeometry();
+	initGL();
 }
 
 CubeGui::~CubeGui()
@@ -75,23 +75,13 @@ CubeGui::~CubeGui()
 
 void CubeGui::initShaders()
 {
-	// Compile vertex shader
-	if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/vshader.glsl"))
-		return;
-
-	// Compile fragment shader
-	if (!program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/fshader.glsl"))
-		return;
+	glinstanse::initShader(program, ":/vshader.glsl", ":/fshader.glsl");
 
 	// Link shader pipeline
 	if (!program.link())
 		return;
 
-	// Bind shader pipeline for use
 }
-//! [3]
-
-//! [4]
 void CubeGui::initTextures()
 {
 	//    // Load cube.png image
@@ -108,7 +98,7 @@ void CubeGui::initTextures()
 	texture->setWrapMode(QOpenGLTexture::Repeat);
 }
 
-void CubeGui::initCubeGeometry()
+void CubeGui::initGL()
 {
     // For cube we would need only 8 vertices but we have to
     // duplicate vertex for each face because texture coordinate
@@ -209,7 +199,7 @@ void CubeGui::initCubeGeometry()
 	program.release();
 }
 
-void CubeGui::drawCubeGeometry(QMatrix4x4 view, QMatrix4x4 projection)
+void CubeGui::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 {
 	program.bind();
 	texture->bind();

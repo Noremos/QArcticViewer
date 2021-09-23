@@ -31,9 +31,9 @@ void Terrain::initGL()
 
 void Terrain::initShaders()
 {
-	initShader(heimapShader, ":/shaders/HeightFactor.vert", ":/shaders/HeightFactor.frag");
-	initShader(objectShader, ":/shaders/simpleColor.vert", ":/shaders/terraColor.frag");
-	initShader(textureShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
+	glinstanse::initShader(heimapShader, ":/shaders/HeightFactor.vert", ":/shaders/HeightFactor.frag");
+	glinstanse::initShader(objectShader, ":/shaders/simpleColor.vert", ":/shaders/terraColor.frag");
+	glinstanse::initShader(textureShader, ":/shaders/simpleColor.vert", ":/shaders/simpleColor.frag");
 	//	initShader(textureShader, ":/vshader.glsl", ":/fshader.glsl");
 }
 
@@ -141,7 +141,7 @@ void Terrain::initArrays()
 	obj.vetexes.clear();
 }
 
-void Terrain::drawFull(QMatrix4x4 &view, QMatrix4x4 &projection)
+void Terrain::renderGL(QMatrix4x4 &view, QMatrix4x4 &projection)
 {
 	// Tell OpenGL which VBOs to use
 

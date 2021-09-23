@@ -63,7 +63,7 @@ enum class DisplayMode {
 //	QOpenGLBuffer indexBuf;
 //};
 
-class Terrain :protected QOpenGLFunctions
+class Terrain : public glinstanse
 {
 	// OpenGL data
 	size_t faceSize, vertSize;
@@ -128,30 +128,11 @@ public:
 private:
 	QOpenGLExtraFunctions *f;
 
-	static void initShader(QOpenGLShaderProgram& prog, QString vert, QString frag)
-	{
-		// Compile vertex shader
-		if (!prog.addShaderFromSourceFile(QOpenGLShader::Vertex, vert))
-			return;
-
-		// Compile fragment shader
-		if (!prog.addShaderFromSourceFile(QOpenGLShader::Fragment, frag))
-			return;
-
-		// Link shader pipeline
-		if (!prog.link())
-			return;
-
-		// Bind shader pipeline for use
-//		if (!prog.bind())
-//			return;
-	}
-
 	void initShaders();
 
 public:
 	void initArrays();
-	void drawFull(QMatrix4x4 &view, QMatrix4x4 &projection);
+	void renderGL(QMatrix4x4 &view, QMatrix4x4 &projection);
 	void setTexture(int num, QString path);
 
 	vertex getValue(size_t offset);

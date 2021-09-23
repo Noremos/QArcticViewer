@@ -173,7 +173,7 @@ void ImageSearcher::segment(bc::barline<float> *line, int i, const int &tx, cons
 	mark(line->matr, i, tx, ty);
 }
 
-size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &barsOut,
+size_t ImageSearcher::findROIs(FileBuffer &boundsOut, FileBuffer &/*barsOut*/,
 							   int start, int len, int bottom,
 							   volatile bool &valStop)
 {

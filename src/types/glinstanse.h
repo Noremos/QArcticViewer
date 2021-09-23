@@ -11,34 +11,47 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
+#include "../shader/shaderBuilder.h"
+
 class glinstanse :protected QOpenGLFunctions
 {
 private:
 public:
     glinstanse(/* args */)
-    {
-//        initGL();
+	{
+		//        initGL();
+		if (ShaderBuilder::shaderBuilder.get() == nullptr)
+			ShaderBuilder::shaderBuilder.reset(new ShaderBuilder(glVersion::opngl3_3));
     }
-    virtual void initGL() = 0;
+
+	virtual void initGL() = 0;
 	virtual void renderGL(QMatrix4x4& view, QMatrix4x4& projection) = 0;
 
-    virtual ~glinstanse()
-    {}
-    
+	virtual ~glinstanse() {}
     static void initShader(QOpenGLShaderProgram& prog, QString vert, QString frag)
 	{
 		// Compile vertex shader
-		if (!prog.addShaderFromSourceFile(QOpenGLShader::Vertex, vert))
+//		if (!prog.addShaderFromSourceFile(QOpenGLShader::Vertex, vert))
+		if (!prog.addShaderFromSourceCode(QOpenGLShader::Vertex, ShaderBuilder::shaderBuilder->processFile(vert)))
 			return;
 
 		// Compile fragment shader
-		if (!prog.addShaderFromSourceFile(QOpenGLShader::Fragment, frag))
+//		if (!prog.addShaderFromSourceFile(QOpenGLShader::Fragment, frag))
+		if (!prog.addShaderFromSourceCode(QOpenGLShader::Fragment, ShaderBuilder::shaderBuilder->processFile(frag)))
 			return;
 
 		// Link shader pipeline
 		if (!prog.link())
 			return;
 
+//		QString ret = ShaderBuilder::shaderBuilder->processFile(":/shaders/marker.pre.vert");
+//		QFile out("D:\\templ.vert");
+//		if (out.open(QFile::WriteOnly))
+//		{
+//			QTextStream stream(&out);
+//			stream << ret;
+//			return;
+//		}
 		// Bind shader pipeline for use
 //		if (!prog.bind())
 //			return;
@@ -62,6 +75,7 @@ public:
 		//		if (!prog.bind())
 		//			return;
 	}
+
 	void printErrors()
 	{
 		GLenum err;
@@ -96,8 +110,8 @@ public:
 			// Process/log the error.
 		}
 	}
-
 };
+
 struct MatrixData
 {
 	QVector4D v0;

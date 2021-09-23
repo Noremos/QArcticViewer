@@ -147,7 +147,7 @@ void Text2d::initSpotModel()
 	//	indexBuf.allocate(cube_elements, 36);
 
 	//	mshader.bind();
-	int vertexLocation = mshader.attributeLocation("aPos");
+	int vertexLocation = mshader.attributeLocation("a_position");
 	mshader.setAttributeBuffer(vertexLocation, GL_FLOAT, 0, 3, sizeof(QVector3D) + sizeof(QVector2D));
 	mshader.enableAttributeArray(vertexLocation);
 

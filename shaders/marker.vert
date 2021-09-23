@@ -1,5 +1,5 @@
-#version 330 core
-layout (location = 0) in vec3 aPos;
+
+layout (location = 0) in vec3 a_position;
 //layout (location = 1) in float aColor;
 
 uniform float minHei;
@@ -17,7 +17,7 @@ void main()
 {
     outColor = 1;
     //aColor;
-    vec3 vp = aPos;
+    vec3 vp = a_position;
     mat4 rmat = model;
 
     //x  s 0 0 t

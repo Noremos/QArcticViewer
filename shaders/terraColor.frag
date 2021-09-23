@@ -1,4 +1,4 @@
-#version 330 core
+
 
 vec3 mainColor = vec3(0.8, 0.8, 0.8);
 

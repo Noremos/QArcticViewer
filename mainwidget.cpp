@@ -477,7 +477,7 @@ void MainWidget::paintGL()
 //		if (polyLine)
 //			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-		terra->drawFull(view, projection);
+		terra->renderGL(view, projection);
 		markers->renderGL(view, projection);
 
 #ifdef ENABLE_MARKERS

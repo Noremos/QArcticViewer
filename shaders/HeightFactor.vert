@@ -1,5 +1,5 @@
-#version 330 core
-in vec3 vertexPosition;
+
+layout(location = 0) in vec3 a_position;
 
 out float curHei;
 
@@ -12,9 +12,7 @@ uniform int factor;
 
 void main()
 {
-    vec3 vp = vertexPosition;
-    curHei = vp.y;
-    vp.y = minHei + (vp.y - minHei) * factor;
+    curHei = a_position.y;
 
-    gl_Position =  projection * view * model * vec4(vp, 1.0);
+    +calcPos()
 }

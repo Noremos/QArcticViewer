@@ -29,6 +29,7 @@ SOURCES += \
     src/render/spotzones.cpp \
     src/render/text2d.cpp \
     src/render/usermarkers.cpp \
+    src/shader/ShaderBuilder.cpp \
     terrarian/terrariangui.cpp
 
 HEADERS += \
@@ -51,6 +52,9 @@ HEADERS += \
     src/render/markers.h \
     src/render/text2d.h \
     src/render/usermarkers.h \
+    src/shader/parser.h \
+    src/shader/shaderBuilder.h \
+    src/types/glinstanse.h \
     src/types/img.h \
     src/types/instinfo.h \
     src/types/types.h \

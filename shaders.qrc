@@ -15,5 +15,7 @@
         <file>resources/objects/makr.obj</file>
         <file>shaders/terraColor.frag</file>
         <file>shaders/terraColor.vert</file>
+        <file>shaders/replaces.data</file>
+        <file>shaders/marker.pre.vert</file>
     </qresource>
 </RCC>

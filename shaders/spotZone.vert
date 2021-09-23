@@ -1,5 +1,5 @@
-#version 330 core
-layout (location = 0) in vec3 aPos;
+
+layout (location = 0) in vec3 a_position;
 layout (location = 1) in mat4 instanceMatrix; //vec[0]
 //     (location = 2)                         //vec[1]
 //     (location = 3)                         //vec[2]
@@ -19,15 +19,12 @@ void main()
 {
     outColor = aColor;
     //aColor;
-    vec3 vp = aPos;
-    mat4 rmat = instanceMatrix;
 
     //x  s 0 0 t
     //z  0 s 0 t
     //y  0 0 s t
     //w  0 0 0 1
-   rmat[3][1] = minHei + (rmat[3][1] - minHei) * factor;
-   vp.y = localMinHei + (vp.y - localMinHei) * factor;
 
-    gl_Position = projection * view * rmat  * vec4(vp, 1.0);
+    mat4 model = instanceMatrix;
+    +calcPos()
 }
